@@ -1,0 +1,7 @@
+*.root
+.RData
+for_dana
+*.o
+*.so
+*.dSYM
+pullProducts
