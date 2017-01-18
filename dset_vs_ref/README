@@ -1,0 +1,5 @@
+Tests to determine the overhead of reading a bunch of data
+via multiple datasets v. a single dataset w/ a reference
+"index".
+
+Build each program w/ h5cc (tested using HDF5 1.10.x)
