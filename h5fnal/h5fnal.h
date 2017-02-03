@@ -33,7 +33,9 @@ typedef struct h5fnal_mc_hit_t {
     float       signal_width;
     float       peak_amp;
     float       charge;
-    float       part_vertex[3];
+    float       part_vertex_x;
+    float       part_vertex_y;
+    float       part_vertex_z;
     float       part_energy;
     int         part_track_id;
     unsigned    channel;
@@ -58,4 +60,8 @@ hid_t h5fnal_create_v_mc_hit_collection_type(void);
 h5fnal_v_mc_hit_coll_t h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name);
 h5fnal_v_mc_hit_coll_t h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name);
 herr_t h5fnal_close_v_mc_hit_collection(h5fnal_v_mc_hit_coll_t vector);
+
+herr_t h5fnal_write_hits(h5fnal_v_mc_hit_coll_t vector, size_t n_hits, h5fnal_mc_hit_t *hits);
+hssize_t h5fnal_get_hits_count(h5fnal_v_mc_hit_coll_t vector);
+herr_t h5fnal_read_all_hits(h5fnal_v_mc_hit_coll_t vector, h5fnal_mc_hit_t *hits);
 #endif /* H5FNAL_H */
