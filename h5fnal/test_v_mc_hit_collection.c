@@ -32,7 +32,7 @@ generate_fake_hits(size_t n_hits)
         hits[i].part_vertex_z = (float)rand();
         hits[i].part_energy = (float)rand();
         hits[i].part_track_id = (int)rand();
-        hits[i].channel = (int)rand();
+        hits[i].channel = (unsigned)rand();
     }
 
     return hits;

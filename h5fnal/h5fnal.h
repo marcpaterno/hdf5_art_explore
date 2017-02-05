@@ -48,6 +48,11 @@ typedef struct h5fnal_v_mc_hit_coll_t {
 } h5fnal_v_mc_hit_coll_t;
 
 /* h5fnal API */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 hid_t h5fnal_create_run(hid_t loc_id, const char *name);
 hid_t h5fnal_open_run(hid_t loc_id, const char *name);
 herr_t h5fnal_close_run(hid_t loc_id);
@@ -64,4 +69,9 @@ herr_t h5fnal_close_v_mc_hit_collection(h5fnal_v_mc_hit_coll_t vector);
 herr_t h5fnal_write_hits(h5fnal_v_mc_hit_coll_t vector, size_t n_hits, h5fnal_mc_hit_t *hits);
 hssize_t h5fnal_get_hits_count(h5fnal_v_mc_hit_coll_t vector);
 herr_t h5fnal_read_all_hits(h5fnal_v_mc_hit_coll_t vector, h5fnal_mc_hit_t *hits);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* H5FNAL_H */

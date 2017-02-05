@@ -158,7 +158,7 @@ h5fnal_create_v_mc_hit_collection_type(void)
         H5FNAL_HDF5_ERROR
     if(H5Tinsert(tid, "fTrackId", HOFFSET(h5fnal_mc_hit_t, part_track_id), H5T_NATIVE_INT) < 0)
         H5FNAL_HDF5_ERROR
-    if(H5Tinsert(tid, "fChannel", HOFFSET(h5fnal_mc_hit_t, channel), H5T_NATIVE_INT) < 0)
+    if(H5Tinsert(tid, "fChannel", HOFFSET(h5fnal_mc_hit_t, channel), H5T_NATIVE_UINT) < 0)
         H5FNAL_HDF5_ERROR
 
     return tid;
