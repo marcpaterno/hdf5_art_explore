@@ -27,7 +27,7 @@
 /* An invalid HDF5 ID */
 #define H5FNAL_BAD_HID_T    (-1)
 
-/* Monte Carlo Hit Type */
+/* MC Hit Type */
 typedef struct h5fnal_mc_hit_t {
     float       signal_time;
     float       signal_width;
@@ -41,11 +41,45 @@ typedef struct h5fnal_mc_hit_t {
     unsigned    channel;
 } h5fnal_mc_hit_t;
 
-/* Vector of Monte Carlo Hit Collection Type */
+/* Vector of MC Hit Collection Type */
 typedef struct h5fnal_v_mc_hit_coll_t {
     hid_t       dataset_id;
     hid_t       datatype_id;
 } h5fnal_v_mc_hit_coll_t;
+
+/* MC Neutrino Type */
+typedef struct h5fnal_mc_neutrino_t {
+    int         mode;
+    int         interaction_type;
+    int         ccnc;
+    int         target;
+    int         hit_nuc;
+    int         hit_quark;
+    double      w;
+    double      x;
+    double      y;
+    double      q_sqr;
+} h5fnal_mc_neutrino_t;
+
+/* MC Particle Type */
+typedef struct h5fnal_mc_particle_t {
+    int         status;
+    int         track_id;
+    int         pdg_code;
+    int         mother;
+    char        *process;
+    char        *end_process;
+    double      mass;
+    double      polarization_x;
+    double      polarization_y;
+    double      polarization_z;
+    double      weight;
+    double      gvtx_e;
+    double      gvtx_x;
+    double      gvtx_y;
+    double      gvtx_z;
+    int         rescatter;
+} h5fnal_mc_particle_t;
 
 /* h5fnal API */
 
@@ -53,14 +87,17 @@ typedef struct h5fnal_v_mc_hit_coll_t {
 extern "C" {
 #endif
 
+/* Run */
 hid_t h5fnal_create_run(hid_t loc_id, const char *name);
 hid_t h5fnal_open_run(hid_t loc_id, const char *name);
 herr_t h5fnal_close_run(hid_t loc_id);
 
+/* Event */
 hid_t h5fnal_create_event(hid_t loc_id, const char *name);
 hid_t h5fnal_open_event(hid_t loc_id, const char *name);
 herr_t h5fnal_close_event(hid_t loc_id);
 
+/* MC Hit Collection */
 hid_t h5fnal_create_v_mc_hit_collection_type(void);
 h5fnal_v_mc_hit_coll_t h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name);
 h5fnal_v_mc_hit_coll_t h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name);
@@ -69,6 +106,10 @@ herr_t h5fnal_close_v_mc_hit_collection(h5fnal_v_mc_hit_coll_t vector);
 herr_t h5fnal_write_hits(h5fnal_v_mc_hit_coll_t vector, size_t n_hits, h5fnal_mc_hit_t *hits);
 hssize_t h5fnal_get_hits_count(h5fnal_v_mc_hit_coll_t vector);
 herr_t h5fnal_read_all_hits(h5fnal_v_mc_hit_coll_t vector, h5fnal_mc_hit_t *hits);
+
+/* MC Truth */
+hid_t h5fnal_create_mc_neutrino_type(void);
+hid_t h5fnal_create_mc_particle_type(void);
 
 #ifdef __cplusplus
 }

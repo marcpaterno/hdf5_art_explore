@@ -58,7 +58,7 @@ main(void)
     hssize_t n_hits_out = 0;
     size_t u;
 
-    printf("Testing vector of Monte Carlo Hit Collection operations... ");
+    printf("Testing vector of MC Hit Collection operations... ");
 
     /* Create the file */
     if((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)

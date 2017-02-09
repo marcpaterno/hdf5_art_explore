@@ -2,6 +2,9 @@
 
 #include "h5fnal.h"
 
+/*******************/
+/* RUNS AND EVENTS */
+/*******************/
 
 hid_t
 h5fnal_create_run(hid_t loc_id, const char *name)
@@ -132,6 +135,10 @@ error:
     return H5FNAL_FAILURE;
 } /* end h5fnal_close_event() */
 
+
+/*********************/
+/* MC HIT COLLECTION */
+/*********************/
 
 hid_t
 h5fnal_create_v_mc_hit_collection_type(void)
@@ -371,4 +378,49 @@ h5fnal_read_all_hits(h5fnal_v_mc_hit_coll_t vector, h5fnal_mc_hit_t *hits)
 error:
     return H5FNAL_FAILURE;
     
-} /* end h5fnal_read_hits() */
+} /* end h5fnal_read_all_hits() */
+
+/************/
+/* MC TRUTH */
+/************/
+
+hid_t
+h5fnal_create_mc_particle_type(void)
+{
+    hid_t tid = H5FNAL_BAD_HID_T;
+
+    tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_mc_particle_t));
+
+    if(H5Tinsert(tid, "fSignalTime", HOFFSET(h5fnal_mc_hit_t, signal_time), H5T_NATIVE_FLOAT) < 0)
+        H5FNAL_HDF5_ERROR
+
+    return tid;
+
+error:
+    H5E_BEGIN_TRY {
+        H5Tclose(tid);
+    } H5E_END_TRY;
+
+    return H5FNAL_BAD_HID_T;
+} /* h5fnal_create_mc_particle_type */
+
+hid_t
+h5fnal_create_mc_neutrino_type(void)
+{
+    hid_t tid = H5FNAL_BAD_HID_T;
+
+    tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_mc_particle_t));
+
+    if(H5Tinsert(tid, "fSignalTime", HOFFSET(h5fnal_mc_hit_t, signal_time), H5T_NATIVE_FLOAT) < 0)
+        H5FNAL_HDF5_ERROR
+
+    return tid;
+
+error:
+    H5E_BEGIN_TRY {
+        H5Tclose(tid);
+    } H5E_END_TRY;
+
+    return H5FNAL_BAD_HID_T;
+} /* h5fnal_create_mc_neutrino_type */
+
