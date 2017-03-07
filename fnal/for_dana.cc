@@ -30,28 +30,26 @@ int main() {
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
     // getValidHandle() is preferred to getByLabel(), for both art and
     // gallery use. It does not require in-your-face error handling.
-    auto const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);
+    std::vector<simb::MCTruth> const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);
+
+    // In C++11 or newer, we recommend use of 'auto' to deduce the
+    // type of the value of the expression (here, the return value of
+    // the function call and derefencing of the returned ValidHandle<...>
+    // object).
+    //
+    //auto const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);
+
+    // After the call above, the MCTruth objects have been read into
+    // memory, and any of their *const* functions can be invoked. Only
+    // const functions can be used, because we have a const reference
+    // to the objects. This is part of the design of our object model:
+    // objects *read from an Event* are always immutable.
+
     if (!mctruths.empty()) {
+      // This output will not be very interesting if the file you're
+      // looking at is the kind of simulation that only contains one
+      // particle per MCTruth object.
       std::cout << mctruths[0].NParticles() << '\n';
-    }
-
-    // Uncomment the next two if you need them.
-    // using vertices_t = vector<recob::Vertex>;
-    // using clusters_t = vector<recob::Cluster>;
-    using vertex_cluster_assns_t = art::Assns<recob::Cluster, recob::Vertex, unsigned short>;
-
-    auto const& assns = *ev.getValidHandle<vertex_cluster_assns_t>(assns_tag);
-    for (size_t i = 0; i < assns.size(); ++i) {
-      // We are relying on the fact that this particlular Assns
-      // contains only valid (thus dereferenceable) Ptrs.
-      auto const& cluster = *(assns[i].first);
-      auto const& vertex  = *(assns[i].second);
-      auto data           = assns.data(i);
-      // now use cluster and vertex as needed...
-      std::cout << cluster.ID() << ", "
-                << vertex.ID() << ", "
-                << data
-                << '\n';
     }
   }
 }
