@@ -31,11 +31,11 @@ export LDFLAGS = $$(root-config --libs) \
 
 LIB := libhdf5_art_explore.so
 OBJECTS := compare.o
-EXEC := for_dana
+EXEC := vmchc_demo
 
 all : $(EXEC)
 
-for_dana.o : compare.hh
+vmchc_demo.o : compare.hh
 
 $(EXEC) : % : %.o $(LIB)
 	@echo Building $(@)
