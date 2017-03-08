@@ -8,7 +8,7 @@
 #include "gallery/ValidHandle.h"
 #include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/Vertex.h"
-#include "nusimdata/SimulationBase/MCTruth.h"
+#include "lardataobj/MCBase/MCHitCollection.h"
 
 
 using namespace art;
@@ -16,7 +16,7 @@ using namespace std;
 
 int main() {
 
-  InputTag mctruths_tag { "generator" };
+  InputTag mchits_tag { "mchitfinder" };
   InputTag vertex_tag { "linecluster" };
   InputTag assns_tag  { "linecluster" };
   vector<string> filenames { "dune_new.root" }; // multiple files are allowed.
@@ -30,7 +30,7 @@ int main() {
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
     // getValidHandle() is preferred to getByLabel(), for both art and
     // gallery use. It does not require in-your-face error handling.
-    std::vector<simb::MCTruth> const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);
+    std::vector<sim::MCHitCollection> const& mchits = *ev.getValidHandle<vector<sim::MCHitCollection>>(mchits_tag);
 
     // In C++11 or newer, we recommend use of 'auto' to deduce the
     // type of the value of the expression (here, the return value of
@@ -45,11 +45,11 @@ int main() {
     // to the objects. This is part of the design of our object model:
     // objects *read from an Event* are always immutable.
 
-    if (!mctruths.empty()) {
+    if (!mchits.empty()) {
       // This output will not be very interesting if the file you're
       // looking at is the kind of simulation that only contains one
       // particle per MCTruth object.
-      std::cout << mctruths[0].NParticles() << '\n';
+      std::cout << mchits[0].Channel() << '\n';
     }
   }
 }
