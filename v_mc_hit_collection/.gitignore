@@ -1,6 +1,6 @@
 *.root
 .RData
-for_dana
+vmchc_demo
 *.o
 *.so
 *.dSYM
