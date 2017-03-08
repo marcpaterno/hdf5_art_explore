@@ -1,0 +1,2 @@
+source demo-setup  /products  v1_11_00  e10:prof
+export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}

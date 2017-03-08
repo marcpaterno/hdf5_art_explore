@@ -1,0 +1,20 @@
+<lcgdict>
+  <class name="gdtest::A"/>
+  <class name="gdtest::B"/>
+  <class name="gdtest::D"/>
+  <class name="art::Ptr<gdtest::A>"/>
+  <class name="art::Ptr<gdtest::B>"/>
+  <class name="std::pair<art::Ptr<gdtest::A>,art::Ptr<gdtest::B> >"/>
+  <class name="std::pair<art::Ptr<gdtest::B>,art::Ptr<gdtest::A> >"/>
+  <class name="std::vector<gdtest::D>"/>
+  <class name="std::vector<std::pair<art::Ptr<gdtest::A>,art::Ptr<gdtest::B> > >"/>
+  <class name="std::vector<std::pair<art::Ptr<gdtest::B>,art::Ptr<gdtest::A> > >"/>
+  <class name="art::Assns<gdtest::A, gdtest::B, void>"/>
+  <class name="art::Wrapper<art::Assns<gdtest::A, gdtest::B, void> >"/>
+  <class name="art::Assns<gdtest::A, gdtest::B, gdtest::D>"/>
+  <class name="art::Wrapper<art::Assns<gdtest::A, gdtest::B, gdtest::D> >"/>
+  <class name="art::Assns<gdtest::B, gdtest::A, void>"/>
+  <class name="art::Wrapper<art::Assns<gdtest::B, gdtest::A, void> >"/>
+  <class name="art::Assns<gdtest::B, gdtest::A, gdtest::D>"/>
+  <class name="art::Wrapper<art::Assns<gdtest::B, gdtest::A, gdtest::D> >"/>
+</lcgdict>

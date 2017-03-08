@@ -1,0 +1,14 @@
+# wget http://scisoft.fnal.gov/scisoft/bundles/tools/pullProducts
+# chmod +x pullProducts
+# ./pullProducts $HOME/products <platform> larsoftobj-v1_08_01 e10 prof
+# <platform> : u14, d14, slf6, slf7
+
+# usage: source demo-setup [<prod-dir>] [<larsoftobj-version>] [<qual>] [<btype>]
+
+pdir=${1:-~/products}
+lsover=${2:-v1_11_00}
+qual=${3:-e10}
+btype=${4:-prof}
+
+source ${pdir}/setup
+setup -B larsoftobj ${lsover} -q+${qual}:+${btype}
