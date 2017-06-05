@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to HDF5 installation bin directory
-HDF5=../../hdf5_d/bin/
+HDF5=../../hdf5/bin/
 
 # libh5fnal
 ${HDF5}h5cc -c h5fnal.c -o h5fnal.o
