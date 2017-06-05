@@ -9,10 +9,10 @@ HDF5 = ../../../hdf5/bin/
 
 all: test_v_mc_hit_collection test_v_mc_truth
 
-test_v_mc_hit_collection: test_v_mc_hit_collection.c
+test_v_mc_hit_collection: test_v_mc_hit_collection.c ../src/libh5fnal.a
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o test_v_mc_hit_collection test_v_mc_hit_collection.c $(LIBS)
 
-test_v_mc_truth: test_v_mc_truth.c
+test_v_mc_truth: test_v_mc_truth.c ../src/libh5fnal.a
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o test_v_mc_truth test_v_mc_truth.c $(LIBS)
 
 

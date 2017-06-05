@@ -106,6 +106,14 @@ h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name)
 {
     h5fnal_v_mc_hit_coll_t vector;
 
+    /* Create datatype */
+    if((vector.datatype_id = h5fnal_create_v_mc_hit_collection_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+
+    /* Open dataset */
+    if((vector.dataset_id = H5Dopen2(loc_id, name, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR
+
     return vector;
 
 error:
@@ -145,7 +153,6 @@ h5fnal_write_hits(h5fnal_v_mc_hit_coll_t vector, size_t n_hits, h5fnal_mc_hit_t 
 {
     hid_t file_sid = -1;             /* dataspace ID                             */
     hid_t memory_sid = -1;             /* dataspace ID                             */
-    hssize_t n_elements = 0;    /* # of data elements per dataset           */
     hsize_t curr_dims[1];   /* initial size of dataset                  */
     hsize_t new_dims[1];   /* new size of data dataset             */
     hsize_t start[1];

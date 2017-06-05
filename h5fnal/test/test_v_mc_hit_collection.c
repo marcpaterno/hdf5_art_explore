@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "h5fnal.h"
@@ -103,6 +104,27 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could allocate memory for hits_out")
 
     /* Read the hits */
+    if(h5fnal_read_all_hits(vector, hits_out) < 0)
+        H5FNAL_PROGRAM_ERROR("could not read hits from the file")
+
+    /* Compare the written and read data */
+    for(u = 0; u < n_hits; u++)
+        if(hits[u].part_track_id != hits_out[u + n_hits].part_track_id)
+            H5FNAL_PROGRAM_ERROR("bad read data")
+
+    /* Close the vector */
+    if(h5fnal_close_v_mc_hit_collection(vector) < 0)
+        H5FNAL_PROGRAM_ERROR("could not close vector")
+
+    /* Re-open the vector */
+    vector = h5fnal_open_v_mc_hit_collection(event_id, VECTOR_NAME);
+    if(vector.dataset_id == H5FNAL_BAD_HID_T)
+        H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection (dataset)")
+    if(vector.datatype_id == H5FNAL_BAD_HID_T)
+        H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection (type)")
+
+    /* Re-read the hits */
+    memset(hits_out, 0, n_hits_out * sizeof(h5fnal_mc_hit_t));
     if(h5fnal_read_all_hits(vector, hits_out) < 0)
         H5FNAL_PROGRAM_ERROR("could not read hits from the file")
 
