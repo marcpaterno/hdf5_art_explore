@@ -28,5 +28,6 @@ check: test_v_mc_hit_collection test_v_mc_truth
 
 clean:
 	rm -rf *.o
+	rm -rf *.h5
 	rm -rf test_v_mc_hit_collection
 	rm -rf test_v_mc_truth
