@@ -1,0 +1,13 @@
+# h5fnal git ignore file
+
+# compiled code
+*.o
+*.a
+
+# executables
+test_v_mc_hit_collection
+test_v_mc_truth
+
+# generated files
+v_mc_hc.h5
+v_mc_truth.h5
