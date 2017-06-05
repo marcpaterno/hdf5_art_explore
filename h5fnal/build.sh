@@ -5,7 +5,9 @@ HDF5=../../hdf5/bin/
 
 # libh5fnal
 ${HDF5}h5cc -c h5fnal.c -o h5fnal.o
-ar rcs libh5fnal.a h5fnal.o
+${HDF5}h5cc -c v_mc_hit_collection.c -o v_mc_hit_collection.o
+${HDF5}h5cc -c v_mc_truth.c -o v_mc_truth.o
+ar rcs libh5fnal.a h5fnal.o v_mc_hit_collection.o v_mc_truth.o
 
 
 # Vector of MC Hit Collection
