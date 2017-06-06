@@ -11,7 +11,8 @@ h5fnal_create_v_mc_hit_collection_type(void)
 {
     hid_t tid = H5FNAL_BAD_HID_T;
 
-    tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_mc_hit_t));
+    if((tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_mc_hit_t))) < 0)
+        H5FNAL_HDF5_ERROR
 
     if(H5Tinsert(tid, "fSignalTime", HOFFSET(h5fnal_mc_hit_t, signal_time), H5T_NATIVE_FLOAT) < 0)
         H5FNAL_HDF5_ERROR
