@@ -93,3 +93,23 @@ error:
     return H5FNAL_BAD_HID_T;
 } /* h5fnal_create_mc_neutrino_type */
 
+h5fnal_v_mc_truth_t
+h5fnal_create_v_mc_truth(hid_t loc_id, const char *name)
+{
+    h5fnal_v_mc_truth_t vector;
+    return vector;
+}
+
+h5fnal_v_mc_truth_t
+h5fnal_open_v_mc_truth(hid_t loc_id, const char *name)
+{
+    h5fnal_v_mc_truth_t vector;
+    return vector;
+}
+
+herr_t
+h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t vector)
+{
+    return H5FNAL_FAILURE;
+}
+

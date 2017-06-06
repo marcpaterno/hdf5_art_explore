@@ -81,6 +81,12 @@ typedef struct h5fnal_mc_particle_t {
     int         rescatter;
 } h5fnal_mc_particle_t;
 
+/* Vector of MC Hit Collection Type */
+typedef struct h5fnal_v_mc_truth_t {
+    hid_t       neutrino_dtype_id;
+    hid_t       particle_dtype_id;
+} h5fnal_v_mc_truth_t;
+
 /* h5fnal API */
 
 #ifdef __cplusplus
@@ -110,6 +116,10 @@ herr_t h5fnal_read_all_hits(h5fnal_v_mc_hit_coll_t vector, h5fnal_mc_hit_t *hits
 /* MC Truth */
 hid_t h5fnal_create_mc_neutrino_type(void);
 hid_t h5fnal_create_mc_particle_type(void);
+h5fnal_v_mc_truth_t h5fnal_create_v_mc_truth(hid_t loc_id, const char *name);
+h5fnal_v_mc_truth_t h5fnal_open_v_mc_truth(hid_t loc_id, const char *name);
+herr_t h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t vector);
+
 
 #ifdef __cplusplus
 }
