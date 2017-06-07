@@ -22,5 +22,5 @@ libh5fnal.a: h5fnal.o v_mc_hit_collection.o v_mc_truth.o
 .PHONY: clean
 
 clean:
-	rm -rf *.o
-	rm -rf libh5fnal.a
+	@rm -rf *.o
+	@rm -rf libh5fnal.a

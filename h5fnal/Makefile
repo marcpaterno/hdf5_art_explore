@@ -8,14 +8,14 @@ all: src test
 .PHONY: src test
 
 src:
-	$(MAKE) -C $(SOURCE_DIR)
+	@$(MAKE) -C $(SOURCE_DIR)
 
 test:
-	$(MAKE) -C $(TEST_DIR)
+	@$(MAKE) -C $(TEST_DIR)
 
 check:
-	$(MAKE) -C $(TEST_DIR) check
+	@$(MAKE) -C $(TEST_DIR) check
 
 clean:
-	$(MAKE) -C $(SOURCE_DIR) clean
-	$(MAKE) -C $(TEST_DIR) clean
+	@$(MAKE) -C $(SOURCE_DIR) clean
+	@$(MAKE) -C $(TEST_DIR) clean
