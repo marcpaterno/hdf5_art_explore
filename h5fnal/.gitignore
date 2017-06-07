@@ -11,3 +11,6 @@ test_v_mc_truth
 # generated files
 v_mc_hc.h5
 v_mc_truth.h5
+
+# output files
+*.out
