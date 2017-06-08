@@ -106,7 +106,7 @@ hid_t h5fnal_open_event(hid_t loc_id, const char *name);
 herr_t h5fnal_close_event(hid_t loc_id);
 
 /* MC Hit Collection */
-hid_t h5fnal_create_v_mc_hit_collection_type(void);
+hid_t h5fnal_create_mc_hit_type(void);
 h5fnal_v_mc_hit_coll_t h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name);
 h5fnal_v_mc_hit_coll_t h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name);
 herr_t h5fnal_close_v_mc_hit_collection(h5fnal_v_mc_hit_coll_t vector);

@@ -18,7 +18,7 @@
  */
 
 hid_t
-h5fnal_create_v_mc_hit_collection_type(void)
+h5fnal_create_mc_hit_type(void)
 {
     hid_t tid = H5FNAL_BAD_HID_T;
 
@@ -54,7 +54,7 @@ error:
     } H5E_END_TRY;
 
     return H5FNAL_BAD_HID_T;
-} /* h5fnal_create_v_mc_hit_collection_type */
+} /* h5fnal_create_mc_hit_type */
 
 
 
@@ -84,7 +84,7 @@ h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name)
         H5FNAL_HDF5_ERROR
 
     /* Create datatype */
-    if((vector.datatype_id = h5fnal_create_v_mc_hit_collection_type()) < 0)
+    if((vector.datatype_id = h5fnal_create_mc_hit_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create datatype")
 
     /* Create dataset */
@@ -119,7 +119,7 @@ h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name)
     h5fnal_v_mc_hit_coll_t vector;
 
     /* Create datatype */
-    if((vector.datatype_id = h5fnal_create_v_mc_hit_collection_type()) < 0)
+    if((vector.datatype_id = h5fnal_create_mc_hit_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create datatype")
 
     /* Open dataset */
