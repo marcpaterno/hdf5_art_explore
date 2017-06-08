@@ -107,8 +107,8 @@ error:
         H5Tclose(vector.datatype_id);
     } H5E_END_TRY;
 
-    vector.dataset_id = H5FNAL_BAD_HID_T; 
-    vector.datatype_id = H5FNAL_BAD_HID_T; 
+    vector.dataset_id = H5FNAL_BAD_HID_T;
+    vector.datatype_id = H5FNAL_BAD_HID_T;
 
     return vector;
 } /* end h5fnal_create_v_mc_hit_collection() */
@@ -147,6 +147,9 @@ h5fnal_close_v_mc_hit_collection(h5fnal_v_mc_hit_coll_t vector)
         H5FNAL_HDF5_ERROR
     if(H5Tclose(vector.datatype_id) < 0)
         H5FNAL_HDF5_ERROR
+
+    vector.dataset_id = H5FNAL_BAD_HID_T;
+    vector.datatype_id = H5FNAL_BAD_HID_T;
 
     return H5FNAL_SUCCESS;
 

@@ -6,6 +6,20 @@
 /* MC TRUTH */
 /************/
 
+/* A vector of MC Truth is a fairly complicated data type and has a
+ * complicated representation in the file.
+ *
+ *  * A top-level group holds all the MC Truth elements.
+ *
+ *  * A second level of groups holds the datasets that represent
+ *    the MC Truth data. Alternatively, a naming scheme could be used
+ *    associate the MC Truth data, but segregating the data using
+ *    groups seems more straightforward.
+ *
+ * Notes and differences from the UML diagram:
+ *
+ */
+
 hid_t
 h5fnal_create_mc_particle_type(void)
 {
@@ -97,12 +111,38 @@ h5fnal_v_mc_truth_t
 h5fnal_create_v_mc_truth(hid_t loc_id, const char *name)
 {
     h5fnal_v_mc_truth_t vector;
+
+    /* Create the top-level group for the vector */
+    if((vector.top_level_group_id = H5Gcreate2(loc_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR
+
+    /* Create the datatypes */
+    if((vector.neutrino_dtype_id = h5fnal_create_mc_neutrino_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    /* Create datatype */
+    if((vector.particle_dtype_id = h5fnal_create_mc_particle_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+
+    return vector;
+
+error:
+    H5E_BEGIN_TRY {
+        H5Gclose(vector.top_level_group_id);
+        H5Tclose(vector.neutrino_dtype_id);
+        H5Tclose(vector.particle_dtype_id);
+    } H5E_END_TRY;
+
+    vector.top_level_group_id = H5FNAL_BAD_HID_T;
+    vector.neutrino_dtype_id = H5FNAL_BAD_HID_T;
+    vector.particle_dtype_id = H5FNAL_BAD_HID_T;
+
     return vector;
 }
 
 h5fnal_v_mc_truth_t
 h5fnal_open_v_mc_truth(hid_t loc_id, const char *name)
 {
+    /* NOT IMPLEMENTED */
     h5fnal_v_mc_truth_t vector;
     return vector;
 }
@@ -110,6 +150,26 @@ h5fnal_open_v_mc_truth(hid_t loc_id, const char *name)
 herr_t
 h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t vector)
 {
+    if(H5Gclose(vector.top_level_group_id) < 0)
+        H5FNAL_HDF5_ERROR
+    if(H5Tclose(vector.neutrino_dtype_id) < 0)
+        H5FNAL_HDF5_ERROR
+    if(H5Tclose(vector.particle_dtype_id) < 0)
+        H5FNAL_HDF5_ERROR
+
+    return H5FNAL_SUCCESS;
+
+error:
+    H5E_BEGIN_TRY {
+        H5Gclose(vector.top_level_group_id);
+        H5Tclose(vector.neutrino_dtype_id);
+        H5Tclose(vector.particle_dtype_id);
+    } H5E_END_TRY;
+
+    vector.top_level_group_id = H5FNAL_BAD_HID_T;
+    vector.neutrino_dtype_id = H5FNAL_BAD_HID_T;
+    vector.particle_dtype_id = H5FNAL_BAD_HID_T;
+
     return H5FNAL_FAILURE;
 }
 

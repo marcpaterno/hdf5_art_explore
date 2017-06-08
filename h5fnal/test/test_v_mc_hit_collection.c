@@ -133,11 +133,13 @@ main(void)
         if(hits[u].part_track_id != hits_out[u + n_hits].part_track_id)
             H5FNAL_PROGRAM_ERROR("bad read data")
 
+    /* Close the vector */
+    if(h5fnal_close_v_mc_hit_collection(vector) < 0)
+        H5FNAL_PROGRAM_ERROR("could not close vector")
+
     /* Close everything */
     free(hits);
     free(hits_out);
-    if(h5fnal_close_v_mc_hit_collection(vector) < 0)
-        H5FNAL_PROGRAM_ERROR("could not close vector")
     if(h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
     if(h5fnal_close_event(event_id) < 0)

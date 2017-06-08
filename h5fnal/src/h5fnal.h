@@ -85,6 +85,7 @@ typedef struct h5fnal_mc_particle_t {
 typedef struct h5fnal_v_mc_truth_t {
     hid_t       neutrino_dtype_id;
     hid_t       particle_dtype_id;
+    hid_t       top_level_group_id;
 } h5fnal_v_mc_truth_t;
 
 /* h5fnal API */
