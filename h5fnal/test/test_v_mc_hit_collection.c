@@ -52,7 +52,7 @@ main(void)
     hid_t   fapl_id = -1;
     hid_t   run_id = -1;
     hid_t   event_id = -1;
-    h5fnal_v_mc_hit_coll_t  vector;
+    h5fnal_v_mc_hit_coll_t *vector;
     size_t n_hits;
     h5fnal_mc_hit_t *hits = NULL;
     h5fnal_mc_hit_t *hits_out = NULL;
@@ -76,11 +76,10 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not create event")
 
     /* Create the vector of MC hit collection data product */
-    vector = h5fnal_create_v_mc_hit_collection(event_id, VECTOR_NAME);
-    if(vector.dataset_id == H5FNAL_BAD_HID_T)
-        H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection (dataset)")
-    if(vector.datatype_id == H5FNAL_BAD_HID_T) 
-        H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection (type)")
+    if(NULL == (vector = calloc(1, sizeof(h5fnal_v_mc_hit_coll_t))))
+        H5FNAL_PROGRAM_ERROR("could not get memory for vector")
+    if(h5fnal_create_v_mc_hit_collection(event_id, VECTOR_NAME, vector) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection")
 
     /* Generate some fake data */
     n_hits = 16384;
@@ -117,11 +116,8 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not close vector")
 
     /* Re-open the vector */
-    vector = h5fnal_open_v_mc_hit_collection(event_id, VECTOR_NAME);
-    if(vector.dataset_id == H5FNAL_BAD_HID_T)
-        H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection (dataset)")
-    if(vector.datatype_id == H5FNAL_BAD_HID_T)
-        H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection (type)")
+    if(h5fnal_open_v_mc_hit_collection(event_id, VECTOR_NAME, vector) < 0)
+        H5FNAL_PROGRAM_ERROR("could not open vector of mc hit collection")
 
     /* Re-read the hits */
     memset(hits_out, 0, n_hits_out * sizeof(h5fnal_mc_hit_t));
@@ -140,6 +136,7 @@ main(void)
     /* Close everything */
     free(hits);
     free(hits_out);
+    free(vector);
     if(h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
     if(h5fnal_close_event(event_id) < 0)
@@ -158,6 +155,7 @@ error:
         free(hits);
         free(hits_out);
         h5fnal_close_v_mc_hit_collection(vector);
+        free(vector);
         h5fnal_close_run(run_id);
         h5fnal_close_event(event_id);
         H5Pclose(fapl_id);

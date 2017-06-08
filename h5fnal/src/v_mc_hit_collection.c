@@ -58,15 +58,17 @@ error:
 
 
 
-h5fnal_v_mc_hit_coll_t
-h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name)
+herr_t
+h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hit_coll_t *vector)
 {
     hid_t dcpl_id = -1;
     hid_t sid = -1;
-    h5fnal_v_mc_hit_coll_t vector;
     hsize_t chunk_dims[1];
     hsize_t init_dims[1];
     hsize_t max_dims[1];
+
+    if(NULL == vector)
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
 
     /* Set up chunking (size is arbitrary for now) */
     chunk_dims[0] = 128;
@@ -84,11 +86,11 @@ h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name)
         H5FNAL_HDF5_ERROR
 
     /* Create datatype */
-    if((vector.datatype_id = h5fnal_create_mc_hit_type()) < 0)
+    if((vector->datatype_id = h5fnal_create_mc_hit_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create datatype")
 
     /* Create dataset */
-    if((vector.dataset_id = H5Dcreate2(loc_id, name, vector.datatype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
+    if((vector->dataset_id = H5Dcreate2(loc_id, name, vector->datatype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
 
     /* close everything */
@@ -97,74 +99,78 @@ h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name)
     if(H5Sclose(sid) < 0)
         H5FNAL_HDF5_ERROR
 
-    return vector;
+    return H5FNAL_SUCCESS;
 
 error:
-    H5E_BEGIN_TRY {
-        H5Sclose(sid);
-        H5Pclose(dcpl_id);
-        H5Dclose(vector.dataset_id);
-        H5Tclose(vector.datatype_id);
-    } H5E_END_TRY;
+    if(vector) {
+        H5E_BEGIN_TRY {
+            H5Sclose(sid);
+            H5Pclose(dcpl_id);
+            H5Dclose(vector->dataset_id);
+            H5Tclose(vector->datatype_id);
+        } H5E_END_TRY;
+    }
 
-    vector.dataset_id = H5FNAL_BAD_HID_T;
-    vector.datatype_id = H5FNAL_BAD_HID_T;
-
-    return vector;
+    return H5FNAL_FAILURE;
 } /* end h5fnal_create_v_mc_hit_collection() */
 
-h5fnal_v_mc_hit_coll_t
-h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name)
+herr_t
+h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hit_coll_t *vector)
 {
-    h5fnal_v_mc_hit_coll_t vector;
+    if(NULL == vector)
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
 
     /* Create datatype */
-    if((vector.datatype_id = h5fnal_create_mc_hit_type()) < 0)
+    if((vector->datatype_id = h5fnal_create_mc_hit_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create datatype")
 
     /* Open dataset */
-    if((vector.dataset_id = H5Dopen2(loc_id, name, H5P_DEFAULT)) < 0)
+    if((vector->dataset_id = H5Dopen2(loc_id, name, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
-
-    return vector;
-
-error:
-    H5E_BEGIN_TRY {
-        H5Dclose(vector.dataset_id);
-        H5Tclose(vector.datatype_id);
-    } H5E_END_TRY;
-
-    vector.dataset_id = H5FNAL_BAD_HID_T; 
-    vector.datatype_id = H5FNAL_BAD_HID_T; 
-
-    return vector;
-} /* end h5fnal_open_v_mc_hit_collection() */
-
-herr_t
-h5fnal_close_v_mc_hit_collection(h5fnal_v_mc_hit_coll_t vector)
-{
-    if(H5Dclose(vector.dataset_id) < 0)
-        H5FNAL_HDF5_ERROR
-    if(H5Tclose(vector.datatype_id) < 0)
-        H5FNAL_HDF5_ERROR
-
-    vector.dataset_id = H5FNAL_BAD_HID_T;
-    vector.datatype_id = H5FNAL_BAD_HID_T;
 
     return H5FNAL_SUCCESS;
 
 error:
-    H5E_BEGIN_TRY {
-        H5Dclose(vector.dataset_id);
-        H5Tclose(vector.datatype_id);
-    } H5E_END_TRY;
+    if(vector) {
+        H5E_BEGIN_TRY {
+            H5Dclose(vector->dataset_id);
+            H5Tclose(vector->datatype_id);
+        } H5E_END_TRY;
+    }
+
+    return H5FNAL_FAILURE;
+} /* end h5fnal_open_v_mc_hit_collection() */
+
+herr_t
+h5fnal_close_v_mc_hit_collection(h5fnal_v_mc_hit_coll_t *vector)
+{
+    if(NULL == vector)
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
+
+    if(H5Dclose(vector->dataset_id) < 0)
+        H5FNAL_HDF5_ERROR
+    if(H5Tclose(vector->datatype_id) < 0)
+        H5FNAL_HDF5_ERROR
+
+    vector->dataset_id = H5FNAL_BAD_HID_T;
+    vector->datatype_id = H5FNAL_BAD_HID_T;
+
+    return H5FNAL_SUCCESS;
+
+error:
+    if(vector) {
+        H5E_BEGIN_TRY {
+            H5Dclose(vector->dataset_id);
+            H5Tclose(vector->datatype_id);
+        } H5E_END_TRY;
+    }
 
     return H5FNAL_FAILURE;
 } /* end h5fnal_close_v_mc_hit_collection() */
 
 
 herr_t
-h5fnal_write_hits(h5fnal_v_mc_hit_coll_t vector, size_t n_hits, h5fnal_mc_hit_t *hits)
+h5fnal_write_hits(h5fnal_v_mc_hit_coll_t *vector, size_t n_hits, h5fnal_mc_hit_t *hits)
 {
     hid_t file_sid = -1;             /* dataspace ID                             */
     hid_t memory_sid = -1;             /* dataspace ID                             */
@@ -181,7 +187,7 @@ h5fnal_write_hits(h5fnal_v_mc_hit_coll_t vector, size_t n_hits, h5fnal_mc_hit_t 
         H5FNAL_HDF5_ERROR
 
     /* Get the size (current size only) of the dataset */
-    if((file_sid = H5Dget_space(vector.dataset_id)) < 0)
+    if((file_sid = H5Dget_space(vector->dataset_id)) < 0)
         H5FNAL_HDF5_ERROR
     if(H5Sget_simple_extent_dims(file_sid, curr_dims, NULL) < 0)
         H5FNAL_HDF5_ERROR
@@ -190,11 +196,11 @@ h5fnal_write_hits(h5fnal_v_mc_hit_coll_t vector, size_t n_hits, h5fnal_mc_hit_t 
 
     /* Resize the dataset to hold the new data */
     new_dims[0] = curr_dims[0] + n_hits;
-    if(H5Dset_extent(vector.dataset_id, new_dims) < 0)
+    if(H5Dset_extent(vector->dataset_id, new_dims) < 0)
         H5FNAL_HDF5_ERROR
 
     /* Get the resized file space */
-    if((file_sid = H5Dget_space(vector.dataset_id)) < 0)
+    if((file_sid = H5Dget_space(vector->dataset_id)) < 0)
         H5FNAL_HDF5_ERROR
 
     /* Create a hyperslab describing where the data should go */
@@ -206,7 +212,7 @@ h5fnal_write_hits(h5fnal_v_mc_hit_coll_t vector, size_t n_hits, h5fnal_mc_hit_t 
         H5FNAL_HDF5_ERROR
 
     /* Write the hits to the dataset */
-    if(H5Dwrite(vector.dataset_id, vector.datatype_id, memory_sid, file_sid, H5P_DEFAULT, hits) < 0)
+    if(H5Dwrite(vector->dataset_id, vector->datatype_id, memory_sid, file_sid, H5P_DEFAULT, hits) < 0)
         H5FNAL_HDF5_ERROR
 
     /* Close everything */
@@ -228,12 +234,12 @@ error:
 
 
 hssize_t
-h5fnal_get_hits_count(h5fnal_v_mc_hit_coll_t vector)
+h5fnal_get_hits_count(h5fnal_v_mc_hit_coll_t *vector)
 {
     hid_t sid = H5FNAL_BAD_HID_T;
     hssize_t n_hits = -1;
 
-    if((sid = H5Dget_space(vector.dataset_id)) < 0)
+    if((sid = H5Dget_space(vector->dataset_id)) < 0)
         H5FNAL_HDF5_ERROR
     if((n_hits = H5Sget_simple_extent_npoints(sid)) < 0)
         H5FNAL_HDF5_ERROR
@@ -253,12 +259,12 @@ error:
 
 
 herr_t
-h5fnal_read_all_hits(h5fnal_v_mc_hit_coll_t vector, h5fnal_mc_hit_t *hits)
+h5fnal_read_all_hits(h5fnal_v_mc_hit_coll_t *vector, h5fnal_mc_hit_t *hits)
 {
     if(!hits)
         H5FNAL_PROGRAM_ERROR("hits parameter cannot be NULL")
 
-    if(H5Dread(vector.dataset_id, vector.datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, hits) < 0)
+    if(H5Dread(vector->dataset_id, vector->datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, hits) < 0)
         H5FNAL_HDF5_ERROR
 
     return H5FNAL_SUCCESS;
