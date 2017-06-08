@@ -6,6 +6,16 @@
 /* MC HIT COLLECTION */
 /*********************/
 
+/* A vector of MC Hit Collection is implemented as a single dataset of
+ * compound type in the file.
+ *
+ * Notes and differences from the UML diagram:
+ *
+ *  * The channel is recorded for each MC Hit
+ *
+ *  * The elements of the partVertex are stored separately
+ */
+
 hid_t
 h5fnal_create_v_mc_hit_collection_type(void)
 {
