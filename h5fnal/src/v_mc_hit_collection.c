@@ -11,7 +11,8 @@
  *
  * Notes and differences from the UML diagram:
  *
- *  * The channel is recorded for each MC Hit
+ *  * The channel is recorded for each MC Hit. This essentially flattens the
+ *    vector and allows us to store all the hits together in one dataset.
  *
  *  * The elements of the partVertex are stored separately
  */
