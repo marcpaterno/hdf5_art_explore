@@ -18,7 +18,7 @@ main(void)
     hid_t   fapl_id = -1;
     hid_t   run_id = -1;
     hid_t   event_id = -1;
-    h5fnal_v_mc_truth_t vector;
+    h5fnal_v_mc_truth_t *vector = NULL;
 
     printf("Testing vector of MC Truth operations... ");
 
@@ -37,19 +37,17 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not create event")
 
     /* Create the vector of MC truth data product */
-    vector = h5fnal_create_v_mc_truth(event_id, VECTOR_NAME);
-    if(vector.top_level_group_id == H5FNAL_BAD_HID_T)
-        H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection (top-level group)")
-    if(vector.neutrino_dtype_id == H5FNAL_BAD_HID_T)
-        H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection (neutrino type)")
-    if(vector.particle_dtype_id == H5FNAL_BAD_HID_T)
-        H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection (particle type)")
+    if(NULL == (vector = calloc(1, sizeof(h5fnal_v_mc_truth_t))))
+        H5FNAL_PROGRAM_ERROR("could not get memory for vector")
+    if(h5fnal_create_v_mc_truth(event_id, VECTOR_NAME, vector) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create vector of mc truth")
 
     /* Close the vector */
     if(h5fnal_close_v_mc_truth(vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not close vector")
 
     /* Close everything else */
+    free(vector);
     if(h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
     if(h5fnal_close_event(event_id) < 0)
@@ -65,6 +63,10 @@ main(void)
 
 error:
     H5E_BEGIN_TRY {
+        if(vector) {
+            h5fnal_close_v_mc_truth(vector);
+            free(vector);
+        }
         h5fnal_close_run(run_id);
         h5fnal_close_event(event_id);
         H5Pclose(fapl_id);

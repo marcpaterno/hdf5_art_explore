@@ -142,73 +142,73 @@ error:
     return H5FNAL_BAD_HID_T;
 } /* h5fnal_create_origin_enum_type */
 
-h5fnal_v_mc_truth_t
-h5fnal_create_v_mc_truth(hid_t loc_id, const char *name)
+herr_t
+h5fnal_create_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *vector)
 {
-    h5fnal_v_mc_truth_t vector;
+    if(NULL == vector)
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
 
     /* Create the top-level group for the vector */
-    if((vector.top_level_group_id = H5Gcreate2(loc_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)) < 0)
+    if((vector->top_level_group_id = H5Gcreate2(loc_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
 
     /* Create the datatypes */
-    if((vector.neutrino_dtype_id = h5fnal_create_mc_neutrino_type()) < 0)
+    if((vector->neutrino_dtype_id = h5fnal_create_mc_neutrino_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create datatype")
-    if((vector.particle_dtype_id = h5fnal_create_mc_particle_type()) < 0)
+    if((vector->particle_dtype_id = h5fnal_create_mc_particle_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create datatype")
-    if((vector.origin_enum_dtype_id = h5fnal_create_origin_enum_type()) < 0)
+    if((vector->origin_enum_dtype_id = h5fnal_create_origin_enum_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create datatype")
 
-    return vector;
+    return H5FNAL_SUCCESS;
 
 error:
     H5E_BEGIN_TRY {
-        H5Gclose(vector.top_level_group_id);
-        H5Tclose(vector.neutrino_dtype_id);
-        H5Tclose(vector.particle_dtype_id);
-        H5Tclose(vector.origin_enum_dtype_id);
+        H5Gclose(vector->top_level_group_id);
+        H5Tclose(vector->neutrino_dtype_id);
+        H5Tclose(vector->particle_dtype_id);
+        H5Tclose(vector->origin_enum_dtype_id);
     } H5E_END_TRY;
 
-    vector.top_level_group_id = H5FNAL_BAD_HID_T;
-    vector.neutrino_dtype_id = H5FNAL_BAD_HID_T;
-    vector.particle_dtype_id = H5FNAL_BAD_HID_T;
-    vector.origin_enum_dtype_id = H5FNAL_BAD_HID_T;
-
-    return vector;
+    return H5FNAL_FAILURE;
 } /* h5fnal_create_v_mc_truth */
 
-h5fnal_v_mc_truth_t
-h5fnal_open_v_mc_truth(hid_t loc_id, const char *name)
+herr_t
+h5fnal_open_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *vector)
 {
     /* NOT IMPLEMENTED */
-    h5fnal_v_mc_truth_t vector;
-    return vector;
+
+    if(NULL == vector)
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
+
+error:
+    return H5FNAL_FAILURE;
 } /* h5fnal_open_v_mc_truth */
 
 herr_t
-h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t vector)
+h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t *vector)
 {
-    if(H5Gclose(vector.top_level_group_id) < 0)
+    if(H5Gclose(vector->top_level_group_id) < 0)
         H5FNAL_HDF5_ERROR
-    if(H5Tclose(vector.neutrino_dtype_id) < 0)
+    if(H5Tclose(vector->neutrino_dtype_id) < 0)
         H5FNAL_HDF5_ERROR
-    if(H5Tclose(vector.particle_dtype_id) < 0)
+    if(H5Tclose(vector->particle_dtype_id) < 0)
         H5FNAL_HDF5_ERROR
 
     return H5FNAL_SUCCESS;
 
 error:
     H5E_BEGIN_TRY {
-        H5Gclose(vector.top_level_group_id);
-        H5Tclose(vector.neutrino_dtype_id);
-        H5Tclose(vector.particle_dtype_id);
-        H5Tclose(vector.origin_enum_dtype_id);
+        H5Gclose(vector->top_level_group_id);
+        H5Tclose(vector->neutrino_dtype_id);
+        H5Tclose(vector->particle_dtype_id);
+        H5Tclose(vector->origin_enum_dtype_id);
     } H5E_END_TRY;
 
-    vector.top_level_group_id = H5FNAL_BAD_HID_T;
-    vector.neutrino_dtype_id = H5FNAL_BAD_HID_T;
-    vector.particle_dtype_id = H5FNAL_BAD_HID_T;
-    vector.origin_enum_dtype_id = H5FNAL_BAD_HID_T;
+    vector->top_level_group_id = H5FNAL_BAD_HID_T;
+    vector->neutrino_dtype_id = H5FNAL_BAD_HID_T;
+    vector->particle_dtype_id = H5FNAL_BAD_HID_T;
+    vector->origin_enum_dtype_id = H5FNAL_BAD_HID_T;
 
     return H5FNAL_FAILURE;
 } /* h5fnal_close_v_mc_truth */

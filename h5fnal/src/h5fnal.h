@@ -107,8 +107,9 @@ herr_t h5fnal_close_event(hid_t loc_id);
 
 /* MC Hit Collection */
 hid_t h5fnal_create_mc_hit_type(void);
-herr_t h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, /*OUT*/ h5fnal_v_mc_hit_coll_t *vector);
-herr_t h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name, /*OUT*/ h5fnal_v_mc_hit_coll_t *vector);
+
+herr_t h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hit_coll_t *vector);
+herr_t h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hit_coll_t *vector);
 herr_t h5fnal_close_v_mc_hit_collection(h5fnal_v_mc_hit_coll_t *vector);
 
 herr_t h5fnal_write_hits(h5fnal_v_mc_hit_coll_t *vector, size_t n_hits, h5fnal_mc_hit_t *hits);
@@ -119,10 +120,10 @@ herr_t h5fnal_read_all_hits(h5fnal_v_mc_hit_coll_t *vector, h5fnal_mc_hit_t *hit
 hid_t h5fnal_create_mc_neutrino_type(void);
 hid_t h5fnal_create_mc_particle_type(void);
 hid_t h5fnal_create_origin_enum_type(void);
-h5fnal_v_mc_truth_t h5fnal_create_v_mc_truth(hid_t loc_id, const char *name);
-h5fnal_v_mc_truth_t h5fnal_open_v_mc_truth(hid_t loc_id, const char *name);
-herr_t h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t vector);
 
+herr_t h5fnal_create_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *vector);
+herr_t h5fnal_open_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *vector);
+herr_t h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t *vector);
 
 #ifdef __cplusplus
 }

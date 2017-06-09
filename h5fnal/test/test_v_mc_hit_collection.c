@@ -52,7 +52,7 @@ main(void)
     hid_t   fapl_id = -1;
     hid_t   run_id = -1;
     hid_t   event_id = -1;
-    h5fnal_v_mc_hit_coll_t *vector;
+    h5fnal_v_mc_hit_coll_t *vector = NULL;
     size_t n_hits;
     h5fnal_mc_hit_t *hits = NULL;
     h5fnal_mc_hit_t *hits_out = NULL;
@@ -154,8 +154,10 @@ error:
     H5E_BEGIN_TRY {
         free(hits);
         free(hits_out);
-        h5fnal_close_v_mc_hit_collection(vector);
-        free(vector);
+        if(vector) {
+            h5fnal_close_v_mc_hit_collection(vector);
+            free(vector);
+        }
         h5fnal_close_run(run_id);
         h5fnal_close_event(event_id);
         H5Pclose(fapl_id);
