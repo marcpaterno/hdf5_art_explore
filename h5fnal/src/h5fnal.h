@@ -81,6 +81,15 @@ typedef struct h5fnal_mc_particle_t {
     int         rescatter;
 } h5fnal_mc_particle_t;
 
+/* Neutrino origin enum */
+typedef enum h5fnal_origin_t {
+    UNKNOWN             = 0,
+    BEAM_NEUTRINO       = 1,
+    COSMIC_RAY          = 2,
+    SUPERNOVA_NEUTRINO  = 3,
+    SINGLE_PARTICLE     = 4
+} h5fnal_origin_t;
+
 /* Vector of MC Hit Collection Type */
 typedef struct h5fnal_v_mc_truth_t {
     hid_t       neutrino_dtype_id;
@@ -88,6 +97,7 @@ typedef struct h5fnal_v_mc_truth_t {
     hid_t       origin_enum_dtype_id;
     hid_t       top_level_group_id;
 } h5fnal_v_mc_truth_t;
+
 
 /* h5fnal API */
 
