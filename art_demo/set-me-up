@@ -1,2 +1,3 @@
-source demo-setup  /products  v1_11_00  e10:prof
+# Edit the products directory as necessary
+source demo-setup  ~/products
 export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}
