@@ -19,7 +19,7 @@ int main() {
   InputTag mctruths_tag { "generator" };
   InputTag vertex_tag { "linecluster" };
   InputTag assns_tag  { "linecluster" };
-  vector<string> filenames { "dune.root" }; // multiple files are allowed.
+  vector<string> filenames { "../data/dune.root" }; // multiple files are allowed.
 
 
   // The gallery::Event object acts as a cursor into the stream of events.

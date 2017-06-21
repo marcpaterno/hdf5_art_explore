@@ -156,7 +156,7 @@ art::operator == (Assns<A, B, D> const & left,
                   Assns<A, B, D> const & right)
 {
   if (left.size() != right.size()) return false;
-  for (std::size_t i = 0UL, sz = left.size(); i != sz; ++i) {
+  for (std::size_t i = 0ULL, sz = left.size(); i != sz; ++i) {
     if (!(left.data(i) == right.data(i) &&
           left[i] == right[i])) {
       return false;

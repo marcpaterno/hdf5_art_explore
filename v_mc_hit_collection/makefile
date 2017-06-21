@@ -3,6 +3,7 @@
 OFLAGS = $(if $(DEBUG),-O0 -g,-O3 -fno-omit-frame-pointer -g)
 export CPPFLAGS = -I$(BOOST_INC) \
   -I$(CANVAS_INC) \
+  -I$(CETLIB_EXCEPT_INC) \
   -I$(CETLIB_INC) \
   -I$(FHICLCPP_INC) \
   -I$(GALLERY_INC) \
@@ -21,8 +22,9 @@ UNDEF_FLAG = $(if $(filter Darwin,$(UNAME_S)),-Wl$(comma)-undefined$(comma)error
 export CXXFLAGS = -fPIC -std=c++14 -Wall -Werror -Wextra -pedantic $(OFLAGS)
 export CXX = g++
 export LDFLAGS = $$(root-config --libs) \
-  -L$(CANVAS_LIB) -lcanvas_Utilities -lcanvas_Persistency_Common -lcanvas_Persistency_Provenance \
+  -L$(CANVAS_LIB) -lcanvas \
   -L$(CETLIB_LIB) -lcetlib \
+  -L$(CETLIB_EXCEPT_LIB) -lcetlib_except \
   -L$(GALLERY_LIB) -lgallery \
   -L$(NUSIMDATA_LIB) -lnusimdata_SimulationBase \
   -L$(LARCOREOBJ_LIB) -llarcoreobj_SummaryData \
