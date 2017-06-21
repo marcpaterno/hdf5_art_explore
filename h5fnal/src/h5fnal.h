@@ -73,8 +73,6 @@ typedef struct h5fnal_mc_particle_t {
     int         track_id;
     int         pdg_code;
     int         mother;
-    char        *process;
-    char        *end_process;
     double      mass;
     double      polarization_x;
     double      polarization_y;
