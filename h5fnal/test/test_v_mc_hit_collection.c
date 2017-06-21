@@ -140,7 +140,7 @@ main(void)
     if(h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
     if(h5fnal_close_event(event_id) < 0)
-        H5FNAL_PROGRAM_ERROR("could not close run")
+        H5FNAL_PROGRAM_ERROR("could not close event")
     if(H5Pclose(fapl_id) < 0)
         H5FNAL_HDF5_ERROR
     if(H5Fclose(fid) < 0)

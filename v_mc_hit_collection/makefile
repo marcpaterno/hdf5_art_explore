@@ -10,7 +10,8 @@ export CPPFLAGS = -I$(BOOST_INC) \
   -I$(LARCOREOBJ_INC) \
   -I$(LARDATAOBJ_INC) \
   -I$(NUSIMDATA_INC) \
-  -I$(ROOT_INC)
+  -I$(ROOT_INC) \
+  -I../h5fnal/src/
 
 comma = ,
 
@@ -20,7 +21,7 @@ export DYN_LIB_PATH = $(if $(filter Darwin,$(UNAME_S)),DY,)LD_LIBRARY_PATH
 UNDEF_FLAG = $(if $(filter Darwin,$(UNAME_S)),-Wl$(comma)-undefined$(comma)error,-Wl$(comma)--no-undefined)
 
 export CXXFLAGS = -fPIC -std=c++14 -Wall -Werror -Wextra -pedantic $(OFLAGS)
-export CXX = g++
+export CXX = ../../hdf5/bin/h5c++
 export LDFLAGS = $$(root-config --libs) \
   -L$(CANVAS_LIB) -lcanvas \
   -L$(CETLIB_LIB) -lcetlib \
@@ -29,6 +30,7 @@ export LDFLAGS = $$(root-config --libs) \
   -L$(NUSIMDATA_LIB) -lnusimdata_SimulationBase \
   -L$(LARCOREOBJ_LIB) -llarcoreobj_SummaryData \
   -L$(LARDATAOBJ_LIB) -llardataobj_RecoBase \
+  -L../h5fnal/src/ -lh5fnal \
   $(UNDEF_FLAG)
 
 LIB := libhdf5_art_explore.so
