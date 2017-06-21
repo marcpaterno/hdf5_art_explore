@@ -12,7 +12,7 @@
 
 #include "h5fnal.h"
 
-#define FILE_NAME   "v_mc_hc.h5"
+#define FILE_NAME   "vmchc.h5"
 #define RUN_NAME    "testrun"
 #define EVENT_NAME  "testevent"
 #define VECTOR_NAME "vomchc"

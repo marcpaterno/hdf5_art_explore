@@ -1,7 +1,10 @@
 *.root
 .RData
-vmchc_demo
 *.o
 *.so
 *.dSYM
 pullProducts
+vmchc_read
+vmchc_write
+*.h5
+*.swp
