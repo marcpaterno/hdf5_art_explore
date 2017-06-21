@@ -27,6 +27,12 @@
 /* An invalid HDF5 ID */
 #define H5FNAL_BAD_HID_T    (-1)
 
+/* Product ID - Uniquely identifies data products */
+typedef struct h5fnal_product_id_t {
+    int         process_index;
+    int         product_index;
+} h5fnal_product_id_t;
+
 /* MC Hit Type */
 typedef struct h5fnal_mc_hit_t {
     float       signal_time;
