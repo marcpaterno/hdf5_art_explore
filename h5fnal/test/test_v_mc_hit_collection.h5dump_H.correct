@@ -1,21 +1,23 @@
 HDF5 "v_mc_hc.h5" {
 GROUP "/" {
    GROUP "testrun" {
-      GROUP "testevent" {
-         DATASET "vomchc" {
-            DATATYPE  H5T_COMPOUND {
-               H5T_IEEE_F32LE "fSignalTime";
-               H5T_IEEE_F32LE "fSignalWidth";
-               H5T_IEEE_F32LE "fPeakAmp";
-               H5T_IEEE_F32LE "fCharge";
-               H5T_IEEE_F32LE "fPartVertexX";
-               H5T_IEEE_F32LE "fPartVertexY";
-               H5T_IEEE_F32LE "fPartVertexZ";
-               H5T_IEEE_F32LE "fPartEnergy";
-               H5T_STD_I32LE "fTrackId";
-               H5T_STD_U32LE "fChannel";
+      GROUP "testsubrun" {
+         GROUP "testevent" {
+            DATASET "vomchc" {
+               DATATYPE  H5T_COMPOUND {
+                  H5T_IEEE_F32LE "fSignalTime";
+                  H5T_IEEE_F32LE "fSignalWidth";
+                  H5T_IEEE_F32LE "fPeakAmp";
+                  H5T_IEEE_F32LE "fCharge";
+                  H5T_IEEE_F32LE "fPartVertexX";
+                  H5T_IEEE_F32LE "fPartVertexY";
+                  H5T_IEEE_F32LE "fPartVertexZ";
+                  H5T_IEEE_F32LE "fPartEnergy";
+                  H5T_STD_I32LE "fTrackId";
+                  H5T_STD_U32LE "fChannel";
+               }
+               DATASPACE  SIMPLE { ( 32768 ) / ( H5S_UNLIMITED ) }
             }
-            DATASPACE  SIMPLE { ( 32768 ) / ( H5S_UNLIMITED ) }
          }
       }
    }

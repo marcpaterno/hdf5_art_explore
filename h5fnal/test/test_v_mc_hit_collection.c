@@ -9,6 +9,7 @@
 
 #define FILE_NAME   "v_mc_hc.h5"
 #define RUN_NAME    "testrun"
+#define SUBRUN_NAME "testsubrun"
 #define EVENT_NAME  "testevent"
 #define VECTOR_NAME "vomchc"
 
@@ -51,6 +52,7 @@ main(void)
     hid_t   fid = -1;
     hid_t   fapl_id = -1;
     hid_t   run_id = -1;
+    hid_t   subrun_id = -1;
     hid_t   event_id = -1;
     h5fnal_v_mc_hit_coll_t *vector = NULL;
     size_t n_hits;
@@ -69,10 +71,12 @@ main(void)
     if((fid = H5Fcreate(FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id)) < 0)
         H5FNAL_HDF5_ERROR
 
-    /* Create the run and event */
+    /* Create the run, sub-run, and event */
     if((run_id = h5fnal_create_run(fid, RUN_NAME)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create run")
-    if((event_id = h5fnal_create_event(run_id, EVENT_NAME)) < 0)
+    if((subrun_id = h5fnal_create_run(run_id, SUBRUN_NAME)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create sub-run")
+    if((event_id = h5fnal_create_event(subrun_id, EVENT_NAME)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create event")
 
     /* Create the vector of MC hit collection data product */
@@ -139,6 +143,8 @@ main(void)
     free(vector);
     if(h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
+    if(h5fnal_close_run(subrun_id) < 0)
+        H5FNAL_PROGRAM_ERROR("could not close run")
     if(h5fnal_close_event(event_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close event")
     if(H5Pclose(fapl_id) < 0)
@@ -159,6 +165,7 @@ error:
             free(vector);
         }
         h5fnal_close_run(run_id);
+        h5fnal_close_run(subrun_id);
         h5fnal_close_event(event_id);
         H5Pclose(fapl_id);
         H5Fclose(fid);
