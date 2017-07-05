@@ -36,6 +36,7 @@ typedef struct h5fnal_product_id_t {
 /* Data type headers */
 #include "v_mc_hit_collection.h"
 #include "v_mc_truth.h"
+#include "association.h"
 
 /* h5fnal API */
 
