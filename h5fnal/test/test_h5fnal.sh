@@ -10,6 +10,7 @@ rm -rf test_v_mc_hit_collection.h5dump_dataset.out
 # Run unit tests
 ./test_v_mc_hit_collection
 ./test_v_mc_truth
+./test_assns
 
 # Check HDF5 tool output
 echo -n "Checking output: vector of MC Hit Collection (h5ls): "
