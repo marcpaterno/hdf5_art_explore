@@ -28,8 +28,6 @@ typedef struct h5fnal_v_mc_hit_coll_t {
     hid_t       datatype_id;
 } h5fnal_v_mc_hit_coll_t;
 
-#define H5FNAL_MCHC_DATASET_NAME    "data"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

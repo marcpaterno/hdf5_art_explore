@@ -17,6 +17,8 @@
  *  * The elements of the partVertex are stored separately
  */
 
+#define H5FNAL_MCHC_DATASET_NAME    "mchits"
+
 hid_t
 h5fnal_create_mc_hit_type(void)
 {

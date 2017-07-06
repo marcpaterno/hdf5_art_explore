@@ -4,7 +4,7 @@ GROUP "/" {
       GROUP "testsubrun" {
          GROUP "testevent" {
             GROUP "vomchc" {
-               DATASET "data" {
+               DATASET "mchits" {
                   DATATYPE  H5T_COMPOUND {
                      H5T_IEEE_F32LE "fSignalTime";
                      H5T_IEEE_F32LE "fSignalWidth";
