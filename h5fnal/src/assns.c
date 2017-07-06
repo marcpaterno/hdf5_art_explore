@@ -3,7 +3,7 @@
 #include "h5fnal.h"
 
 #define H5FNAL_ASSNS_DATA_DATASET_NAME          "data"
-#define H5FNAL_ASSNS_ASSOCIATIONS_DATASET_NAME  "associations"
+#define H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME  "associations"
 
 hid_t
 h5fnal_create_association_type(void)
@@ -76,7 +76,7 @@ h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
         H5FNAL_PROGRAM_ERROR("could not create association datatype")
 
     /* Create dataset */
-    if((assns->association_dataset_id = H5Dcreate2(assns->top_level_group_id, H5FNAL_ASSNS_ASSOCIATIONS_DATASET_NAME,
+    if((assns->association_dataset_id = H5Dcreate2(assns->top_level_group_id, H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME,
             assns->association_datatype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
 
@@ -114,7 +114,31 @@ h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
     if(NULL == assns)
         H5FNAL_PROGRAM_ERROR("assns parameter cannot be NULL")
 
+    /* Create datatype */
+    if((assns->association_datatype_id = h5fnal_create_association_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create association datatype")
+
+    /* Open top-level group */
+    if((assns->top_level_group_id = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR
+
+    /* Open dataset */
+    if((assns->association_dataset_id = H5Dopen2(assns->top_level_group_id, H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR
+
+    return H5FNAL_SUCCESS;
+
 error:
+    H5E_BEGIN_TRY {
+        if(assns) {
+            H5Gclose(assns->top_level_group_id);
+            H5Dclose(assns->association_dataset_id);
+            H5Tclose(assns->association_datatype_id);
+            H5Dclose(assns->data_dataset_id);
+            H5Tclose(assns->data_datatype_id);
+        }
+    } H5E_END_TRY;
+
     return H5FNAL_FAILURE;
 } /* h5fnal_open_assns */
 
