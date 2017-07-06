@@ -2,4 +2,5 @@
 /testrun                 Group
 /testrun/testsubrun      Group
 /testrun/testsubrun/testevent Group
-/testrun/testsubrun/testevent/vomchc Dataset {32768/Inf}
+/testrun/testsubrun/testevent/vomchc Group
+/testrun/testsubrun/testevent/vomchc/data Dataset {32768/Inf}

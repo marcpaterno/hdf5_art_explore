@@ -7,10 +7,12 @@
 # executables
 test_v_mc_hit_collection
 test_v_mc_truth
+test_assns
 
 # generated files
 v_mc_hc.h5
 v_mc_truth.h5
+assns.h5
 
 # output files
 *.out

@@ -67,8 +67,16 @@ h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hi
     hsize_t init_dims[1];
     hsize_t max_dims[1];
 
+    if(loc_id < 0)
+        H5FNAL_PROGRAM_ERROR("invalid loc_id parameter")
+    if(NULL == name)
+        H5FNAL_PROGRAM_ERROR("name parameter cannot be NULL")
     if(NULL == vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
+
+    /* Create top-level group */
+    if((vector->top_level_group_id = H5Gcreate2(loc_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR
 
     /* Set up chunking (size is arbitrary for now) */
     chunk_dims[0] = 128;
@@ -90,7 +98,7 @@ h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hi
         H5FNAL_PROGRAM_ERROR("could not create datatype")
 
     /* Create dataset */
-    if((vector->dataset_id = H5Dcreate2(loc_id, name, vector->datatype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
+    if((vector->dataset_id = H5Dcreate2(vector->top_level_group_id, H5FNAL_MCHC_DATASET_NAME, vector->datatype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
 
     /* close everything */
@@ -104,6 +112,7 @@ h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hi
 error:
     if(vector) {
         H5E_BEGIN_TRY {
+            H5Gclose(vector->top_level_group_id);
             H5Sclose(sid);
             H5Pclose(dcpl_id);
             H5Dclose(vector->dataset_id);
@@ -117,6 +126,10 @@ error:
 herr_t
 h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hit_coll_t *vector)
 {
+    if(loc_id < 0)
+        H5FNAL_PROGRAM_ERROR("invalid loc_id parameter")
+    if(NULL == name)
+        H5FNAL_PROGRAM_ERROR("name parameter cannot be NULL")
     if(NULL == vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
 
@@ -124,8 +137,12 @@ h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hit_
     if((vector->datatype_id = h5fnal_create_mc_hit_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create datatype")
 
+    /* Open top-level group */
+    if((vector->top_level_group_id = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR
+
     /* Open dataset */
-    if((vector->dataset_id = H5Dopen2(loc_id, name, H5P_DEFAULT)) < 0)
+    if((vector->dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MCHC_DATASET_NAME, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
 
     return H5FNAL_SUCCESS;
@@ -135,6 +152,7 @@ error:
         H5E_BEGIN_TRY {
             H5Dclose(vector->dataset_id);
             H5Tclose(vector->datatype_id);
+            H5Gclose(vector->top_level_group_id);
         } H5E_END_TRY;
     }
 
@@ -151,9 +169,12 @@ h5fnal_close_v_mc_hit_collection(h5fnal_v_mc_hit_coll_t *vector)
         H5FNAL_HDF5_ERROR
     if(H5Tclose(vector->datatype_id) < 0)
         H5FNAL_HDF5_ERROR
+    if(H5Gclose(vector->top_level_group_id) < 0)
+        H5FNAL_HDF5_ERROR
 
     vector->dataset_id = H5FNAL_BAD_HID_T;
     vector->datatype_id = H5FNAL_BAD_HID_T;
+    vector->top_level_group_id = H5FNAL_BAD_HID_T;
 
     return H5FNAL_SUCCESS;
 
@@ -162,6 +183,7 @@ error:
         H5E_BEGIN_TRY {
             H5Dclose(vector->dataset_id);
             H5Tclose(vector->datatype_id);
+            H5Gclose(vector->top_level_group_id);
         } H5E_END_TRY;
     }
 

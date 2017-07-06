@@ -37,7 +37,7 @@ herr_t
 h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
 {
     if(loc_id < 0)
-        H5FNAL_PROGRAM_ERROR("loc_id parameter cannot be negative")
+        H5FNAL_PROGRAM_ERROR("invalid loc_id parameter")
     if(NULL == name)
         H5FNAL_PROGRAM_ERROR("name parameter cannot be NULL")
     if(NULL == assns)
@@ -51,7 +51,7 @@ herr_t
 h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
 {
     if(loc_id < 0)
-        H5FNAL_PROGRAM_ERROR("loc_id parameter cannot be negative")
+        H5FNAL_PROGRAM_ERROR("invalid loc_id parameter")
     if(NULL == name)
         H5FNAL_PROGRAM_ERROR("name parameter cannot be NULL")
     if(NULL == assns)

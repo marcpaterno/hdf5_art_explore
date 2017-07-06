@@ -7,7 +7,7 @@
 
 #include "h5fnal.h"
 
-#define FILE_NAME   "v_mc_hc.h5"
+#define FILE_NAME   "assns.h5"
 #define RUN_NAME    "testrun"
 #define SUBRUN_NAME "testsubrun"
 #define EVENT_NAME  "testevent"

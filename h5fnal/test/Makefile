@@ -25,8 +25,8 @@ check: test_v_mc_hit_collection test_v_mc_truth test_assns
 
 clean:
 	@rm -rf *.o
-	@rm -rf *.h5
 	@rm -rf *.out
+	@rm -rf v_mc_hc.h5
 	@rm -rf test_v_mc_hit_collection
 	@rm -rf test_v_mc_truth
 	@rm -rf test_assns
