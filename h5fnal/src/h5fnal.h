@@ -25,7 +25,7 @@
 #define H5FNAL_FAILURE      (-1)
 
 /* An invalid HDF5 ID */
-#define H5FNAL_BAD_HID_T    (-1)
+#define H5FNAL_BAD_HID_T    H5I_INVALID_HID
 
 /* Product ID - Uniquely identifies data products */
 typedef struct h5fnal_product_id_t {
@@ -36,7 +36,7 @@ typedef struct h5fnal_product_id_t {
 /* Data type headers */
 #include "v_mc_hit_collection.h"
 #include "v_mc_truth.h"
-#include "association.h"
+#include "assns.h"
 
 /* h5fnal API */
 
