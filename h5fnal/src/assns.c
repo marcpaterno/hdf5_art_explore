@@ -26,6 +26,7 @@ h5fnal_create_association_type(void)
         H5FNAL_HDF5_ERROR
     if(H5Tinsert(tid, "right_key", HOFFSET(h5fnal_association_t, right_key), H5T_STD_U64LE) < 0)
         H5FNAL_HDF5_ERROR
+
     return tid;
 
 error:
@@ -75,10 +76,17 @@ h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
     if((assns->association_datatype_id = h5fnal_create_association_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create association datatype")
 
-    /* Create dataset */
+    /* Create the association dataset
+     * The association data dataset is optional and is created as
+     * needed.
+     */
     if((assns->association_dataset_id = H5Dcreate2(assns->top_level_group_id, H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME,
             assns->association_datatype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
+
+    /* The assns data dataset is optional and created lazily */
+    assns->data_dataset_id = H5FNAL_BAD_HID_T;
+    assns->data_datatype_id = H5FNAL_BAD_HID_T;
 
     /* close everything */
     if(H5Pclose(dcpl_id) < 0)
@@ -99,6 +107,12 @@ h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
             H5Tclose(assns->data_datatype_id);
         }
     } H5E_END_TRY;
+
+    assns->top_level_group_id = H5FNAL_BAD_HID_T;
+    assns->association_dataset_id = H5FNAL_BAD_HID_T;
+    assns->association_datatype_id = H5FNAL_BAD_HID_T;
+    assns->data_dataset_id = H5FNAL_BAD_HID_T;
+    assns->data_datatype_id = H5FNAL_BAD_HID_T;
 
 error:
     return H5FNAL_FAILURE;
@@ -122,9 +136,13 @@ h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
     if((assns->top_level_group_id = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
 
-    /* Open dataset */
+    /* Open association dataset */
     if((assns->association_dataset_id = H5Dopen2(assns->top_level_group_id, H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
+
+    /* This is not implemented yet */
+    assns->data_dataset_id = H5FNAL_BAD_HID_T;
+    assns->data_datatype_id = H5FNAL_BAD_HID_T;
 
     return H5FNAL_SUCCESS;
 
@@ -138,6 +156,12 @@ error:
             H5Tclose(assns->data_datatype_id);
         }
     } H5E_END_TRY;
+
+    assns->top_level_group_id = H5FNAL_BAD_HID_T;
+    assns->association_dataset_id = H5FNAL_BAD_HID_T;
+    assns->association_datatype_id = H5FNAL_BAD_HID_T;
+    assns->data_dataset_id = H5FNAL_BAD_HID_T;
+    assns->data_datatype_id = H5FNAL_BAD_HID_T;
 
     return H5FNAL_FAILURE;
 } /* h5fnal_open_assns */

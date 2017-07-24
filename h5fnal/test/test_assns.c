@@ -11,6 +11,7 @@
 #define RUN_NAME    "testrun"
 #define SUBRUN_NAME "testsubrun"
 #define EVENT_NAME  "testevent"
+#define ASSNS_NAME  "assns"
 
 int
 main(void)
@@ -20,6 +21,7 @@ main(void)
     hid_t   run_id = -1;
     hid_t   subrun_id = -1;
     hid_t   event_id = -1;
+    h5fnal_assns_t *assns = NULL;
 
     printf("Testing Assns operations... ");
 
@@ -39,7 +41,25 @@ main(void)
     if((event_id = h5fnal_create_event(subrun_id, EVENT_NAME)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create event")
 
-    /* Close everything */
+    /* Create the assns data product */
+    if(NULL == (assns = calloc(1, sizeof(h5fnal_assns_t))))
+        H5FNAL_PROGRAM_ERROR("could not get memory for assns")
+    if(h5fnal_create_assns(event_id, ASSNS_NAME, assns) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create assns data product")
+
+    /* Close the assns data product */
+    if(h5fnal_close_assns(assns) < 0)
+        H5FNAL_PROGRAM_ERROR("could not close assns")
+
+    /* Re-open the assns data product */
+    if(h5fnal_open_assns(event_id, ASSNS_NAME, assns) < 0)
+        H5FNAL_PROGRAM_ERROR("could not open assns data product")
+
+    /* Close the assns data product */
+    if(h5fnal_close_assns(assns) < 0)
+        H5FNAL_PROGRAM_ERROR("could not close assns")
+
+    /* Close boilerplate */
     if(h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
     if(h5fnal_close_run(subrun_id) < 0)
