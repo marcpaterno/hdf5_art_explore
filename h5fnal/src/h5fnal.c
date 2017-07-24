@@ -18,14 +18,14 @@ h5fnal_create_run(hid_t loc_id, const char *name)
      * allow more efficient and straightforward iteration with H5Literate()
      * later and we can't set this up in the root group.
      */
-    if((gcpl_id = H5Pcreate(H5P_GROUP_CREATE)) , 0)
+    if ((gcpl_id = H5Pcreate(H5P_GROUP_CREATE)) , 0)
         H5FNAL_HDF5_ERROR
-    if(H5Pset_link_creation_order(gcpl_id, H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED) < 0)
+    if (H5Pset_link_creation_order(gcpl_id, H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED) < 0)
         H5FNAL_HDF5_ERROR
-    if((gid = H5Gcreate2(loc_id, name, H5P_DEFAULT, gcpl_id, H5P_DEFAULT)) < 0)
+    if ((gid = H5Gcreate2(loc_id, name, H5P_DEFAULT, gcpl_id, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
 
-    if(H5Pclose(gcpl_id) < 0)
+    if (H5Pclose(gcpl_id) < 0)
         H5FNAL_HDF5_ERROR
 
     return gid;
@@ -47,7 +47,7 @@ h5fnal_open_run(hid_t loc_id, const char *name)
 {
     hid_t gid = -1;         /* group ID                                     */
 
-    if((gid = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
+    if ((gid = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
 
     return gid;
@@ -63,7 +63,7 @@ error:
 herr_t
 h5fnal_close_run(hid_t loc_id)
 {
-    if(H5Gclose(loc_id) < 0)
+    if (H5Gclose(loc_id) < 0)
         H5FNAL_HDF5_ERROR
 
     return H5FNAL_SUCCESS;
@@ -84,14 +84,14 @@ h5fnal_create_event(hid_t loc_id, const char *name)
      * allow more efficient and straightforward iteration with H5Literate()
      * later and we can't set this up in the root group.
      */
-    if((gcpl_id = H5Pcreate(H5P_GROUP_CREATE)) , 0)
+    if ((gcpl_id = H5Pcreate(H5P_GROUP_CREATE)) , 0)
         H5FNAL_HDF5_ERROR
-    if(H5Pset_link_creation_order(gcpl_id, H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED) < 0)
+    if (H5Pset_link_creation_order(gcpl_id, H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED) < 0)
         H5FNAL_HDF5_ERROR
-    if((gid = H5Gcreate2(loc_id, name, H5P_DEFAULT, gcpl_id, H5P_DEFAULT)) < 0)
+    if ((gid = H5Gcreate2(loc_id, name, H5P_DEFAULT, gcpl_id, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
 
-    if(H5Pclose(gcpl_id) < 0)
+    if (H5Pclose(gcpl_id) < 0)
         H5FNAL_HDF5_ERROR
 
     return gid;
@@ -110,7 +110,7 @@ h5fnal_open_event(hid_t loc_id, const char *name)
 {
     hid_t gid = -1;         /* group ID                                     */
 
-    if((gid = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
+    if ((gid = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR
 
     return gid;
@@ -126,7 +126,7 @@ error:
 herr_t
 h5fnal_close_event(hid_t loc_id)
 {
-    if(H5Gclose(loc_id) < 0)
+    if (H5Gclose(loc_id) < 0)
         H5FNAL_HDF5_ERROR
 
     return H5FNAL_SUCCESS;

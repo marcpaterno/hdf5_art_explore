@@ -25,42 +25,42 @@ main(void)
     printf("Testing vector of MC Truth operations... ");
 
     /* Create the file */
-    if((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)
+    if ((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)
         H5FNAL_HDF5_ERROR
-    if(H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST) < 0)
+    if (H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST) < 0)
         H5FNAL_HDF5_ERROR
-    if((fid = H5Fcreate(FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id)) < 0)
+    if ((fid = H5Fcreate(FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id)) < 0)
         H5FNAL_HDF5_ERROR
 
     /* Create the run, sub-run, and event */
-    if((run_id = h5fnal_create_run(fid, RUN_NAME)) < 0)
+    if ((run_id = h5fnal_create_run(fid, RUN_NAME)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create run")
-    if((subrun_id = h5fnal_create_run(run_id, SUBRUN_NAME)) < 0)
+    if ((subrun_id = h5fnal_create_run(run_id, SUBRUN_NAME)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create sub-run")
-    if((event_id = h5fnal_create_event(subrun_id, EVENT_NAME)) < 0)
+    if ((event_id = h5fnal_create_event(subrun_id, EVENT_NAME)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create event")
 
     /* Create the vector of MC truth data product */
-    if(NULL == (vector = calloc(1, sizeof(h5fnal_v_mc_truth_t))))
+    if (NULL == (vector = calloc(1, sizeof(h5fnal_v_mc_truth_t))))
         H5FNAL_PROGRAM_ERROR("could not get memory for vector")
-    if(h5fnal_create_v_mc_truth(event_id, VECTOR_NAME, vector) < 0)
+    if (h5fnal_create_v_mc_truth(event_id, VECTOR_NAME, vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not create vector of mc truth")
 
     /* Close the vector */
-    if(h5fnal_close_v_mc_truth(vector) < 0)
+    if (h5fnal_close_v_mc_truth(vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not close vector")
 
     /* Close everything else */
     free(vector);
-    if(h5fnal_close_run(run_id) < 0)
+    if (h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
-    if(h5fnal_close_run(subrun_id) < 0)
+    if (h5fnal_close_run(subrun_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
-    if(h5fnal_close_event(event_id) < 0)
+    if (h5fnal_close_event(event_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
-    if(H5Pclose(fapl_id) < 0)
+    if (H5Pclose(fapl_id) < 0)
         H5FNAL_HDF5_ERROR
-    if(H5Fclose(fid) < 0)
+    if (H5Fclose(fid) < 0)
         H5FNAL_HDF5_ERROR
 
     printf("SUCCESS!\n");
@@ -69,7 +69,7 @@ main(void)
 
 error:
     H5E_BEGIN_TRY {
-        if(vector) {
+        if (vector) {
             h5fnal_close_v_mc_truth(vector);
             free(vector);
         }
