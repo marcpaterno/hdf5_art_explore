@@ -157,9 +157,9 @@ main(void)
     exit(EXIT_SUCCESS);
 
 error:
+    free(hits);
+    free(hits_out);
     H5E_BEGIN_TRY {
-        free(hits);
-        free(hits_out);
         if(vector) {
             h5fnal_close_v_mc_hit_collection(vector);
             free(vector);

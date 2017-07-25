@@ -52,6 +52,11 @@ main(void)
     hid_t   subrun_id = -1;
     hid_t   event_id = -1;
     h5fnal_assns_t *assns = NULL;
+    size_t n_associations;
+    h5fnal_association_t *associations = NULL;
+    h5fnal_association_t *associations_out = NULL;
+    hssize_t n_associations_out = 0;
+    size_t u;
 
     printf("Testing Assns operations... ");
 
@@ -77,6 +82,11 @@ main(void)
     if (h5fnal_create_assns(event_id, ASSNS_NAME, assns) < 0)
         H5FNAL_PROGRAM_ERROR("could not create assns data product")
 
+    /* Generate some fake data */
+    n_associations = 16384;
+    if (NULL == (associations = generate_fake_associations(n_associations)))
+        H5FNAL_PROGRAM_ERROR("unable to create fake associations")
+
     /* Close the assns data product */
     if (h5fnal_close_assns(assns) < 0)
         H5FNAL_PROGRAM_ERROR("could not close assns")
@@ -90,6 +100,9 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not close assns")
 
     /* Close boilerplate */
+    free(associations);
+    free(associations_out);
+    free(assns);
     if (h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
     if (h5fnal_close_run(subrun_id) < 0)
@@ -106,7 +119,13 @@ main(void)
     exit(EXIT_SUCCESS);
 
 error:
+    free(associations);
+    free(associations_out);
     H5E_BEGIN_TRY {
+        if(assns) {
+            h5fnal_close_assns(assns);
+            free(assns);
+        }
         h5fnal_close_run(run_id);
         h5fnal_close_run(subrun_id);
         h5fnal_close_event(event_id);
