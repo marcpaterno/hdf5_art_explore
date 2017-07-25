@@ -217,3 +217,111 @@ error:
 
 } /* h5fnal_close_assns */
 
+herr_t
+h5fnal_write_assns(h5fnal_assns_t *assns, size_t n_assns, h5fnal_association_t *associations)
+{
+    hid_t file_sid = -1;                /* dataspace ID                             */
+    hid_t memory_sid = -1;              /* dataspace ID                             */
+    hsize_t curr_dims[1];               /* initial size of dataset                  */
+    hsize_t new_dims[1];                /* new size of data dataset             */
+    hsize_t start[1];
+    hsize_t stride[1];
+    hsize_t count[1];
+    hsize_t block[1];
+
+    /* Create the memory dataspace (set of points describing the data size, etc.) */
+    curr_dims[0] = n_assns;
+    if ((memory_sid = H5Screate_simple(1, curr_dims, curr_dims)) < 0)
+        H5FNAL_HDF5_ERROR
+
+    /* Get the size (current size only) of the dataset */
+    if ((file_sid = H5Dget_space(assns->association_dataset_id)) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Sget_simple_extent_dims(file_sid, curr_dims, NULL) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Sclose(file_sid) < 0)
+        H5FNAL_HDF5_ERROR
+
+    /* Resize the dataset to hold the new data */
+    new_dims[0] = curr_dims[0] + n_assns;
+    if (H5Dset_extent(assns->association_dataset_id, new_dims) < 0)
+        H5FNAL_HDF5_ERROR
+
+    /* Get the resized file space */
+    if ((file_sid = H5Dget_space(assns->association_dataset_id)) < 0)
+        H5FNAL_HDF5_ERROR
+
+    /* Create a hyperslab describing where the data should go */
+    start[0] = curr_dims[0];
+    stride[0] = 1;
+    count[0] = n_assns;
+    block[0] = 1;
+    if (H5Sselect_hyperslab(file_sid, H5S_SELECT_SET, start, stride, count, block) < 0)
+        H5FNAL_HDF5_ERROR
+
+    /* Write the assns to the dataset */
+    if (H5Dwrite(assns->association_dataset_id, assns->association_datatype_id, memory_sid, file_sid, H5P_DEFAULT, associations) < 0)
+        H5FNAL_HDF5_ERROR
+
+    /* Close everything */
+    if (H5Sclose(file_sid) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Sclose(memory_sid) < 0)
+        H5FNAL_HDF5_ERROR
+
+    return H5FNAL_SUCCESS;
+
+error:
+    H5E_BEGIN_TRY {
+        H5Sclose(file_sid);
+        H5Sclose(memory_sid);
+    } H5E_END_TRY;
+
+    return H5FNAL_FAILURE;
+} /* end h5fnal_write_assns() */
+
+
+hssize_t
+h5fnal_get_assns_count(h5fnal_assns_t *assns)
+{
+    hid_t sid = H5FNAL_BAD_HID_T;
+    hssize_t n_assns = -1;
+
+    /* Note that we consider the size of the association dataset
+     * as the 'number of assns' since it's non-optional.
+     */
+    if ((sid = H5Dget_space(assns->association_dataset_id)) < 0)
+        H5FNAL_HDF5_ERROR
+    if ((n_assns = H5Sget_simple_extent_npoints(sid)) < 0)
+        H5FNAL_HDF5_ERROR
+
+    if (H5Sclose(sid) < 0)
+        H5FNAL_HDF5_ERROR
+
+    return n_assns;
+
+error:
+    H5E_BEGIN_TRY {
+        H5Sclose(sid);
+    } H5E_END_TRY;
+
+    return -1;
+} /* end h5fnal_get_assns_count() */
+
+
+herr_t
+h5fnal_read_all_assns(h5fnal_assns_t *assns, h5fnal_association_t *associations)
+{
+    if (!assns)
+        H5FNAL_PROGRAM_ERROR("assns parameter cannot be NULL")
+
+    if (H5Dread(assns->association_dataset_id, assns->association_datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, associations) < 0)
+        H5FNAL_HDF5_ERROR
+
+    return H5FNAL_SUCCESS;
+
+error:
+    return H5FNAL_FAILURE;
+
+} /* end h5fnal_read_all_assns() */
+

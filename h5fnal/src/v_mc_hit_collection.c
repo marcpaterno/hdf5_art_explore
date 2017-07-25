@@ -196,10 +196,10 @@ error:
 herr_t
 h5fnal_write_hits(h5fnal_v_mc_hit_coll_t *vector, size_t n_hits, h5fnal_mc_hit_t *hits)
 {
-    hid_t file_sid = -1;             /* dataspace ID                             */
-    hid_t memory_sid = -1;             /* dataspace ID                             */
-    hsize_t curr_dims[1];   /* initial size of dataset                  */
-    hsize_t new_dims[1];   /* new size of data dataset             */
+    hid_t file_sid = -1;                /* dataspace ID                             */
+    hid_t memory_sid = -1;              /* dataspace ID                             */
+    hsize_t curr_dims[1];               /* initial size of dataset                  */
+    hsize_t new_dims[1];                /* new size of data dataset                 */
     hsize_t start[1];
     hsize_t stride[1];
     hsize_t count[1];
