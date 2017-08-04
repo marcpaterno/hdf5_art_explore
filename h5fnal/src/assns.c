@@ -273,10 +273,13 @@ h5fnal_append_assns(h5fnal_assns_t *assns, size_t n_assns, h5fnal_association_t 
     if (H5Sclose(file_sid) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* Resize the dataset to hold the new data */
+    /* Resize the datasets to hold the new data */
     new_dims[0] = curr_dims[0] + n_assns;
     if (H5Dset_extent(assns->association_dataset_id, new_dims) < 0)
         H5FNAL_HDF5_ERROR;
+    if (assns->data_dataset_id >= 0)
+        if (H5Dset_extent(assns->data_dataset_id, new_dims) < 0)
+            H5FNAL_HDF5_ERROR;
 
     /* Get the resized file space */
     if ((file_sid = H5Dget_space(assns->association_dataset_id)) < 0)
@@ -290,9 +293,14 @@ h5fnal_append_assns(h5fnal_assns_t *assns, size_t n_assns, h5fnal_association_t 
     if (H5Sselect_hyperslab(file_sid, H5S_SELECT_SET, start, stride, count, block) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* Write the assns to the dataset */
+    /* Write the associations to the dataset */
     if (H5Dwrite(assns->association_dataset_id, assns->association_datatype_id, memory_sid, file_sid, H5P_DEFAULT, associations) < 0)
         H5FNAL_HDF5_ERROR;
+
+    /* Write the data to the dataset, if necessary */
+    if (assns->data_dataset_id >= 0)
+        if (H5Dwrite(assns->data_dataset_id, assns->data_datatype_id, memory_sid, file_sid, H5P_DEFAULT, data) < 0)
+            H5FNAL_HDF5_ERROR;
 
     /* Close everything */
     if (H5Sclose(file_sid) < 0)

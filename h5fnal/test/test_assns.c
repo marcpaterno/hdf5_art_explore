@@ -197,9 +197,9 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
 
     /* Write some assns with 'extra' data */
-    if (h5fnal_append_assns(assns_data, n_assns, associations, data) < 0)
+    if (h5fnal_append_assns(assns_data, n_assns, associations, (void *)data) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
-    if (h5fnal_append_assns(assns_data, n_assns, associations, data) < 0)
+    if (h5fnal_append_assns(assns_data, n_assns, associations, (void *)data) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
 
     /******************************************/
@@ -233,7 +233,7 @@ main(void)
         H5FNAL_PROGRAM_ERROR("association read buffer incorrect (2)");
 
     /* Read the assns that use 'extra' data */
-    if (h5fnal_read_all_assns(assns, associations_out, data_out) < 0)
+    if (h5fnal_read_all_assns(assns, associations_out, (void *)data_out) < 0)
         H5FNAL_PROGRAM_ERROR("could not read assns from the file");
 
     /* Compare the associations */
@@ -284,7 +284,7 @@ main(void)
     memset(data_out, 0, n_assns_out * sizeof(int64_t));
 
     /* Re-read the assns with 'extra' data */
-    if (h5fnal_read_all_assns(assns, associations_out, data_out) < 0)
+    if (h5fnal_read_all_assns(assns, associations_out, (void *)data_out) < 0)
         H5FNAL_PROGRAM_ERROR("could not read assns from the file");
 
     /* Compare the associations */
