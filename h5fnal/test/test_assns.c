@@ -95,9 +95,22 @@ main(void)
 
     /* Get the number of assns */
     if ((n_assns_out = h5fnal_get_assns_count(assns)) < 0)
-        H5FNAL_PROGRAM_ERROR("could not get number of hits from dataset")
+        H5FNAL_PROGRAM_ERROR("could not get number of assns from dataset")
     if (n_assns_out != 2 * n_assns)
         H5FNAL_PROGRAM_ERROR("got wrong number of assns from data product")
+
+    /* Generate a buffer for reading the assns */
+    if (NULL == (associations_out = (h5fnal_association_t *)calloc(n_assns_out, sizeof(h5fnal_association_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory for associations_out")
+
+    /* Read the assns */
+    if (h5fnal_read_all_assns(assns, associations_out) < 0)
+        H5FNAL_PROGRAM_ERROR("could not read assns from the file")
+
+    /* Compare the written and read data */
+    for (u = 0; u < n_assns; u++)
+        if (associations[u].left_key != associations_out[u + n_assns].left_key)
+            H5FNAL_PROGRAM_ERROR("bad read data")
 
     /* Close the assns data product */
     if (h5fnal_close_assns(assns) < 0)
@@ -106,6 +119,16 @@ main(void)
     /* Re-open the assns data product */
     if (h5fnal_open_assns(event_id, ASSNS_NAME, assns) < 0)
         H5FNAL_PROGRAM_ERROR("could not open assns data product")
+
+    /* Re-read the assns */
+    memset(associations_out, 0, n_assns_out * sizeof(h5fnal_association_t));
+    if (h5fnal_read_all_assns(assns, associations_out) < 0)
+        H5FNAL_PROGRAM_ERROR("could not read assns from the file")
+
+    /* Compare the written and read data */
+    for (u = 0; u < n_assns; u++)
+        if (associations[u].left_key != associations_out[u + n_assns].left_key)
+            H5FNAL_PROGRAM_ERROR("bad read data")
 
     /* Close the assns data product */
     if (h5fnal_close_assns(assns) < 0)
