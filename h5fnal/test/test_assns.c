@@ -188,24 +188,24 @@ main(void)
         H5FNAL_PROGRAM_ERROR("unable to create fake associations");
 
     /*******************************/
-    /* TEST DATA PRODUCT I/O CALLS */
+    /* WRITE ASSOCIATIONS AND DATA */
     /*******************************/
 
-    /* WRITE */
-
     /* Write some assns */
-    if (h5fnal_append_assns(assns, n_assns, associations) < 0)
+    if (h5fnal_append_assns(assns, n_assns, associations, NULL) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
-    if (h5fnal_append_assns(assns, n_assns, associations) < 0)
+    if (h5fnal_append_assns(assns, n_assns, associations, NULL) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
 
     /* Write some assns with 'extra' data */
-    if (h5fnal_append_assns(assns_data, n_assns, associations) < 0)
+    if (h5fnal_append_assns(assns_data, n_assns, associations, data) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
-    if (h5fnal_append_assns(assns_data, n_assns, associations) < 0)
+    if (h5fnal_append_assns(assns_data, n_assns, associations, data) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
 
-    /* READ */
+    /******************************************/
+    /* READ AND COMPARE ASSOCIATIONS AND DATA */
+    /******************************************/
 
     /* Get the number of assns */
     if ((n_assns_out = h5fnal_get_assns_count(assns)) < 0)
@@ -213,33 +213,37 @@ main(void)
     if (n_assns_out != 2 * n_assns)
         H5FNAL_PROGRAM_ERROR("got wrong number of assns from data product");
 
-    /* Generate a buffer for reading the associations */
+    /* Generate a buffers for reading the associations and data */
     if (NULL == (associations_out = (h5fnal_association_t *)calloc(n_assns_out, sizeof(h5fnal_association_t))))
         H5FNAL_PROGRAM_ERROR("couldn't allocate memory for associations_out");
-
-    /* Generate a buffer for reading the 'extra' data */
     if (NULL == (data_out = (int64_t *)calloc(n_assns_out, sizeof(int64_t))))
         H5FNAL_PROGRAM_ERROR("couldn't allocate memory for data_out");
 
+    /* Calculate sizes for memory compare */
+    associations_size = n_assns * sizeof(h5fnal_association_t);
+    data_size = n_assns * sizeof(int64_t);
+
     /* Read the assns */
-    if (h5fnal_read_all_assns(assns, associations_out) < 0)
+    if (h5fnal_read_all_assns(assns, associations_out, NULL) < 0)
         H5FNAL_PROGRAM_ERROR("could not read assns from the file");
 
-    /**********************************/
-    /* COMPARE ORIGINAL AND READ DATA */
-    /**********************************/
-
-    /* associations */
-    associations_size = n_assns * sizeof(h5fnal_association_t);
-
+    /* Compare the associations */
     if (0 != memcmp(associations, associations_out, associations_size))
         H5FNAL_PROGRAM_ERROR("association read buffer incorrect (1)");
     if (0 != memcmp(associations, associations_out + n_assns, associations_size))
         H5FNAL_PROGRAM_ERROR("association read buffer incorrect (2)");
 
-    /* 'extra' data */
-    data_size = n_assns * sizeof(int64_t);
+    /* Read the assns that use 'extra' data */
+    if (h5fnal_read_all_assns(assns, associations_out, data_out) < 0)
+        H5FNAL_PROGRAM_ERROR("could not read assns from the file");
 
+    /* Compare the associations */
+    if (0 != memcmp(associations, associations_out, associations_size))
+        H5FNAL_PROGRAM_ERROR("association read buffer incorrect (1)");
+    if (0 != memcmp(associations, associations_out + n_assns, associations_size))
+        H5FNAL_PROGRAM_ERROR("association read buffer incorrect (2)");
+
+    /* Compare the 'extra' data */
 //    if (0 != memcmp(data, data_out, data_size))
 //        H5FNAL_PROGRAM_ERROR("data read buffer incorrect (1)");
 //    if (0 != memcmp(data, data_out + n_assns, data_size))
@@ -266,10 +270,22 @@ main(void)
     /*******************************/
 
     memset(associations_out, 0, n_assns_out * sizeof(h5fnal_association_t));
-    memset(data_out, 0, n_assns_out * sizeof(int64_t));
 
     /* Re-read the assns */
-    if (h5fnal_read_all_assns(assns, associations_out) < 0)
+    if (h5fnal_read_all_assns(assns, associations_out, NULL) < 0)
+        H5FNAL_PROGRAM_ERROR("could not read assns from the file");
+
+    /* Compare the associations */
+    if (0 != memcmp(associations, associations_out, associations_size))
+        H5FNAL_PROGRAM_ERROR("association (re-)read buffer incorrect (1)");
+    if (0 != memcmp(associations, associations_out + n_assns, associations_size))
+        H5FNAL_PROGRAM_ERROR("association (re-)read buffer incorrect (2)");
+
+    memset(associations_out, 0, n_assns_out * sizeof(h5fnal_association_t));
+    memset(data_out, 0, n_assns_out * sizeof(int64_t));
+
+    /* Re-read the assns with 'extra' data */
+    if (h5fnal_read_all_assns(assns, associations_out, data_out) < 0)
         H5FNAL_PROGRAM_ERROR("could not read assns from the file");
 
     /* Compare the associations */
