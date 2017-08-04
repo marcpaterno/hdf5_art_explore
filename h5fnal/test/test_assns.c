@@ -114,22 +114,22 @@ main(void)
     hid_t                   run_id = -1;
     hid_t                   subrun_id = -1;
     hid_t                   event_id = -1;
+    hid_t                   data_tid = -1;
 
     /* Assns */
     h5fnal_assns_t         *assns = NULL;
     size_t                  n_assns;
+    hssize_t                n_assns_out = 0;
 
     /* associations */
     size_t                  associations_size;
     h5fnal_association_t   *associations = NULL;
     h5fnal_association_t   *associations_out = NULL;
-    hssize_t                n_assns_out = 0;
 
     /* 'extra' data */
     size_t                  data_size;
     int64_t                *data = NULL;
     int64_t                *data_out = NULL;
-    hssize_t                n_data_out = 0;
 
 
     printf("Testing Assns operations... ");
@@ -183,21 +183,29 @@ main(void)
     /* TEST DATA PRODUCT I/O CALLS */
     /*******************************/
 
+    /* WRITE */
+
     /* Write some assns */
     if (h5fnal_write_assns(assns, n_assns, associations) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
     if (h5fnal_write_assns(assns, n_assns, associations) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
 
+    /* READ */
+
     /* Get the number of assns */
     if ((n_assns_out = h5fnal_get_assns_count(assns)) < 0)
-        H5FNAL_PROGRAM_ERROR("could not get number of assns from dataset");
+        H5FNAL_PROGRAM_ERROR("could not get number of assns from data product");
     if (n_assns_out != 2 * n_assns)
         H5FNAL_PROGRAM_ERROR("got wrong number of assns from data product");
 
-    /* Generate a buffer for reading the assns */
+    /* Generate a buffer for reading the associations */
     if (NULL == (associations_out = (h5fnal_association_t *)calloc(n_assns_out, sizeof(h5fnal_association_t))))
-        H5FNAL_PROGRAM_ERROR("could allocate memory for associations_out");
+        H5FNAL_PROGRAM_ERROR("couldn't allocate memory for associations_out");
+
+    /* Generate a buffer for reading the 'extra' data */
+    if (NULL == (data_out = (int64_t *)calloc(n_assns_out, sizeof(int64_t))))
+        H5FNAL_PROGRAM_ERROR("couldn't allocate memory for data_out");
 
     /* Read the assns */
     if (h5fnal_read_all_assns(assns, associations_out) < 0)
@@ -215,6 +223,14 @@ main(void)
     if (0 != memcmp(associations, associations_out + n_assns, associations_size))
         H5FNAL_PROGRAM_ERROR("association read buffer incorrect (2)");
 
+    /* 'extra' data */
+    data_size = n_assns * sizeof(int64_t);
+
+    if (0 != memcmp(data, data_out, data_size))
+        H5FNAL_PROGRAM_ERROR("data read buffer incorrect (1)");
+    if (0 != memcmp(data, data_out + n_assns, data_size))
+        H5FNAL_PROGRAM_ERROR("data read buffer incorrect (2)");
+
     /**********************************/
     /* CLOSE AND RE-OPEN DATA PRODUCT */
     /**********************************/
@@ -231,16 +247,24 @@ main(void)
     /* RE-READ DATA AND RE-COMPARE */
     /*******************************/
 
-    /* Re-read the assns */
     memset(associations_out, 0, n_assns_out * sizeof(h5fnal_association_t));
+    memset(data_out, 0, n_assns_out * sizeof(int64_t));
+
+    /* Re-read the assns */
     if (h5fnal_read_all_assns(assns, associations_out) < 0)
         H5FNAL_PROGRAM_ERROR("could not read assns from the file");
 
-    /* Compare the written and read data */
+    /* Compare the associations */
     if (0 != memcmp(associations, associations_out, associations_size))
         H5FNAL_PROGRAM_ERROR("association (re-)read buffer incorrect (1)");
     if (0 != memcmp(associations, associations_out + n_assns, associations_size))
         H5FNAL_PROGRAM_ERROR("association (re-)read buffer incorrect (2)");
+
+    /* Compare the 'extra' data */
+    if (0 != memcmp(data, data_out, data_size))
+        H5FNAL_PROGRAM_ERROR("data (re-)read buffer incorrect (1)");
+    if (0 != memcmp(data, data_out + n_assns, data_size))
+        H5FNAL_PROGRAM_ERROR("data (re-)read buffer incorrect (2)");
 
     /********************/
     /* CLOSE EVERYTHING */
