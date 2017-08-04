@@ -13,16 +13,32 @@
 #define EVENT_NAME  "testevent"
 #define ASSNS_NAME  "assns"
 
+/************************************************************************
+ * Function:    generate_fake_associations()
+ *
+ * Purpose:     Generate associations to test Assns data product I/O.
+ *
+ *              The fields of the generated associations are just random data
+ *              and do not correspond to any real data product.
+ *
+ * Parameters:
+ *  n_associationns:    The number of associations to create.
+ *
+ * Returns:     The buffer of associations. The caller is responsible for
+ *              freeing this data using free().
+ *
+ *              NULL on failure.
+ ************************************************************************/
 h5fnal_association_t *
-generate_fake_associations(unsigned int n_associations)
+generate_fake_associations(size_t n_associations)
 {
-    unsigned int u;
+    size_t u;
     h5fnal_association_t *associations = NULL;
 
     srand((unsigned int)time(NULL));
 
     if (NULL == (associations = (h5fnal_association_t *)calloc(n_associations, sizeof(h5fnal_association_t))))
-        H5FNAL_PROGRAM_ERROR("could allocate memory for associations");
+        H5FNAL_PROGRAM_ERROR("couldn't allocate memory for fake associations");
 
     for (u = 0; u < n_associations; u++) {
         associations[u].left_process_index = (uint16_t)rand();
@@ -43,22 +59,84 @@ error:
 
 } /* end generate_fake_associations() */
 
+
+/************************************************************************
+ * Function:    generate_fake_data()
+ *
+ * Purpose:     Generate random data to test Assns data product I/O.
+ *
+ * Parameters:
+ *  n_data:     The number of data elements to create.
+ *
+ * Returns:     A buffer of data. The caller is responsible for freeing this
+ *              data with free().
+ *
+ *              NULL on failure.
+ ************************************************************************/
+int64_t *
+generate_fake_data(size_t n_data)
+{
+    size_t u;
+    int64_t *data = NULL;
+
+    srand((unsigned int)time(NULL));
+
+    if (NULL == (data = (int64_t *)calloc(n_data, sizeof(int64_t))))
+        H5FNAL_PROGRAM_ERROR("couldn't allocate memory for fake data");
+
+    for (u = 0; u < n_data; u++)
+        data[u] = (uint64_t)rand();
+
+    return data;
+
+error:
+
+    free(data);
+    return NULL;
+
+} /* end generate_fake_data() */
+
+
+/************************************************************************
+ * Function:    main()
+ *
+ * Purpose:     Tests the Assns data product API calls.
+ *
+ * Returns:     EXIT_SUCCESS / EXIT_FAILURE
+ *
+ ************************************************************************/
 int
 main(void)
 {
+    /* HDF5 IDs */
     hid_t                   fid = -1;
     hid_t                   fapl_id = -1;
     hid_t                   run_id = -1;
     hid_t                   subrun_id = -1;
     hid_t                   event_id = -1;
+
+    /* Assns */
     h5fnal_assns_t         *assns = NULL;
     size_t                  n_assns;
+
+    /* associations */
     size_t                  associations_size;
     h5fnal_association_t   *associations = NULL;
     h5fnal_association_t   *associations_out = NULL;
     hssize_t                n_assns_out = 0;
 
+    /* 'extra' data */
+    size_t                  data_size;
+    int64_t                *data = NULL;
+    int64_t                *data_out = NULL;
+    hssize_t                n_data_out = 0;
+
+
     printf("Testing Assns operations... ");
+
+    /********************/
+    /* FILE BOILERPLATE */
+    /********************/
 
     /* Create the file */
     if ((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)
@@ -76,18 +154,36 @@ main(void)
     if ((event_id = h5fnal_create_event(subrun_id, EVENT_NAME)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create event");
 
+    /***********************/
+    /* CREATE DATA PRODUCT */
+    /***********************/
+
     /* Create the assns data product */
     if (NULL == (assns = calloc(1, sizeof(h5fnal_assns_t))))
         H5FNAL_PROGRAM_ERROR("could not get memory for assns");
     if (h5fnal_create_assns(event_id, ASSNS_NAME, assns) < 0)
         H5FNAL_PROGRAM_ERROR("could not create assns data product");
 
-    /* Generate some fake data */
+    /* The number of Assns to create */
     n_assns = 16384;
+
+    /************************/
+    /* GENERATE (FAKE) DATA */
+    /************************/
+
+    /* Generate some fake associations */
     if (NULL == (associations = generate_fake_associations(n_assns)))
         H5FNAL_PROGRAM_ERROR("unable to create fake associations");
 
-    /* Write some assns to it */
+    /* Generate some fake data */
+    if (NULL == (data = generate_fake_data(n_assns)))
+        H5FNAL_PROGRAM_ERROR("unable to create fake associations");
+
+    /*******************************/
+    /* TEST DATA PRODUCT I/O CALLS */
+    /*******************************/
+
+    /* Write some assns */
     if (h5fnal_write_assns(assns, n_assns, associations) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
     if (h5fnal_write_assns(assns, n_assns, associations) < 0)
@@ -107,12 +203,21 @@ main(void)
     if (h5fnal_read_all_assns(assns, associations_out) < 0)
         H5FNAL_PROGRAM_ERROR("could not read assns from the file");
 
-    /* Compare the written and read data */
+    /**********************************/
+    /* COMPARE ORIGINAL AND READ DATA */
+    /**********************************/
+
+    /* associations */
     associations_size = n_assns * sizeof(h5fnal_association_t);
+
     if (0 != memcmp(associations, associations_out, associations_size))
         H5FNAL_PROGRAM_ERROR("association read buffer incorrect (1)");
     if (0 != memcmp(associations, associations_out + n_assns, associations_size))
         H5FNAL_PROGRAM_ERROR("association read buffer incorrect (2)");
+
+    /**********************************/
+    /* CLOSE AND RE-OPEN DATA PRODUCT */
+    /**********************************/
 
     /* Close the assns data product */
     if (h5fnal_close_assns(assns) < 0)
@@ -121,6 +226,10 @@ main(void)
     /* Re-open the assns data product */
     if (h5fnal_open_assns(event_id, ASSNS_NAME, assns) < 0)
         H5FNAL_PROGRAM_ERROR("could not open assns data product");
+
+    /*******************************/
+    /* RE-READ DATA AND RE-COMPARE */
+    /*******************************/
 
     /* Re-read the assns */
     memset(associations_out, 0, n_assns_out * sizeof(h5fnal_association_t));
@@ -133,14 +242,15 @@ main(void)
     if (0 != memcmp(associations, associations_out + n_assns, associations_size))
         H5FNAL_PROGRAM_ERROR("association (re-)read buffer incorrect (2)");
 
+    /********************/
+    /* CLOSE EVERYTHING */
+    /********************/
+
     /* Close the assns data product */
     if (h5fnal_close_assns(assns) < 0)
         H5FNAL_PROGRAM_ERROR("could not close assns");
 
     /* Close boilerplate */
-    free(associations);
-    free(associations_out);
-    free(assns);
     if (h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run");
     if (h5fnal_close_run(subrun_id) < 0)
@@ -152,18 +262,20 @@ main(void)
     if (H5Fclose(fid) < 0)
         H5FNAL_HDF5_ERROR;
 
+    free(data);
+    free(data_out);
+    free(associations);
+    free(associations_out);
+    free(assns);
+
     printf("SUCCESS!\n");
 
     exit(EXIT_SUCCESS);
 
 error:
-    free(associations);
-    free(associations_out);
     H5E_BEGIN_TRY {
-        if(assns) {
+        if(assns)
             h5fnal_close_assns(assns);
-            free(assns);
-        }
         h5fnal_close_run(run_id);
         h5fnal_close_run(subrun_id);
         h5fnal_close_event(event_id);
@@ -171,8 +283,14 @@ error:
         H5Fclose(fid);
     } H5E_END_TRY;
 
+    free(data);
+    free(data_out);
+    free(associations);
+    free(associations_out);
+    free(assns);
+
     printf("*** FAILURE ***\n");
 
     exit(EXIT_FAILURE);
-}
+} /* end main() */
 
