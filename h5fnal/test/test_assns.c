@@ -53,10 +53,10 @@ main(void)
     hid_t   event_id = -1;
     h5fnal_assns_t *assns = NULL;
     size_t n_assns;
+    size_t associations_size;
     h5fnal_association_t *associations = NULL;
     h5fnal_association_t *associations_out = NULL;
     hssize_t n_assns_out = 0;
-    size_t u;
 
     printf("Testing Assns operations... ");
 
@@ -108,9 +108,11 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not read assns from the file")
 
     /* Compare the written and read data */
-    for (u = 0; u < n_assns; u++)
-        if (associations[u].left_key != associations_out[u + n_assns].left_key)
-            H5FNAL_PROGRAM_ERROR("bad read data")
+    associations_size = n_assns * sizeof(h5fnal_association_t);
+    if (0 != memcmp(associations, associations_out, associations_size))
+        H5FNAL_PROGRAM_ERROR("association read buffer incorrect (1)")
+    if (0 != memcmp(associations, associations_out + n_assns, associations_size))
+        H5FNAL_PROGRAM_ERROR("association read buffer incorrect (2)")
 
     /* Close the assns data product */
     if (h5fnal_close_assns(assns) < 0)
@@ -126,9 +128,10 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not read assns from the file")
 
     /* Compare the written and read data */
-    for (u = 0; u < n_assns; u++)
-        if (associations[u].left_key != associations_out[u + n_assns].left_key)
-            H5FNAL_PROGRAM_ERROR("bad read data")
+    if (0 != memcmp(associations, associations_out, associations_size))
+        H5FNAL_PROGRAM_ERROR("association (re-)read buffer incorrect (1)")
+    if (0 != memcmp(associations, associations_out + n_assns, associations_size))
+        H5FNAL_PROGRAM_ERROR("association (re-)read buffer incorrect (2)")
 
     /* Close the assns data product */
     if (h5fnal_close_assns(assns) < 0)
