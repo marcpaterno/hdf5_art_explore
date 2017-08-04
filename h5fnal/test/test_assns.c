@@ -52,10 +52,10 @@ main(void)
     hid_t   subrun_id = -1;
     hid_t   event_id = -1;
     h5fnal_assns_t *assns = NULL;
-    size_t n_associations;
+    size_t n_assns;
     h5fnal_association_t *associations = NULL;
     h5fnal_association_t *associations_out = NULL;
-    hssize_t n_associations_out = 0;
+    hssize_t n_assns_out = 0;
     size_t u;
 
     printf("Testing Assns operations... ");
@@ -83,9 +83,21 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not create assns data product")
 
     /* Generate some fake data */
-    n_associations = 16384;
-    if (NULL == (associations = generate_fake_associations(n_associations)))
+    n_assns = 16384;
+    if (NULL == (associations = generate_fake_associations(n_assns)))
         H5FNAL_PROGRAM_ERROR("unable to create fake associations")
+
+    /* Write some assns to it */
+    if (h5fnal_write_assns(assns, n_assns, associations) < 0)
+        H5FNAL_PROGRAM_ERROR("could not write assns to the file")
+    if (h5fnal_write_assns(assns, n_assns, associations) < 0)
+        H5FNAL_PROGRAM_ERROR("could not write assns to the file")
+
+    /* Get the number of assns */
+    if ((n_assns_out = h5fnal_get_assns_count(assns)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get number of hits from dataset")
+    if (n_assns_out != 2 * n_assns)
+        H5FNAL_PROGRAM_ERROR("got wrong number of assns from data product")
 
     /* Close the assns data product */
     if (h5fnal_close_assns(assns) < 0)

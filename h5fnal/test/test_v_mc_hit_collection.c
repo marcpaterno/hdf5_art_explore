@@ -24,7 +24,7 @@ generate_fake_hits(size_t n_hits)
     if (NULL == (hits = (h5fnal_mc_hit_t *)calloc(n_hits, sizeof(h5fnal_mc_hit_t))))
         H5FNAL_PROGRAM_ERROR("could allocate memory for hits")
 
-    for (i=0; i < n_hits; i++) {
+    for (i = 0; i < n_hits; i++) {
         hits[i].signal_time = (float)rand();
         hits[i].signal_width = (float)rand();
         hits[i].peak_amp = (float)rand();
