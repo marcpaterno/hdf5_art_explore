@@ -326,9 +326,7 @@ h5fnal_get_assns_count(h5fnal_assns_t *assns)
     hid_t sid = H5FNAL_BAD_HID_T;
     hssize_t n_assns = -1;
 
-    /* Note that we consider the size of the association dataset
-     * as the 'number of assns' since it's non-optional.
-     */
+    /* Get the number of elements in the associations dataset */
     if ((sid = H5Dget_space(assns->association_dataset_id)) < 0)
         H5FNAL_HDF5_ERROR;
     if ((n_assns = H5Sget_simple_extent_npoints(sid)) < 0)
@@ -356,6 +354,10 @@ h5fnal_read_all_assns(h5fnal_assns_t *assns, h5fnal_association_t *associations,
 
     if (H5Dread(assns->association_dataset_id, assns->association_datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, associations) < 0)
         H5FNAL_HDF5_ERROR;
+
+    if (assns->data_dataset_id >= 0)
+        if (H5Dread(assns->data_dataset_id, assns->data_datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
+            H5FNAL_HDF5_ERROR;
 
     return H5FNAL_SUCCESS;
 
