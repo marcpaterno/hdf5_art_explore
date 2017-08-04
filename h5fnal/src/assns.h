@@ -37,7 +37,7 @@ herr_t h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns
 herr_t h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns);
 herr_t h5fnal_close_assns(h5fnal_assns_t *assns);
 
-herr_t h5fnal_write_assns(h5fnal_assns_t *assns, size_t n_assns, h5fnal_association_t *associations);
+herr_t h5fnal_append_assns(h5fnal_assns_t *assns, size_t n_assns, h5fnal_association_t *associations);
 hssize_t h5fnal_get_assns_count(h5fnal_assns_t *assns);
 herr_t h5fnal_read_all_assns(h5fnal_assns_t *assns, h5fnal_association_t *associations);
 

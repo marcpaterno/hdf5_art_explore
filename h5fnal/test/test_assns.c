@@ -172,7 +172,7 @@ main(void)
     if (h5fnal_create_assns(event_id, ASSNS_DATA_NAME, assns_data) < 0)
         H5FNAL_PROGRAM_ERROR("could not create assns_data data product");
 
-    /* The number of Assns to create */
+    /* The number of Assns to create in each product */
     n_assns = 16384;
 
     /************************/
@@ -183,7 +183,7 @@ main(void)
     if (NULL == (associations = generate_fake_associations(n_assns)))
         H5FNAL_PROGRAM_ERROR("unable to create fake associations");
 
-    /* Generate some fake data */
+    /* Generate some fake 'extra' data */
     if (NULL == (data = generate_fake_data(n_assns)))
         H5FNAL_PROGRAM_ERROR("unable to create fake associations");
 
@@ -194,9 +194,15 @@ main(void)
     /* WRITE */
 
     /* Write some assns */
-    if (h5fnal_write_assns(assns, n_assns, associations) < 0)
+    if (h5fnal_append_assns(assns, n_assns, associations) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
-    if (h5fnal_write_assns(assns, n_assns, associations) < 0)
+    if (h5fnal_append_assns(assns, n_assns, associations) < 0)
+        H5FNAL_PROGRAM_ERROR("could not write assns to the file");
+
+    /* Write some assns with 'extra' data */
+    if (h5fnal_append_assns(assns_data, n_assns, associations) < 0)
+        H5FNAL_PROGRAM_ERROR("could not write assns to the file");
+    if (h5fnal_append_assns(assns_data, n_assns, associations) < 0)
         H5FNAL_PROGRAM_ERROR("could not write assns to the file");
 
     /* READ */

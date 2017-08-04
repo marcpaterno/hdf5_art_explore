@@ -218,7 +218,7 @@ error:
 } /* h5fnal_close_assns */
 
 herr_t
-h5fnal_write_assns(h5fnal_assns_t *assns, size_t n_assns, h5fnal_association_t *associations)
+h5fnal_append_assns(h5fnal_assns_t *assns, size_t n_assns, h5fnal_association_t *associations)
 {
     hid_t file_sid = -1;                /* dataspace ID                             */
     hid_t memory_sid = -1;              /* dataspace ID                             */
