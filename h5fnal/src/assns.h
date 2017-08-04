@@ -33,7 +33,7 @@ extern "C" {
 #endif
 hid_t h5fnal_create_association_type(void);
 
-herr_t h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns);
+herr_t h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns, hid_t data_datatype_id);
 herr_t h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns);
 herr_t h5fnal_close_assns(h5fnal_assns_t *assns);
 

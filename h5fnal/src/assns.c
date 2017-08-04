@@ -3,7 +3,7 @@
 #include "h5fnal.h"
 
 #define H5FNAL_ASSNS_DATA_DATASET_NAME          "data"
-#define H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME  "associations"
+#define H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME   "associations"
 
 hid_t
 h5fnal_create_association_type(void)
@@ -38,7 +38,7 @@ error:
 } /* h5fnal_create_association_type */
 
 herr_t
-h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
+h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns, hid_t data_datatype_id)
 {
     hid_t dcpl_id = -1;
     hid_t sid = -1;
@@ -76,17 +76,32 @@ h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
     if ((assns->association_datatype_id = h5fnal_create_association_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create association datatype");
 
-    /* Create the association dataset
-     * The association data dataset is optional and is created as
-     * needed.
-     */
+    /* Create the association dataset */
     if ((assns->association_dataset_id = H5Dcreate2(assns->top_level_group_id, H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME,
             assns->association_datatype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* The assns data dataset is optional and created lazily */
-    assns->data_dataset_id = H5FNAL_BAD_HID_T;
-    assns->data_datatype_id = H5FNAL_BAD_HID_T;
+    /* Store the 'extra' data datatype
+     *
+     * We'll store a 'known invalid' value if the datatype
+     * is invalid (i.e.: not used) to make things more
+     * consistent.
+     */
+    if (data_datatype_id >= 0) {
+        if((assns->data_datatype_id = H5Tcopy(data_datatype_id)) < 0)
+            H5FNAL_HDF5_ERROR;
+    }
+    else
+        assns->data_datatype_id = H5FNAL_BAD_HID_T;
+
+    /* Create the 'extra' data dataset, if we need that */
+    if (data_datatype_id >= 0) {
+        if ((assns->data_dataset_id = H5Dcreate2(assns->top_level_group_id, H5FNAL_ASSNS_DATA_DATASET_NAME,
+                assns->data_datatype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
+            H5FNAL_HDF5_ERROR;
+    }
+    else
+        assns->data_dataset_id = H5FNAL_BAD_HID_T;
 
     /* close everything */
     if (H5Pclose(dcpl_id) < 0)
@@ -121,6 +136,8 @@ error:
 herr_t
 h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
 {
+    htri_t  data_dataset_exists;
+
     if (loc_id < 0)
         H5FNAL_PROGRAM_ERROR("invalid loc_id parameter");
     if (NULL == name)
@@ -140,9 +157,23 @@ h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
     if ((assns->association_dataset_id = H5Dopen2(assns->top_level_group_id, H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* This is not implemented yet */
-    assns->data_dataset_id = H5FNAL_BAD_HID_T;
-    assns->data_datatype_id = H5FNAL_BAD_HID_T;
+    /* Open data dataset, if it exists */
+    if ((data_dataset_exists = H5Lexists(assns->top_level_group_id, H5FNAL_ASSNS_DATA_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (data_dataset_exists) {
+        if ((assns->data_dataset_id = H5Dopen2(assns->top_level_group_id, H5FNAL_ASSNS_DATA_DATASET_NAME, H5P_DEFAULT)) < 0)
+            H5FNAL_HDF5_ERROR;
+    }
+    else
+        assns->data_dataset_id = H5FNAL_BAD_HID_T;
+
+    /* Get the data datatype from the dataset */
+    if (data_dataset_exists) {
+        if ((assns->data_datatype_id = H5Dget_type(assns->data_dataset_id)) < 0)
+            H5FNAL_HDF5_ERROR;
+    }
+    else
+        assns->data_datatype_id = H5FNAL_BAD_HID_T;
 
     return H5FNAL_SUCCESS;
 

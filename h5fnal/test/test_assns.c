@@ -115,7 +115,6 @@ main(void)
     hid_t                   run_id = -1;
     hid_t                   subrun_id = -1;
     hid_t                   event_id = -1;
-    hid_t                   data_tid = -1;
 
     /* Assns */
     h5fnal_assns_t         *assns = NULL;
@@ -163,13 +162,13 @@ main(void)
     /* Create the assns data product */
     if (NULL == (assns = calloc(1, sizeof(h5fnal_assns_t))))
         H5FNAL_PROGRAM_ERROR("could not get memory for assns");
-    if (h5fnal_create_assns(event_id, ASSNS_NAME, assns) < 0)
+    if (h5fnal_create_assns(event_id, ASSNS_NAME, assns, H5FNAL_BAD_HID_T) < 0)
         H5FNAL_PROGRAM_ERROR("could not create assns data product");
 
     /* Create the assns data product that uses 'extra' data */
     if (NULL == (assns_data = calloc(1, sizeof(h5fnal_assns_t))))
         H5FNAL_PROGRAM_ERROR("could not get memory for assns_data");
-    if (h5fnal_create_assns(event_id, ASSNS_DATA_NAME, assns_data) < 0)
+    if (h5fnal_create_assns(event_id, ASSNS_DATA_NAME, assns_data, H5T_STD_I64LE) < 0)
         H5FNAL_PROGRAM_ERROR("could not create assns_data data product");
 
     /* The number of Assns to create in each product */
