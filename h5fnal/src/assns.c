@@ -1,9 +1,16 @@
 /* assns.c */
 
+#include <stdlib.h>
+#include <string.h>
+
 #include "h5fnal.h"
+#include "util.h"
 
 #define H5FNAL_ASSNS_DATA_DATASET_NAME          "data"
 #define H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME   "associations"
+
+#define H5FNAL_LEFT_DATA_PRODUCT_NAME           "left data product"
+#define H5FNAL_RIGHT_DATA_PRODUCT_NAME          "right data product"
 
 hid_t
 h5fnal_create_association_type(void)
@@ -38,24 +45,46 @@ error:
 } /* h5fnal_create_association_type */
 
 herr_t
-h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns, hid_t data_datatype_id)
+h5fnal_create_assns(hid_t loc_id, const char *name, const char *left, const char *right, 
+        h5fnal_assns_t *assns, hid_t data_datatype_id)
 {
     hid_t dcpl_id = -1;
     hid_t sid = -1;
     hsize_t chunk_dims[1];
     hsize_t init_dims[1];
     hsize_t max_dims[1];
+    size_t dp_len;
 
     if (loc_id < 0)
         H5FNAL_PROGRAM_ERROR("invalid loc_id parameter");
     if (NULL == name)
         H5FNAL_PROGRAM_ERROR("name parameter cannot be NULL");
+    if (NULL == left)
+        H5FNAL_PROGRAM_ERROR("left parameter cannot be NULL");
+    if (NULL == right)
+        H5FNAL_PROGRAM_ERROR("right parameter cannot be NULL");
     if (NULL == assns)
         H5FNAL_PROGRAM_ERROR("assns parameter cannot be NULL");
+
+    /* Store the names of the right and left data products in the struct */
+    dp_len = strlen(left) + 1;
+    if (NULL == (assns->left = (char *)malloc(dp_len)))
+        H5FNAL_PROGRAM_ERROR("could not get memory for left data product string");
+    strcpy(assns->left, left);
+    dp_len = strlen(right) + 1;
+    if (NULL == (assns->right = (char *)malloc(dp_len)))
+        H5FNAL_PROGRAM_ERROR("could not get memory for right data product string");
+    strcpy(assns->right, right);
 
     /* Create top-level group */
     if ((assns->top_level_group_id = H5Gcreate2(loc_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR;
+
+    /* Add the left and right data product strings to the top-level group */
+    if (h5fnal_add_string_attribute(assns->top_level_group_id, H5FNAL_LEFT_DATA_PRODUCT_NAME, left) < 0)
+        H5FNAL_PROGRAM_ERROR("could not add left data product name attribute");
+    if (h5fnal_add_string_attribute(assns->top_level_group_id, H5FNAL_RIGHT_DATA_PRODUCT_NAME, right) < 0)
+        H5FNAL_PROGRAM_ERROR("could not add left data product name attribute");
 
     /* Set up chunking (size is arbitrary for now) */
     chunk_dims[0] = 128;
@@ -153,6 +182,12 @@ h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
     if ((assns->top_level_group_id = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR;
 
+    /* Get the left and right data product names */
+    if (h5fnal_get_string_attribute(assns->top_level_group_id, H5FNAL_LEFT_DATA_PRODUCT_NAME, &(assns->left)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get left data product name attribute");
+    if (h5fnal_get_string_attribute(assns->top_level_group_id, H5FNAL_RIGHT_DATA_PRODUCT_NAME, &(assns->right)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get left data product name attribute");
+
     /* Open association dataset */
     if ((assns->association_dataset_id = H5Dopen2(assns->top_level_group_id, H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR;
@@ -202,6 +237,11 @@ h5fnal_close_assns(h5fnal_assns_t *assns)
 {
     if (NULL == assns)
         H5FNAL_PROGRAM_ERROR("assns parameter cannot be NULL");
+
+    free(assns->left);
+    free(assns->right);
+    assns->left = NULL;
+    assns->right = NULL;
 
     if (H5Gclose(assns->top_level_group_id) < 0)
         H5FNAL_HDF5_ERROR;

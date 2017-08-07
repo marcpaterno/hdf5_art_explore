@@ -13,6 +13,8 @@
 #define EVENT_NAME          "testevent"
 #define ASSNS_NAME          "assns"
 #define ASSNS_DATA_NAME     "assns_data"
+#define LEFT_NAME           "left_data_product"
+#define RIGHT_NAME          "right_data_product"
 
 /************************************************************************
  * Function:    generate_fake_associations()
@@ -162,14 +164,24 @@ main(void)
     /* Create the assns data product */
     if (NULL == (assns = calloc(1, sizeof(h5fnal_assns_t))))
         H5FNAL_PROGRAM_ERROR("could not get memory for assns");
-    if (h5fnal_create_assns(event_id, ASSNS_NAME, assns, H5FNAL_BAD_HID_T) < 0)
+    if (h5fnal_create_assns(event_id, ASSNS_NAME, LEFT_NAME, RIGHT_NAME, assns, H5FNAL_BAD_HID_T) < 0)
         H5FNAL_PROGRAM_ERROR("could not create assns data product");
 
     /* Create the assns data product that uses 'extra' data */
     if (NULL == (assns_data = calloc(1, sizeof(h5fnal_assns_t))))
         H5FNAL_PROGRAM_ERROR("could not get memory for assns_data");
-    if (h5fnal_create_assns(event_id, ASSNS_DATA_NAME, assns_data, H5T_STD_I64LE) < 0)
+    if (h5fnal_create_assns(event_id, ASSNS_DATA_NAME, LEFT_NAME, RIGHT_NAME, assns_data, H5T_STD_I64LE) < 0)
         H5FNAL_PROGRAM_ERROR("could not create assns_data data product");
+
+    /* Make sure we are getting the names of the left and right data products out */
+    if (!assns->right)
+        H5FNAL_PROGRAM_ERROR("right data product name in struct is NULL")
+    if (!assns->left)
+        H5FNAL_PROGRAM_ERROR("left data product name in struct is NULL")
+    if (strcmp(RIGHT_NAME, assns->right) != 0)
+        H5FNAL_PROGRAM_ERROR("incorrect name stored for right data product")
+    if (strcmp(LEFT_NAME, assns->left) != 0)
+        H5FNAL_PROGRAM_ERROR("incorrect name stored for left data product")
 
     /* The number of Assns to create in each product */
     n_assns = 16384;
@@ -266,6 +278,16 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not open assns data product");
     if (h5fnal_open_assns(event_id, ASSNS_DATA_NAME, assns_data) < 0)
         H5FNAL_PROGRAM_ERROR("could not open assns_data data product");
+
+    /* Make sure we are getting the names of the left and right data products out */
+    if (!assns->right)
+        H5FNAL_PROGRAM_ERROR("right data product name in struct is NULL")
+    if (!assns->left)
+        H5FNAL_PROGRAM_ERROR("left data product name in struct is NULL")
+    if (0 != strcmp(RIGHT_NAME, assns->right))
+        H5FNAL_PROGRAM_ERROR("incorrect name stored for right data product")
+    if (0 != strcmp(LEFT_NAME, assns->left))
+        H5FNAL_PROGRAM_ERROR("incorrect name stored for left data product")
 
     /*******************************/
     /* RE-READ DATA AND RE-COMPARE */

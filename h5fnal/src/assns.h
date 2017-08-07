@@ -25,6 +25,8 @@ typedef struct h5fnal_assns_t {
     hid_t       association_datatype_id;
     hid_t       data_dataset_id;
     hid_t       data_datatype_id;
+    char       *left;
+    char       *right;
 } h5fnal_assns_t;
 
 
@@ -33,7 +35,8 @@ extern "C" {
 #endif
 hid_t h5fnal_create_association_type(void);
 
-herr_t h5fnal_create_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns, hid_t data_datatype_id);
+herr_t h5fnal_create_assns(hid_t loc_id, const char *name, const char *left, const char *right,
+        h5fnal_assns_t *assns, hid_t data_datatype_id);
 herr_t h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns);
 herr_t h5fnal_close_assns(h5fnal_assns_t *assns);
 
