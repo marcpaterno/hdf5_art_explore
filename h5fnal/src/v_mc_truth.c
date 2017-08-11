@@ -36,7 +36,11 @@ h5fnal_create_mc_particle_type(void)
         H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "fMother", HOFFSET(h5fnal_mc_particle_t, mother), H5T_NATIVE_INT) < 0)
         H5FNAL_HDF5_ERROR
-    /* Strings go here */
+    /* NOTE: The 'strings' are just indexes into a string dictionary */
+    if (H5Tinsert(tid, "fprocess", HOFFSET(h5fnal_mc_particle_t, process_index), H5T_NATIVE_INT) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Tinsert(tid, "fendprocess", HOFFSET(h5fnal_mc_particle_t, endprocess_index), H5T_NATIVE_INT) < 0)
+        H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "fmass", HOFFSET(h5fnal_mc_particle_t, mass), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "fpolarization_x", HOFFSET(h5fnal_mc_particle_t, polarization_x), H5T_NATIVE_DOUBLE) < 0)

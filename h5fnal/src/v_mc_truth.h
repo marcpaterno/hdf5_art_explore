@@ -7,6 +7,26 @@
 #ifndef V_MC_TRUTH_H
 #define V_MC_TRUTH_H
 
+/* Neutrino origin enum */
+typedef enum h5fnal_origin_t {
+    UNKNOWN             = 0,
+    BEAM_NEUTRINO       = 1,
+    COSMIC_RAY          = 2,
+    SUPERNOVA_NEUTRINO  = 3,
+    SINGLE_PARTICLE     = 4
+} h5fnal_origin_t;
+
+/* MC Truth Type */
+typedef struct h5fnal_mc_truth_t {
+    hssize_t    neutrino_index;     /* -1 == no neutrino */
+    hsize_t     particle_start_index;
+    hsize_t     particle_end_index;
+    hsize_t     trajectory_start_index;
+    hsize_t     trajectory_end_index;
+    hsize_t     daughters_start_index;
+    hsize_t     daughters_end_index;
+} h5fnal_mc_truth_t;
+
 /* MC Neutrino Type */
 typedef struct h5fnal_mc_neutrino_t {
     int         mode;
@@ -27,6 +47,8 @@ typedef struct h5fnal_mc_particle_t {
     int         track_id;
     int         pdg_code;
     int         mother;
+    int         process_index;
+    int         endprocess_index;
     double      mass;
     double      polarization_x;
     double      polarization_y;
@@ -39,21 +61,40 @@ typedef struct h5fnal_mc_particle_t {
     int         rescatter;
 } h5fnal_mc_particle_t;
 
-/* Neutrino origin enum */
-typedef enum h5fnal_origin_t {
-    UNKNOWN             = 0,
-    BEAM_NEUTRINO       = 1,
-    COSMIC_RAY          = 2,
-    SUPERNOVA_NEUTRINO  = 3,
-    SINGLE_PARTICLE     = 4
-} h5fnal_origin_t;
+/* Daughters type (for parent-child relationships) */
+typedef struct h5fnal_daughter_t {
+    hsize_t     parent_index;
+    hsize_t     child_index;
+} h5fnal_daughter_t;
+
+/* Trajectory type */
+typedef struct h5fnal_trajectory_t {
+    double      Ec1;
+    double      px1;
+    double      py1;
+    double      pz1;
+    double      Ec2;
+    double      px2;
+    double      py2;
+    double      pz2;
+    hsize_t     particle_index;
+} h5fnal_trajectory_t;
 
 /* Vector of MC Hit Truth Type */
 typedef struct h5fnal_v_mc_truth_t {
     hid_t       top_level_group_id;
+    hid_t       origin_enum_dtype_id;
+    hid_t       truths_dtype_id;
     hid_t       neutrino_dtype_id;
     hid_t       particle_dtype_id;
-    hid_t       origin_enum_dtype_id;
+    hid_t       daughter_dtype_id;
+    hid_t       trajectory_dtype_id;
+    /* string dictionary pointer goes here */
+    hid_t       truth_dataset_id;
+    hid_t       neutrino_dataset_id;
+    hid_t       particle_dataset_id;
+    hid_t       daughter_dataset_id;
+    hid_t       trajectory_dataset_id;
 } h5fnal_v_mc_truth_t;
 
 #ifdef __cplusplus
