@@ -97,6 +97,15 @@ typedef struct h5fnal_v_mc_truth_t {
     hid_t       trajectory_dataset_id;
 } h5fnal_v_mc_truth_t;
 
+/* In-memory data container for I/O calls */
+typedef struct h5fnal_truth_mem_t {
+    h5fnal_mc_truth_t       *truths;
+    h5fnal_mc_trajectory_t  *trajectories;
+    h5fnal_daughter_t       *daughters;
+    h5fnal_mc_particle_t    *particles;
+    h5fnal_mc_neutrino_t    *neutrinos;
+} h5fnal_truth_mem_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
