@@ -20,6 +20,13 @@
  *
  */
 
+/* Dataset names */
+#define H5FNAL_MC_TRUTH_TRUTH_DATASET_NAME          "truths"
+#define H5FNAL_MC_TRUTH_NEUTRINO_DATASET_NAME       "neutrinos"
+#define H5FNAL_MC_TRUTH_PARTICLE_DATASET_NAME       "particles"
+#define H5FNAL_MC_TRUTH_DAUGHTER_DATASET_NAME       "daughters"
+#define H5FNAL_MC_TRUTH_TRAJECTORY_DATASET_NAME     "trajectories"
+
 hid_t
 h5fnal_create_origin_enum_type(void)
 {
@@ -280,6 +287,21 @@ h5fnal_create_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *ve
         H5FNAL_HDF5_ERROR;
 
     /* Create the datasets */
+    if ((vector->truth_dataset_id = H5Dcreate2(vector->top_level_group_id, H5FNAL_MC_TRUTH_TRUTH_DATASET_NAME,
+            vector->truth_dtype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->neutrino_dataset_id = H5Dcreate2(vector->top_level_group_id, H5FNAL_MC_TRUTH_NEUTRINO_DATASET_NAME,
+            vector->neutrino_dtype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->particle_dataset_id = H5Dcreate2(vector->top_level_group_id, H5FNAL_MC_TRUTH_PARTICLE_DATASET_NAME,
+            vector->particle_dtype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->daughter_dataset_id = H5Dcreate2(vector->top_level_group_id, H5FNAL_MC_TRUTH_DAUGHTER_DATASET_NAME,
+            vector->daughter_dtype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->trajectory_dataset_id = H5Dcreate2(vector->top_level_group_id, H5FNAL_MC_TRUTH_TRAJECTORY_DATASET_NAME,
+            vector->trajectory_dtype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
 
     /* close everything */
     if (H5Pclose(dcpl_id) < 0)
@@ -331,6 +353,8 @@ h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t *vector)
 {
     if (H5Gclose(vector->top_level_group_id) < 0)
         H5FNAL_HDF5_ERROR
+
+    /* Datatypes */
     if (H5Tclose(vector->origin_enum_dtype_id) < 0)
         H5FNAL_HDF5_ERROR
     if (H5Tclose(vector->neutrino_dtype_id) < 0)
@@ -343,6 +367,19 @@ h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t *vector)
         H5FNAL_HDF5_ERROR
     if (H5Tclose(vector->truth_dtype_id) < 0)
         H5FNAL_HDF5_ERROR
+
+    /* Datasets */
+    if (H5Dclose(vector->neutrino_dataset_id) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dclose(vector->particle_dataset_id) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dclose(vector->daughter_dataset_id) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dclose(vector->trajectory_dataset_id) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dclose(vector->truth_dataset_id) < 0)
+        H5FNAL_HDF5_ERROR
+
 
     return H5FNAL_SUCCESS;
 
