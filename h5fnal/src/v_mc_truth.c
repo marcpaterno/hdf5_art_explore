@@ -407,3 +407,21 @@ error:
     return H5FNAL_FAILURE;
 } /* h5fnal_close_v_mc_truth */
 
+herr_t
+h5fnal_append_truths(h5fnal_v_mc_truth_t *vector, h5fnal_truth_mem_t *truths)
+{
+    return H5FNAL_FAILURE;
+} /* end h5fnal_append_truths() */
+
+hssize_t
+h5fnal_get_truths_count(h5fnal_v_mc_truth_t *vector)
+{
+    return -1;
+} /* end h5fnal_get_truths_count() */
+
+herr_t
+h5fnal_read_all_truths(h5fnal_v_mc_truth_t *vector, h5fnal_truth_mem_t *truths)
+{
+    return H5FNAL_FAILURE;
+} /* end h5fnal_read_all_truths() */
+
