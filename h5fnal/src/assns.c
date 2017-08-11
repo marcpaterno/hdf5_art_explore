@@ -95,10 +95,6 @@ h5fnal_create_assns(hid_t loc_id, const char *name, const char *left, const char
     if (H5Pset_deflate(dcpl_id, 6) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* Turn on gzip compression (compression level is arbitrary) */
-    if (H5Pset_deflate(dcpl_id, 5) < 0)
-        H5FNAL_HDF5_ERROR;
-
     /* Create the dataspace (set of points describing the data size, etc.) */
     init_dims[0] = 0;
     max_dims[0] = H5S_UNLIMITED;

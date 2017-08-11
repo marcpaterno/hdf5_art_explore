@@ -237,6 +237,12 @@ error:
 herr_t
 h5fnal_create_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *vector)
 {
+    hid_t dcpl_id = -1;
+    hid_t sid = -1;
+    hsize_t chunk_dims[1];
+    hsize_t init_dims[1];
+    hsize_t max_dims[1];
+
     if (NULL == vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
 
@@ -258,17 +264,44 @@ h5fnal_create_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *ve
     if ((vector->truth_dtype_id = h5fnal_create_mc_truth_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create datatype")
 
+    /* Set up chunking (for all datasets, size is arbitrary for now) */
+    chunk_dims[0] = 128;
+    if ((dcpl_id = H5Pcreate(H5P_DATASET_CREATE)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Pset_chunk(dcpl_id, 1, chunk_dims) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Pset_deflate(dcpl_id, 6) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Create the dataspace (set of points describing the data size, etc.) */
+    init_dims[0] = 0;
+    max_dims[0] = H5S_UNLIMITED;
+    if ((sid = H5Screate_simple(1, init_dims, max_dims)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Create the datasets */
+
+    /* close everything */
+    if (H5Pclose(dcpl_id) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Sclose(sid) < 0)
+        H5FNAL_HDF5_ERROR;
+
     return H5FNAL_SUCCESS;
 
 error:
     H5E_BEGIN_TRY {
-        H5Gclose(vector->top_level_group_id);
-        H5Tclose(vector->origin_enum_dtype_id);
-        H5Tclose(vector->neutrino_dtype_id);
-        H5Tclose(vector->particle_dtype_id);
-        H5Tclose(vector->daughter_dtype_id);
-        H5Tclose(vector->trajectory_dtype_id);
-        H5Tclose(vector->truth_dtype_id);
+        H5Sclose(sid);
+        H5Pclose(dcpl_id);
+        if (vector) {
+            H5Gclose(vector->top_level_group_id);
+            H5Tclose(vector->origin_enum_dtype_id);
+            H5Tclose(vector->neutrino_dtype_id);
+            H5Tclose(vector->particle_dtype_id);
+            H5Tclose(vector->daughter_dtype_id);
+            H5Tclose(vector->trajectory_dtype_id);
+            H5Tclose(vector->truth_dtype_id);
+        }
     } H5E_END_TRY;
 
     vector->origin_enum_dtype_id = H5FNAL_BAD_HID_T;
@@ -315,13 +348,15 @@ h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t *vector)
 
 error:
     H5E_BEGIN_TRY {
-        H5Gclose(vector->top_level_group_id);
-        H5Tclose(vector->neutrino_dtype_id);
-        H5Tclose(vector->particle_dtype_id);
-        H5Tclose(vector->origin_enum_dtype_id);
-        H5Tclose(vector->daughter_dtype_id);
-        H5Tclose(vector->trajectory_dtype_id);
-        H5Tclose(vector->truth_dtype_id);
+        if (vector) {
+            H5Gclose(vector->top_level_group_id);
+            H5Tclose(vector->neutrino_dtype_id);
+            H5Tclose(vector->particle_dtype_id);
+            H5Tclose(vector->origin_enum_dtype_id);
+            H5Tclose(vector->daughter_dtype_id);
+            H5Tclose(vector->trajectory_dtype_id);
+            H5Tclose(vector->truth_dtype_id);
+        }
     } H5E_END_TRY;
 
     vector->top_level_group_id = H5FNAL_BAD_HID_T;
