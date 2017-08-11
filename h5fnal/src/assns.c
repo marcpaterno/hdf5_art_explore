@@ -366,6 +366,9 @@ h5fnal_get_assns_count(h5fnal_assns_t *assns)
     hid_t sid = H5FNAL_BAD_HID_T;
     hssize_t n_assns = -1;
 
+    if (!assns)
+        H5FNAL_PROGRAM_ERROR("assns parameter cannot be NULL");
+
     /* Get the number of elements in the associations dataset */
     if ((sid = H5Dget_space(assns->association_dataset_id)) < 0)
         H5FNAL_HDF5_ERROR;
