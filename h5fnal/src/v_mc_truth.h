@@ -99,6 +99,7 @@ typedef struct h5fnal_v_mc_truth_t {
 
 /* In-memory data container for I/O calls */
 typedef struct h5fnal_truth_mem_t {
+    hsize_t                 n_truths;
     h5fnal_mc_truth_t       *truths;
     h5fnal_mc_trajectory_t  *trajectories;
     h5fnal_daughter_t       *daughters;
@@ -120,6 +121,10 @@ hid_t h5fnal_create_mc_truth_type(void);
 herr_t h5fnal_create_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *vector);
 herr_t h5fnal_open_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *vector);
 herr_t h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t *vector);
+
+herr_t h5fnal_append_truths(h5fnal_v_mc_truth_t *vector, h5fnal_truth_mem_t *truths);
+hssize_t h5fnal_get_truths_count(h5fnal_v_mc_truth_t *vector);
+herr_t h5fnal_read_all_truths(h5fnal_v_mc_truth_t *vector, h5fnal_truth_mem_t *truths);
 
 #ifdef __cplusplus
 }
