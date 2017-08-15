@@ -12,6 +12,48 @@
 #define EVENT_NAME  "testevent"
 #define VECTOR_NAME "vomct"
 
+
+/* generates fake MC Truth data for testing */
+static herr_t
+generate_fake_truths(h5fnal_mem_truth_t *truths)
+{
+    if (!truths)
+        H5FNAL_PROGRAM_ERROR("truths parameter cannot be NULL");
+
+    srand((unsigned int)time(NULL));
+
+    /* Set the number of elements to create in each dataset */
+    truths->n_truths = 2;
+    truths->n_trajectories = 10;
+    truths->n_daughters = 4;
+    truths->n_particles = 10;
+    truths->n_neutrinos = 1;
+
+    /* Allocate buffers for data */
+    if (NULL == (truths->truths = (h5fnal_mc_truth_t *)calloc(truths->n_truths, sizeof(h5fnal_mc_truth_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory")
+    if (NULL == (truths->trajectories = (h5fnal_mc_trajectory_t *)calloc(truths->n_trajectories, sizeof(h5fnal_mc_trajectory_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory")
+    if (NULL == (truths->daughters = (h5fnal_daughter_t *)calloc(truths->n_daughters, sizeof(h5fnal_daughter_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory")
+    if (NULL == (truths->particles = (h5fnal_mc_particle_t *)calloc(truths->n_particles, sizeof(h5fnal_mc_particle_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory")
+    if (NULL == (truths->neutrinos = (h5fnal_mc_neutrino_t *)calloc(truths->n_neutrinos, sizeof(h5fnal_mc_neutrino_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory")
+
+    /* Add data */
+
+    return H5FNAL_SUCCESS;
+
+error:
+
+    if (truths)
+        h5fnal_free_mem_truths(truths);
+
+    return H5FNAL_FAILURE;
+
+} /* end generate_fake_truths() */
+
 int
 main(void)
 {
@@ -21,6 +63,8 @@ main(void)
     hid_t   subrun_id = -1;
     hid_t   event_id = -1;
     h5fnal_v_mc_truth_t *vector = NULL;
+    hssize_t n_truths_out = 0;
+    h5fnal_mem_truth_t *truths = NULL;
 
     printf("Testing vector of MC Truth operations... ");
 
@@ -46,12 +90,28 @@ main(void)
     if (h5fnal_create_v_mc_truth(event_id, VECTOR_NAME, vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not create vector of mc truth")
 
+    /* It should have zero size when created */
+    if ((n_truths_out = h5fnal_get_truths_count(vector)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get number of truths from dataset")
+    if (n_truths_out != 0)
+        H5FNAL_PROGRAM_ERROR("got wrong number of truths from dataset after creation")
+
+    /* Generate some fake data */
+    if (NULL == (truths = calloc(1, sizeof(h5fnal_mem_truth_t))))
+        H5FNAL_PROGRAM_ERROR("could not get memory for in-memory truth data container")
+    if (generate_fake_truths(truths) < 0)
+        H5FNAL_PROGRAM_ERROR("problem generating fake data for testing")
+
+
     /* Close the vector */
     if (h5fnal_close_v_mc_truth(vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not close vector")
 
     /* Close everything else */
     free(vector);
+    if (h5fnal_free_mem_truths(truths) < 0)
+        H5FNAL_PROGRAM_ERROR("could not clean up fake data")
+    free(truths);
     if (h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
     if (h5fnal_close_run(subrun_id) < 0)
@@ -72,6 +132,10 @@ error:
         if (vector) {
             h5fnal_close_v_mc_truth(vector);
             free(vector);
+        }
+        if (truths) {
+            h5fnal_free_mem_truths(truths);
+            free(truths);
         }
         h5fnal_close_run(subrun_id);
         h5fnal_close_run(run_id);
