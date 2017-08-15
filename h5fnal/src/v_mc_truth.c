@@ -465,3 +465,33 @@ error:
     return H5FNAL_FAILURE;
 } /* end h5fnal_read_all_truths() */
 
+/* Important in case the library and application use a different
+ * memory allocator.
+ */
+herr_t
+h5fnal_free_mem_truths(h5fnal_mem_truth_t *mem_truths)
+{
+    if (!mem_truths)
+        H5FNAL_PROGRAM_ERROR("mem_truths parameter cannot be NULL");
+
+    free(mem_truths->truths);
+    free(mem_truths->trajectories);
+    free(mem_truths->daughters);
+    free(mem_truths->particles);
+    free(mem_truths->neutrinos);
+
+    mem_truths->truths          = NULL;
+    mem_truths->trajectories    = NULL;
+    mem_truths->daughters       = NULL;
+    mem_truths->particles       = NULL;
+    mem_truths->neutrinos       = NULL;
+
+    mem_truths->n_truths = 0;
+
+    return H5FNAL_SUCCESS;
+
+error:
+    return H5FNAL_FAILURE;
+} /* end h5fnal_free_mem_truths() */
+
+
