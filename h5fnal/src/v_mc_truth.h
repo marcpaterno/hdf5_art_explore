@@ -7,6 +7,8 @@
 #ifndef V_MC_TRUTH_H
 #define V_MC_TRUTH_H
 
+#include "h5fnal.h"
+
 /* Neutrino origin enum */
 typedef enum h5fnal_origin_t {
     UNKNOWN             = 0,
@@ -100,6 +102,10 @@ typedef struct h5fnal_v_mc_truth_t {
 /* In-memory data container for I/O calls */
 typedef struct h5fnal_mem_truth_t {
     hsize_t                 n_truths;
+    hsize_t                 n_trajectories;
+    hsize_t                 n_daughters;
+    hsize_t                 n_particles;
+    hsize_t                 n_neutrinos;
     h5fnal_mc_truth_t       *truths;
     h5fnal_mc_trajectory_t  *trajectories;
     h5fnal_daughter_t       *daughters;

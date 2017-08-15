@@ -29,6 +29,9 @@
 #define H5FNAL_MC_TRUTH_DAUGHTER_DATASET_NAME       "daughters"
 #define H5FNAL_MC_TRUTH_TRAJECTORY_DATASET_NAME     "trajectories"
 
+/* Prototypes */
+static herr_t append_fixup(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_truths);
+
 hid_t
 h5fnal_create_origin_enum_type(void)
 {
@@ -408,6 +411,12 @@ error:
 
     return H5FNAL_FAILURE;
 } /* h5fnal_close_v_mc_truth */
+
+static herr_t
+append_fixup(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_truths)
+{
+    return H5FNAL_FAILURE;
+}
 
 herr_t
 h5fnal_append_truths(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_truths)

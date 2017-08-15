@@ -6,6 +6,7 @@
 #ifndef H5FNAL_STRING_DICTIONARY_H
 #define H5FNAL_STRING_DICTIONARY_H
 
+#include "h5fnal.h"
 
 typedef struct string_dictionary_t {
     unsigned n_strings;

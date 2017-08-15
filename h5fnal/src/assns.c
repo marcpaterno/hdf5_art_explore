@@ -3,8 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "h5fnal.h"
-#include "util.h"
+#include "assns.h"
 
 #define H5FNAL_ASSNS_DATA_DATASET_NAME          "data"
 #define H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME   "associations"
