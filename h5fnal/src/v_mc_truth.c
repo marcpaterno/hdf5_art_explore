@@ -428,10 +428,28 @@ error:
 hssize_t
 h5fnal_get_truths_count(h5fnal_v_mc_truth_t *vector)
 {
+    hid_t sid = H5FNAL_BAD_HID_T;
+    hssize_t n_truths = -1;
+
     if (!vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
 
+    /* Get the number of elements in the truths dataset */
+    if ((sid = H5Dget_space(vector->truth_dataset_id)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((n_truths = H5Sget_simple_extent_npoints(sid)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    if (H5Sclose(sid) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    return n_truths;
+
 error:
+    H5E_BEGIN_TRY {
+        H5Sclose(sid);
+    } H5E_END_TRY;
+
     return -1;
 } /* end h5fnal_get_truths_count() */
 
@@ -446,33 +464,4 @@ h5fnal_read_all_truths(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_trut
 error:
     return H5FNAL_FAILURE;
 } /* end h5fnal_read_all_truths() */
-
-/* Important in case the library and application use a different
- * memory allocator.
- */
-herr_t
-h5fnal_free_mem_truths(h5fnal_mem_truth_t *mem_truths)
-{
-    if (!mem_truths)
-        H5FNAL_PROGRAM_ERROR("mem_truths parameter cannot be NULL");
-
-    free(mem_truths->truths);
-    free(mem_truths->trajectories);
-    free(mem_truths->daughters);
-    free(mem_truths->particles);
-    free(mem_truths->neutrinos);
-
-    mem_truths->truths          = NULL;
-    mem_truths->trajectories    = NULL;
-    mem_truths->daughters       = NULL;
-    mem_truths->particles       = NULL;
-    mem_truths->neutrinos       = NULL;
-
-    mem_truths->n_truths = 0;
-
-    return H5FNAL_SUCCESS;
-
-error:
-    return H5FNAL_FAILURE;
-} /* end h5fnal_free_mem_truths() */
 
