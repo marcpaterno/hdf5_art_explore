@@ -31,7 +31,7 @@ export LDFLAGS = $$(root-config --libs) \
   -L$(NUSIMDATA_LIB) -lnusimdata_SimulationBase \
   -L$(LARCOREOBJ_LIB) -llarcoreobj_SummaryData \
   -L$(LARDATAOBJ_LIB) -llardataobj_RecoBase \
-  -L../h5fnal/src/ -lh5fnal \
+  -L$(PWD)/../h5fnal/src -lh5fnal \
   -L$(HDF5_LIB) -lhdf5 \
   $(UNDEF_FLAG)
 
