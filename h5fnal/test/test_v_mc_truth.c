@@ -108,6 +108,11 @@ main(void)
     if (h5fnal_append_truths(vector, truths) < 0)
         H5FNAL_PROGRAM_ERROR("could not write truths to the file")
 
+    /* Get the number of truths */
+    if ((n_truths_out = h5fnal_get_truths_count(vector)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get number of truths")
+    if (n_truths_out != 2 * truths->n_truths)
+        H5FNAL_PROGRAM_ERROR("got wrong number of truths")
 
     /* Close the vector */
     if (h5fnal_close_v_mc_truth(vector) < 0)
