@@ -1,9 +1,12 @@
 #include <iostream>
+#include <iterator>
+#include <numeric>
 #include <string>
 #include <vector>
 
 #include "canvas/Utilities/InputTag.h"
 #include "canvas/Persistency/Common/Assns.h"
+#include "canvas/Persistency/Provenance/EventAuxiliary.h"
 #include "gallery/Event.h"
 #include "gallery/ValidHandle.h"
 #include "lardataobj/RecoBase/Cluster.h"
@@ -20,7 +23,7 @@
 using namespace art;
 using namespace std;
 
-int main() {
+int main(int argc, char* argv[]) {
 
   /********
    * ROOT *
@@ -28,7 +31,11 @@ int main() {
   InputTag mchits_tag { "mchitfinder" };
   InputTag vertex_tag { "linecluster" };
   InputTag assns_tag  { "linecluster" };
-  vector<string> filenames { "../data/dune_new.root" }; // multiple files are allowed.
+  vector<string> filenames { argv+1, argv+argc }; // filenames from command line
+  if (filenames.empty()) {
+    std::cerr << "Please supply one or more input filenames\n";
+    return 1;
+  }
 
   // The gallery::Event object acts as a cursor into the stream of events.
   // A newly-constructed gallery::Event is at the start if its stream.
@@ -52,13 +59,14 @@ int main() {
     // const functions can be used, because we have a const reference
     // to the objects. This is part of the design of our object model:
     // objects *read from an Event* are always immutable.
-
-    if (!mchits.empty()) {
-      // This output will not be very interesting if the file you're
-      // looking at is the kind of simulation that only contains one
-      // particle per MCTruth object.
-      std::cout << mchits[0].Channel() << '\n';
-    }
+    auto const& aux = ev.eventAuxiliary();
+    std::cout << "Processing event: " << aux.run()
+              << ',' << aux.subRun()
+              << ',' << aux.event() << '\n';
+    std::cout << "number of MCHitCollection objects: " << mchits.size() << '\n';
+    std::size_t nhits = 0UL;
+    for (auto const&  hitcol : mchits) { nhits += hitcol.size(); }
+    std::cout << "total number of hits: " << nhits << '\n';
   }
 
   /********
