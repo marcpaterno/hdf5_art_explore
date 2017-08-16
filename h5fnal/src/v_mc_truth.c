@@ -385,7 +385,6 @@ h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t *vector)
     if (H5Dclose(vector->truth_dataset_id) < 0)
         H5FNAL_HDF5_ERROR
 
-
     return H5FNAL_SUCCESS;
 
 error:
@@ -429,6 +428,20 @@ h5fnal_append_truths(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_truths
     /* Trivial case */
     if (0 == mem_truths->n_truths)
         return H5FNAL_SUCCESS;
+
+    /* append data to all the datasets */
+    if (h5fnal_append_data(vector->truth_dataset_id, vector->truth_dtype_id, mem_truths->n_truths, (const void *)(mem_truths->truths)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append truths data")
+    if (h5fnal_append_data(vector->trajectory_dataset_id, vector->trajectory_dtype_id, mem_truths->n_trajectories, (const void *)(mem_truths->trajectories)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append trajectories data")
+    if (h5fnal_append_data(vector->daughter_dataset_id, vector->daughter_dtype_id, mem_truths->n_daughters, (const void *)(mem_truths->daughters)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append daughters data")
+    if (h5fnal_append_data(vector->particle_dataset_id, vector->particle_dtype_id, mem_truths->n_particles, (const void *)(mem_truths->particles)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append particles data")
+    if (h5fnal_append_data(vector->neutrino_dataset_id, vector->neutrino_dtype_id, mem_truths->n_neutrinos, (const void *)(mem_truths->neutrinos)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append neutrinos data")
+
+    return H5FNAL_SUCCESS;
 
 error:
     return H5FNAL_FAILURE;

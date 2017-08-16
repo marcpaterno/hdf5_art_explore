@@ -102,6 +102,12 @@ main(void)
     if (generate_fake_truths(truths) < 0)
         H5FNAL_PROGRAM_ERROR("problem generating fake data for testing")
 
+    /* Append truths */
+    if (h5fnal_append_truths(vector, truths) < 0)
+        H5FNAL_PROGRAM_ERROR("could not write truths to the file")
+    if (h5fnal_append_truths(vector, truths) < 0)
+        H5FNAL_PROGRAM_ERROR("could not write truths to the file")
+
 
     /* Close the vector */
     if (h5fnal_close_v_mc_truth(vector) < 0)

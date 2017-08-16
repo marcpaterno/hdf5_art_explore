@@ -90,7 +90,7 @@ main(void)
     if (NULL == (hits = generate_fake_hits(n_hits)))
         H5FNAL_PROGRAM_ERROR("unable to create fake hit data")
 
-    /* Write some hits to it */
+    /* Append hits */
     if (h5fnal_append_hits(vector, n_hits, hits) < 0)
         H5FNAL_PROGRAM_ERROR("could not write hits to the file")
     if (h5fnal_append_hits(vector, n_hits, hits) < 0)
