@@ -118,6 +118,20 @@ main(void)
     if (h5fnal_close_v_mc_truth(vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not close vector")
 
+    /* Re-open the vector */
+    if (h5fnal_open_v_mc_truth(event_id, VECTOR_NAME, vector) < 0)
+        H5FNAL_PROGRAM_ERROR("could not open vector of mc truth")
+
+    /* Get the number of truths */
+    if ((n_truths_out = h5fnal_get_truths_count(vector)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get number of truths")
+    if (n_truths_out != 2 * truths->n_truths)
+        H5FNAL_PROGRAM_ERROR("got wrong number of truths")
+
+    /* Close the vector */
+    if (h5fnal_close_v_mc_truth(vector) < 0)
+        H5FNAL_PROGRAM_ERROR("could not close vector")
+
     /* Close everything else */
     free(vector);
     if (h5fnal_free_mem_truths(truths) < 0)

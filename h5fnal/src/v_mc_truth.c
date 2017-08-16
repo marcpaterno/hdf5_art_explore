@@ -344,12 +344,67 @@ error:
 herr_t
 h5fnal_open_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *vector)
 {
-    /* NOT IMPLEMENTED */
 
+    if (loc_id < 0)
+        H5FNAL_PROGRAM_ERROR("invalid loc_id parameter")
+    if (NULL == name)
+        H5FNAL_PROGRAM_ERROR("name parameter cannot be NULL")
     if (NULL == vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
 
+    /* Create the datatypes */
+    if ((vector->origin_enum_dtype_id = h5fnal_create_origin_enum_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    if ((vector->neutrino_dtype_id = h5fnal_create_mc_neutrino_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    if ((vector->particle_dtype_id = h5fnal_create_mc_particle_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    if ((vector->daughter_dtype_id = h5fnal_create_daughter_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    if ((vector->trajectory_dtype_id = h5fnal_create_mc_trajectory_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    if ((vector->truth_dtype_id = h5fnal_create_mc_truth_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+
+    /* Open top-level group */
+    if ((vector->top_level_group_id = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR
+
+    /* Open the datasets */
+    if ((vector->truth_dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MC_TRUTH_TRUTH_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->neutrino_dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MC_TRUTH_NEUTRINO_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->particle_dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MC_TRUTH_PARTICLE_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->daughter_dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MC_TRUTH_DAUGHTER_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->trajectory_dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MC_TRUTH_TRAJECTORY_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    return H5FNAL_SUCCESS;
+
 error:
+
+    H5E_BEGIN_TRY {
+        if (vector) {
+            H5Gclose(vector->top_level_group_id);
+            H5Tclose(vector->origin_enum_dtype_id);
+            H5Tclose(vector->neutrino_dtype_id);
+            H5Tclose(vector->particle_dtype_id);
+            H5Tclose(vector->daughter_dtype_id);
+            H5Tclose(vector->trajectory_dtype_id);
+            H5Tclose(vector->truth_dtype_id);
+        }
+    } H5E_END_TRY;
+
+    vector->origin_enum_dtype_id = H5FNAL_BAD_HID_T;
+    vector->neutrino_dtype_id = H5FNAL_BAD_HID_T;
+    vector->particle_dtype_id = H5FNAL_BAD_HID_T;
+    vector->daughter_dtype_id = H5FNAL_BAD_HID_T;
+    vector->trajectory_dtype_id = H5FNAL_BAD_HID_T;
+    vector->truth_dtype_id = H5FNAL_BAD_HID_T;
+
     return H5FNAL_FAILURE;
 } /* h5fnal_open_v_mc_truth */
 
