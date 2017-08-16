@@ -505,28 +505,17 @@ error:
 hssize_t
 h5fnal_get_truths_count(h5fnal_v_mc_truth_t *vector)
 {
-    hid_t sid = H5FNAL_BAD_HID_T;
     hssize_t n_truths = -1;
 
     if (!vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
 
-    /* Get the number of elements in the truths dataset */
-    if ((sid = H5Dget_space(vector->truth_dataset_id)) < 0)
-        H5FNAL_HDF5_ERROR;
-    if ((n_truths = H5Sget_simple_extent_npoints(sid)) < 0)
-        H5FNAL_HDF5_ERROR;
-
-    if (H5Sclose(sid) < 0)
-        H5FNAL_HDF5_ERROR;
+    if ((n_truths = h5fnal_get_dset_size(vector->truth_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get the number of truths");
 
     return n_truths;
 
 error:
-    H5E_BEGIN_TRY {
-        H5Sclose(sid);
-    } H5E_END_TRY;
-
     return -1;
 } /* end h5fnal_get_truths_count() */
 
@@ -537,6 +526,25 @@ h5fnal_read_all_truths(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_trut
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
     if (!mem_truths)
         H5FNAL_PROGRAM_ERROR("mem_truths parameter cannot be NULL");
+
+#if 0
+    /* Get size and allocate buffers for read data */
+    if (NULL == (truths->truths = (h5fnal_mc_truth_t *)calloc(truths->n_truths, sizeof(h5fnal_mc_truth_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory")
+    if (NULL == (truths->trajectories = (h5fnal_mc_trajectory_t *)calloc(truths->n_trajectories, sizeof(h5fnal_mc_trajectory_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory")
+    if (NULL == (truths->daughters = (h5fnal_daughter_t *)calloc(truths->n_daughters, sizeof(h5fnal_daughter_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory")
+    if (NULL == (truths->particles = (h5fnal_mc_particle_t *)calloc(truths->n_particles, sizeof(h5fnal_mc_particle_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory")
+    if (NULL == (truths->neutrinos = (h5fnal_mc_neutrino_t *)calloc(truths->n_neutrinos, sizeof(h5fnal_mc_neutrino_t))))
+        H5FNAL_PROGRAM_ERROR("could allocate memory")
+
+
+    /* Read data */
+    if (H5Dread(vector->dataset_id, vector->datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, hits) < 0)
+        H5FNAL_HDF5_ERROR
+#endif
 
 error:
     return H5FNAL_FAILURE;

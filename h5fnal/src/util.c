@@ -120,6 +120,34 @@ error:
 
 } /* end h5fnal_get_string_attribute() */
 
+hssize_t
+h5fnal_get_dset_size(hid_t did)
+{
+    hid_t sid = H5FNAL_BAD_HID_T;
+    hssize_t n = -1;
+
+    if (did < 0)
+        H5FNAL_PROGRAM_ERROR("did parameter cannot be negative");
+
+    if ((sid = H5Dget_space(did)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((n = H5Sget_simple_extent_npoints(sid)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    if (H5Sclose(sid) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    return n;
+
+error:
+    H5E_BEGIN_TRY {
+        H5Sclose(sid);
+    } H5E_END_TRY;
+
+    return -1;
+} /* end h5fnal_get_dset_size() */
+
+
 herr_t
 h5fnal_append_data(hid_t did, hid_t tid, hsize_t n_elements, const void *data)
 {
