@@ -37,37 +37,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  // The gallery::Event object acts as a cursor into the stream of events.
-  // A newly-constructed gallery::Event is at the start if its stream.
-  // Use gallery::Event::atEnd() to check if you've reached the end of the stream.
-  // Use gallery::Event::next() to go to the next event.
-
-  for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
-    // getValidHandle() is preferred to getByLabel(), for both art and
-    // gallery use. It does not require in-your-face error handling.
-    std::vector<sim::MCHitCollection> const& mchits = *ev.getValidHandle<vector<sim::MCHitCollection>>(mchits_tag);
-
-    // In C++11 or newer, we recommend use of 'auto' to deduce the
-    // type of the value of the expression (here, the return value of
-    // the function call and derefencing of the returned ValidHandle<...>
-    // object).
-    //
-    //auto const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);
-
-    // After the call above, the MCTruth objects have been read into
-    // memory, and any of their *const* functions can be invoked. Only
-    // const functions can be used, because we have a const reference
-    // to the objects. This is part of the design of our object model:
-    // objects *read from an Event* are always immutable.
-    auto const& aux = ev.eventAuxiliary();
-    std::cout << "Processing event: " << aux.run()
-              << ',' << aux.subRun()
-              << ',' << aux.event() << '\n';
-    std::cout << "number of MCHitCollection objects: " << mchits.size() << '\n';
-    std::size_t nhits = 0UL;
-    for (auto const&  hitcol : mchits) { nhits += hitcol.size(); }
-    std::cout << "total number of hits: " << nhits << '\n';
-  }
 
   /********
    * HDF5 *
@@ -79,12 +48,72 @@ int main(int argc, char* argv[]) {
 
   /* Create the file */
   if((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)
-    H5FNAL_HDF5_ERROR
+    H5FNAL_HDF5_ERROR;
   if(H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST) < 0)
-    H5FNAL_HDF5_ERROR
+    H5FNAL_HDF5_ERROR;
   if((fid = H5Fcreate(FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id)) < 0)
-    H5FNAL_HDF5_ERROR
+    H5FNAL_HDF5_ERROR;
+  
+  // The gallery::Event object acts as a cursor into the stream of events.
+  // A newly-constructed gallery::Event is at the start if its stream.
+  // Use gallery::Event::atEnd() to check if you've reached the end of the stream.
+  // Use gallery::Event::next() to go to the next event.
 
+  unsigned int prevRun = 0;
+  unsigned int prevSubRun = 0;
+    
+  for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
+    auto const& aux = ev.eventAuxiliary();
+    std::cout << "Processing event: " << aux.run()
+              << ',' << aux.subRun()
+              << ',' << aux.event() << '\n';
+  
+    unsigned int currentRun = aux.run();
+    unsigned int currentSubRun = aux.subRun();
+    if (currentRun != prevRun) {
+      // make new group for Run, and for new SubRun
+      // create name from the integer ID.
+      prevRun = currentRun;
+      prevSubRun = currentSubRun;
+    } else if (currentSubRun != prevSubRun) {
+      // make new group for SubRun in the same run
+      prevSubRun = currentSubRun;
+    }
+
+    // Create group for new Event
+    unsigned int currentEvent = aux.event();
+      
+    
+    // getValidHandle() is preferred to getByLabel(), for both art and
+    // gallery use. It does not require in-your-face error handling.
+    std::vector<sim::MCHitCollection> const& mchits = *ev.getValidHandle<vector<sim::MCHitCollection>>(mchits_tag);
+
+    // call h5fnal::create_v_mc_hit_collection. This will create a group containing datasets. The name for this group should be something like:
+    // "MCHitCollections_mchitfinder_"
+    // The empty string following the 2nd underscore indicates and empty 'product instance name'.
+    // There is no need to represent the 'process name' because that is a top-level of the file entity -- in the root group.
+
+    std::cout << "number of MCHitCollection objects: " << mchits.size() << '\n';
+    std::size_t nhits = 0UL;
+    for (sim::MCHitCollection const&  hitcol : mchits) {
+      // channel for this hit collection
+      unsigned int channel = hitcol.Channel();
+      
+      // pointer to first hit:
+      sim::MCHit const* = hitcol.data();
+      // number of hits:
+      unsigned long sz = hitcol.size();
+      // Or iterator through all this:
+      for (sim::MCHit const& hit : hitcol) {
+        // in here 'hit' is the current sim::MCHit object.
+        float signal_time = hit.PeakTime();
+      }
+      //nhits += hitcol.size();
+    }
+    //std::cout << "total number of hits: " << nhits << '\n';
+  }
+
+  
   /* Create the run and event */
   if((run_id = h5fnal_create_run(fid, RUN_NAME)) < 0)
     H5FNAL_PROGRAM_ERROR("could not create run")
