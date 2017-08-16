@@ -1,3 +1,0 @@
-# Edit the products directory as necessary
-source demo-setup  "${@}"
-export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}

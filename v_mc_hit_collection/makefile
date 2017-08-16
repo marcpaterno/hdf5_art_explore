@@ -40,6 +40,7 @@ OBJECTS := compare.o
 EXEC := vmchc_read vmchc_write
 
 all : $(EXEC)
+	$(MAKE) -C test all
 
 vmchc_read.o : compare.hh
 
@@ -61,4 +62,4 @@ clean:
 	-@$(RM) -r *.dSYM
 
 test: all
-	@$(MAKE) -C test
+	@$(MAKE) -C test test
