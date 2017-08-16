@@ -527,24 +527,45 @@ h5fnal_read_all_truths(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_trut
     if (!mem_truths)
         H5FNAL_PROGRAM_ERROR("mem_truths parameter cannot be NULL");
 
-#if 0
-    /* Get size and allocate buffers for read data */
-    if (NULL == (truths->truths = (h5fnal_mc_truth_t *)calloc(truths->n_truths, sizeof(h5fnal_mc_truth_t))))
-        H5FNAL_PROGRAM_ERROR("could allocate memory")
-    if (NULL == (truths->trajectories = (h5fnal_mc_trajectory_t *)calloc(truths->n_trajectories, sizeof(h5fnal_mc_trajectory_t))))
-        H5FNAL_PROGRAM_ERROR("could allocate memory")
-    if (NULL == (truths->daughters = (h5fnal_daughter_t *)calloc(truths->n_daughters, sizeof(h5fnal_daughter_t))))
-        H5FNAL_PROGRAM_ERROR("could allocate memory")
-    if (NULL == (truths->particles = (h5fnal_mc_particle_t *)calloc(truths->n_particles, sizeof(h5fnal_mc_particle_t))))
-        H5FNAL_PROGRAM_ERROR("could allocate memory")
-    if (NULL == (truths->neutrinos = (h5fnal_mc_neutrino_t *)calloc(truths->n_neutrinos, sizeof(h5fnal_mc_neutrino_t))))
-        H5FNAL_PROGRAM_ERROR("could allocate memory")
+    /* Get dataset sizes and allocate memory */
+    if ((mem_truths->n_truths = h5fnal_get_dset_size(vector->truth_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get dataset size");
+    if (NULL == (mem_truths->truths = (h5fnal_mc_truth_t *)calloc(mem_truths->n_truths, sizeof(h5fnal_mc_truth_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory")
 
+    if ((mem_truths->n_trajectories = h5fnal_get_dset_size(vector->trajectory_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get dataset size");
+    if (NULL == (mem_truths->trajectories = (h5fnal_mc_trajectory_t *)calloc(mem_truths->n_trajectories, sizeof(h5fnal_mc_trajectory_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory")
+
+    if ((mem_truths->n_daughters = h5fnal_get_dset_size(vector->daughter_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get dataset size");
+    if (NULL == (mem_truths->daughters = (h5fnal_daughter_t *)calloc(mem_truths->n_daughters, sizeof(h5fnal_daughter_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory")
+
+    if ((mem_truths->n_particles = h5fnal_get_dset_size(vector->particle_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get dataset size");
+    if (NULL == (mem_truths->particles = (h5fnal_mc_particle_t *)calloc(mem_truths->n_particles, sizeof(h5fnal_mc_particle_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory")
+
+    if ((mem_truths->n_neutrinos = h5fnal_get_dset_size(vector->neutrino_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get dataset size");
+    if (NULL == (mem_truths->neutrinos = (h5fnal_mc_neutrino_t *)calloc(mem_truths->n_neutrinos, sizeof(h5fnal_mc_neutrino_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory")
 
     /* Read data */
-    if (H5Dread(vector->dataset_id, vector->datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, hits) < 0)
+    if (H5Dread(vector->truth_dataset_id, vector->truth_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, mem_truths->truths) < 0)
         H5FNAL_HDF5_ERROR
-#endif
+    if (H5Dread(vector->trajectory_dataset_id, vector->trajectory_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, mem_truths->trajectories) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dread(vector->daughter_dataset_id, vector->daughter_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, mem_truths->daughters) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dread(vector->particle_dataset_id, vector->particle_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, mem_truths->particles) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dread(vector->neutrino_dataset_id, vector->neutrino_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, mem_truths->neutrinos) < 0)
+        H5FNAL_HDF5_ERROR
+
+    return H5FNAL_SUCCESS;
 
 error:
     return H5FNAL_FAILURE;
