@@ -25,6 +25,18 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
+  /* TODO: Move variable declarations and initializations here to handle C-style
+   *       error handling without requiring -fpermissive and turning -Werror off.
+   */
+  /* HDF5 */
+  hid_t   fid 		= H5FNAL_BAD_HID_T;
+  hid_t   fapl_id 	= H5FNAL_BAD_HID_T;
+  hid_t   run_id 	= H5FNAL_BAD_HID_T;
+  hid_t   subrun_id 	= H5FNAL_BAD_HID_T;
+  hid_t   event_id 	= H5FNAL_BAD_HID_T;
+  int prevRun 		= -1;
+  int prevSubRun 	= -1;
+ 
   /********
    * ROOT *
    ********/
@@ -36,15 +48,6 @@ int main(int argc, char* argv[]) {
     std::cerr << "Please supply one or more input filenames\n";
     return 1;
   }
-
-
-  /********
-   * HDF5 *
-   ********/
-  hid_t   fid = -1;
-  hid_t   fapl_id = -1;
-  hid_t   run_id = -1;
-  hid_t   event_id = -1;
 
   /* Create the file */
   if((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)
@@ -59,10 +62,9 @@ int main(int argc, char* argv[]) {
   // Use gallery::Event::atEnd() to check if you've reached the end of the stream.
   // Use gallery::Event::next() to go to the next event.
 
-  unsigned int prevRun = 0;
-  unsigned int prevSubRun = 0;
-    
+   
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
+
     auto const& aux = ev.eventAuxiliary();
     std::cout << "Processing event: " << aux.run()
               << ',' << aux.subRun()
@@ -70,20 +72,43 @@ int main(int argc, char* argv[]) {
   
     unsigned int currentRun = aux.run();
     unsigned int currentSubRun = aux.subRun();
-    if (currentRun != prevRun) {
-      // make new group for Run, and for new SubRun
-      // create name from the integer ID.
+
+    if (currentRun != (int)prevRun) {
+      // Create a new run (create name from the integer ID)
+      if (run_id != H5FNAL_BAD_HID_T)
+        if (h5fnal_close_run(run_id) < 0)
+          H5FNAL_PROGRAM_ERROR("could not close run")
+
+      if ((run_id = h5fnal_create_run(fid, std::to_string(currentRun).c_str())) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create run");
+
+      // Create a new sub-run (create name from the integer ID)
+      if (subrun_id != H5FNAL_BAD_HID_T)
+        if (h5fnal_close_run(subrun_id) < 0)
+          H5FNAL_PROGRAM_ERROR("could not close sub-run");
+
+      if ((subrun_id = h5fnal_create_run(run_id, std::to_string(currentSubRun).c_str())) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create sub-run");
+
       prevRun = currentRun;
       prevSubRun = currentSubRun;
-    } else if (currentSubRun != prevSubRun) {
+    } else if (currentSubRun != (int)prevSubRun) {
       // make new group for SubRun in the same run
+      if (subrun_id != H5FNAL_BAD_HID_T)
+        if (h5fnal_close_run(subrun_id) < 0)
+          H5FNAL_PROGRAM_ERROR("could not close sub-run");
+
+      if ((subrun_id = h5fnal_create_run(run_id, std::to_string(currentSubRun).c_str())) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create sub-run");
+
       prevSubRun = currentSubRun;
     }
 
-    // Create group for new Event
+    // Create a new event (create name from the integer ID)
     unsigned int currentEvent = aux.event();
-      
-    
+      if ((event_id = h5fnal_create_event(subrun_id, std::to_string(currentEvent).c_str())) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create event");
+   
     // getValidHandle() is preferred to getByLabel(), for both art and
     // gallery use. It does not require in-your-face error handling.
     std::vector<sim::MCHitCollection> const& mchits = *ev.getValidHandle<vector<sim::MCHitCollection>>(mchits_tag);
@@ -100,35 +125,32 @@ int main(int argc, char* argv[]) {
       unsigned int channel = hitcol.Channel();
       
       // pointer to first hit:
-      sim::MCHit const* = hitcol.data();
+      //sim::MCHit const* = hitcol.data();
       // number of hits:
-      unsigned long sz = hitcol.size();
+      //unsigned long sz = hitcol.size();
       // Or iterator through all this:
-      for (sim::MCHit const& hit : hitcol) {
+      //for (sim::MCHit const& hit : hitcol) {
         // in here 'hit' is the current sim::MCHit object.
-        float signal_time = hit.PeakTime();
-      }
-      //nhits += hitcol.size();
+        //float signal_time = hit.PeakTime();
+      //}
+      nhits += hitcol.size();
     }
-    //std::cout << "total number of hits: " << nhits << '\n';
+    std::cout << "total number of hits: " << nhits << '\n';
+
+    if (h5fnal_close_event(event_id) < 0)
+      H5FNAL_PROGRAM_ERROR("could not close event")
   }
 
   
-  /* Create the run and event */
-  if((run_id = h5fnal_create_run(fid, RUN_NAME)) < 0)
-    H5FNAL_PROGRAM_ERROR("could not create run")
-  if((event_id = h5fnal_create_event(run_id, EVENT_NAME)) < 0)
-    H5FNAL_PROGRAM_ERROR("could not create event")
-
-  /* Close everything */
-  if(h5fnal_close_run(run_id) < 0)
-    H5FNAL_PROGRAM_ERROR("could not close run")
-  if(h5fnal_close_event(event_id) < 0)
-    H5FNAL_PROGRAM_ERROR("could not close event")
   if(H5Pclose(fapl_id) < 0)
-    H5FNAL_HDF5_ERROR
+    H5FNAL_HDF5_ERROR;
   if(H5Fclose(fid) < 0)
-    H5FNAL_HDF5_ERROR
+    H5FNAL_HDF5_ERROR;
+  // These will still be open after the loop.
+  if (h5fnal_close_run(run_id) < 0)
+    H5FNAL_PROGRAM_ERROR("could not close run")
+  if (h5fnal_close_run(subrun_id) < 0)
+    H5FNAL_PROGRAM_ERROR("could not close sub-run")
 
   std::cout << "*** SUCCESS ***\n";
 
@@ -138,10 +160,11 @@ error:
   std::cout << "*** FAILURE ***\n";
 
   H5E_BEGIN_TRY {
-    h5fnal_close_run(run_id);
-    h5fnal_close_event(event_id);
     H5Pclose(fapl_id);
     H5Fclose(fid);
+    h5fnal_close_run(run_id);
+    h5fnal_close_run(subrun_id);
+    h5fnal_close_event(event_id);
   } H5E_END_TRY;
 
   exit(EXIT_FAILURE);
