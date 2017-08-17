@@ -1,3 +1,4 @@
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <numeric>
@@ -16,9 +17,6 @@
 #include "h5fnal.h"
 
 #define FILE_NAME   "vmchc.h5"
-#define RUN_NAME    "testrun"
-#define EVENT_NAME  "testevent"
-#define VECTOR_NAME "vomchc"
 
 using namespace art;
 using namespace std;
@@ -36,6 +34,7 @@ int main(int argc, char* argv[]) {
   hid_t   event_id 	= H5FNAL_BAD_HID_T;
   int prevRun 		= -1;
   int prevSubRun 	= -1;
+  h5fnal_v_mc_hit_coll_t *h5vmchc = NULL;
  
   /********
    * ROOT *
@@ -56,7 +55,11 @@ int main(int argc, char* argv[]) {
     H5FNAL_HDF5_ERROR;
   if((fid = H5Fcreate(FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id)) < 0)
     H5FNAL_HDF5_ERROR;
-  
+
+  /* Allocate memory for the data product struct */
+  if (NULL == (h5vmchc = (h5fnal_v_mc_hit_coll_t *)calloc(1, sizeof(h5fnal_v_mc_hit_coll_t))))
+    H5FNAL_PROGRAM_ERROR("could not get memory for struct");
+
   // The gallery::Event object acts as a cursor into the stream of events.
   // A newly-constructed gallery::Event is at the start if its stream.
   // Use gallery::Event::atEnd() to check if you've reached the end of the stream.
@@ -64,7 +67,7 @@ int main(int argc, char* argv[]) {
 
    
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
-
+    vector<h5fnal_mc_hit_t> hits;
     auto const& aux = ev.eventAuxiliary();
     std::cout << "Processing event: " << aux.run()
               << ',' << aux.subRun()
@@ -106,17 +109,21 @@ int main(int argc, char* argv[]) {
 
     // Create a new event (create name from the integer ID)
     unsigned int currentEvent = aux.event();
-      if ((event_id = h5fnal_create_event(subrun_id, std::to_string(currentEvent).c_str())) < 0)
-        H5FNAL_PROGRAM_ERROR("could not create event");
+    if ((event_id = h5fnal_create_event(subrun_id, std::to_string(currentEvent).c_str())) < 0)
+      H5FNAL_PROGRAM_ERROR("could not create event");
    
     // getValidHandle() is preferred to getByLabel(), for both art and
     // gallery use. It does not require in-your-face error handling.
     std::vector<sim::MCHitCollection> const& mchits = *ev.getValidHandle<vector<sim::MCHitCollection>>(mchits_tag);
 
-    // call h5fnal::create_v_mc_hit_collection. This will create a group containing datasets. The name for this group should be something like:
+    // Create the Vector of MC Hit Collection via h5fnal.
+    // This will create a group containing datasets. The name for this group should be something like:
     // "MCHitCollections_mchitfinder_"
     // The empty string following the 2nd underscore indicates and empty 'product instance name'.
     // There is no need to represent the 'process name' because that is a top-level of the file entity -- in the root group.
+    memset(h5vmchc, 0, sizeof(h5fnal_v_mc_hit_coll_t));
+    if (h5fnal_create_v_mc_hit_collection(event_id, "REPLACEME", h5vmchc) < 0)
+      H5FNAL_PROGRAM_ERROR("could not create HDF5 data product");
 
     std::cout << "number of MCHitCollection objects: " << mchits.size() << '\n';
     std::size_t nhits = 0UL;
@@ -129,19 +136,31 @@ int main(int argc, char* argv[]) {
       // number of hits:
       //unsigned long sz = hitcol.size();
       // Or iterator through all this:
-      //for (sim::MCHit const& hit : hitcol) {
+      for (sim::MCHit const& hit : hitcol) {
+        h5fnal_mc_hit_t h5hit;
         // in here 'hit' is the current sim::MCHit object.
         //float signal_time = hit.PeakTime();
-      //}
+        memset(&h5hit, 0, sizeof(h5fnal_mc_hit_t));  // XXX: garbage
+        h5hit.channel = channel;
+        hits.push_back(h5hit);
+      }
       nhits += hitcol.size();
     }
     std::cout << "total number of hits: " << nhits << '\n';
 
+    // Write the data to the HDF5 data product
+    if (hits.size() > 0)
+      if (h5fnal_write_hits(h5vmchc, hits.size(), &hits[0]) < 0)
+        H5FNAL_PROGRAM_ERROR("could not write hits to the HDF5 data product")
+
+    /* Close the event and HDF5 data product */
+    if(h5fnal_close_v_mc_hit_collection(h5vmchc) < 0)
+      H5FNAL_PROGRAM_ERROR("could not close HDF5 data product");
     if (h5fnal_close_event(event_id) < 0)
-      H5FNAL_PROGRAM_ERROR("could not close event")
+      H5FNAL_PROGRAM_ERROR("could not close event");
   }
 
-  
+  /* Clean up */
   if(H5Pclose(fapl_id) < 0)
     H5FNAL_HDF5_ERROR;
   if(H5Fclose(fid) < 0)
@@ -152,12 +171,12 @@ int main(int argc, char* argv[]) {
   if (h5fnal_close_run(subrun_id) < 0)
     H5FNAL_PROGRAM_ERROR("could not close sub-run")
 
-  std::cout << "*** SUCCESS ***\n";
+  free(h5vmchc);
 
+  std::cout << "*** SUCCESS ***\n";
   exit(EXIT_SUCCESS);
 
 error:
-  std::cout << "*** FAILURE ***\n";
 
   H5E_BEGIN_TRY {
     H5Pclose(fapl_id);
@@ -165,7 +184,11 @@ error:
     h5fnal_close_run(run_id);
     h5fnal_close_run(subrun_id);
     h5fnal_close_event(event_id);
+    h5fnal_close_v_mc_hit_collection(h5vmchc);
   } H5E_END_TRY;
 
+  free(h5vmchc);
+
+  std::cout << "*** FAILURE ***\n";
   exit(EXIT_FAILURE);
 }
