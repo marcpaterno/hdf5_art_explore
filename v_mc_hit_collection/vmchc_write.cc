@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     unsigned int currentRun = aux.run();
     unsigned int currentSubRun = aux.subRun();
 
-    if (currentRun != (int)prevRun) {
+    if ((int)currentRun != prevRun) {
       // Create a new run (create name from the integer ID)
       if (run_id != H5FNAL_BAD_HID_T)
         if (h5fnal_close_run(run_id) < 0)
@@ -95,7 +95,8 @@ int main(int argc, char* argv[]) {
 
       prevRun = currentRun;
       prevSubRun = currentSubRun;
-    } else if (currentSubRun != (int)prevSubRun) {
+    }
+    else if ((int)currentSubRun != prevSubRun) {
       // make new group for SubRun in the same run
       if (subrun_id != H5FNAL_BAD_HID_T)
         if (h5fnal_close_run(subrun_id) < 0)
@@ -125,28 +126,28 @@ int main(int argc, char* argv[]) {
     if (h5fnal_create_v_mc_hit_collection(event_id, "REPLACEME", h5vmchc) < 0)
       H5FNAL_PROGRAM_ERROR("could not create HDF5 data product");
 
-    std::cout << "number of MCHitCollection objects: " << mchits.size() << '\n';
-    std::size_t nhits = 0UL;
+    // Process all MC Hit Collections
     for (sim::MCHitCollection const&  hitcol : mchits) {
-      // channel for this hit collection
-      unsigned int channel = hitcol.Channel();
+      unsigned int channel = hitcol.Channel();  // channel for this hit collection
       
-      // pointer to first hit:
-      //sim::MCHit const* = hitcol.data();
-      // number of hits:
-      //unsigned long sz = hitcol.size();
-      // Or iterator through all this:
+      // Iterate through all hits
       for (sim::MCHit const& hit : hitcol) {
         h5fnal_mc_hit_t h5hit;
-        // in here 'hit' is the current sim::MCHit object.
-        //float signal_time = hit.PeakTime();
-        memset(&h5hit, 0, sizeof(h5fnal_mc_hit_t));  // XXX: garbage
-        h5hit.channel = channel;
+
+        h5hit.signal_time 	= hit.PeakTime();
+        h5hit.signal_width	= hit.PeakWidth();
+        h5hit.peak_amp 		= hit.Charge(true);
+        h5hit.charge 		= hit.Charge(false);
+        h5hit.part_vertex_x	= (hit.PartVertex())[0];
+        h5hit.part_vertex_y 	= (hit.PartVertex())[1];
+        h5hit.part_vertex_z 	= (hit.PartVertex())[2];
+        h5hit.part_energy 	= hit.PartEnergy();
+        h5hit.part_track_id 	= hit.PartTrackId();
+        h5hit.channel 		= channel;
+
         hits.push_back(h5hit);
       }
-      nhits += hitcol.size();
     }
-    std::cout << "total number of hits: " << nhits << '\n';
 
     // Write the data to the HDF5 data product
     if (hits.size() > 0)
