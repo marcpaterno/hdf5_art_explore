@@ -23,10 +23,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-  /* TODO: Move variable declarations and initializations here to handle C-style
-   *       error handling without requiring -fpermissive and turning -Werror off.
-   */
-  /* HDF5 */
+  size_t totalHits = 0L;
   hid_t   fid 		= H5FNAL_BAD_HID_T;
   hid_t   fapl_id 	= H5FNAL_BAD_HID_T;
   hid_t   run_id 	= H5FNAL_BAD_HID_T;
@@ -36,9 +33,6 @@ int main(int argc, char* argv[]) {
   int prevSubRun 	= -1;
   h5fnal_v_mc_hit_coll_t *h5vmchc = NULL;
  
-  /********
-   * ROOT *
-   ********/
   InputTag mchits_tag { "mchitfinder" };
   InputTag vertex_tag { "linecluster" };
   InputTag assns_tag  { "linecluster" };
@@ -48,7 +42,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  /* Create the file */
+  /* Create the HDF5 file */
   if((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)
     H5FNAL_HDF5_ERROR;
   if(H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST) < 0)
@@ -65,7 +59,7 @@ int main(int argc, char* argv[]) {
   // Use gallery::Event::atEnd() to check if you've reached the end of the stream.
   // Use gallery::Event::next() to go to the next event.
 
-   
+  // Keep track of the total hit count
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
     vector<h5fnal_mc_hit_t> hits;
     auto const& aux = ev.eventAuxiliary();
@@ -153,6 +147,8 @@ int main(int argc, char* argv[]) {
     if (hits.size() > 0)
       if (h5fnal_write_hits(h5vmchc, hits.size(), &hits[0]) < 0)
         H5FNAL_PROGRAM_ERROR("could not write hits to the HDF5 data product")
+    totalHits += hits.size();
+    cout << "Wrote " << hits.size() << " hits to the HDF5 file." << endl;
 
     /* Close the event and HDF5 data product */
     if(h5fnal_close_v_mc_hit_collection(h5vmchc) < 0)
@@ -174,6 +170,7 @@ int main(int argc, char* argv[]) {
 
   free(h5vmchc);
 
+  cout << "Wrote " << totalHits << " TOTAL hits to the HDF5 file." << endl;
   std::cout << "*** SUCCESS ***\n";
   exit(EXIT_SUCCESS);
 
