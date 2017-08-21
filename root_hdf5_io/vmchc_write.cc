@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
 
     // Write the data to the HDF5 data product
     if (hits.size() > 0)
-      if (h5fnal_write_hits(h5vmchc, hits.size(), &hits[0]) < 0)
+      if (h5fnal_append_hits(h5vmchc, hits.size(), &hits[0]) < 0)
         H5FNAL_PROGRAM_ERROR("could not write hits to the HDF5 data product")
     totalHits += hits.size();
     cout << "Wrote " << hits.size() << " hits to the HDF5 file." << endl;

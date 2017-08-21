@@ -3,6 +3,7 @@
 # compiled code
 *.o
 *.a
+*.so
 
 # executables
 test_v_mc_hit_collection
