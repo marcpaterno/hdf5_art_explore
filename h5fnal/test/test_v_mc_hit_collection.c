@@ -14,27 +14,27 @@
 #define VECTOR_NAME "vomchc"
 
 h5fnal_mc_hit_t *
-generate_fake_hits(size_t n_hits)
+generate_fake_hits(hsize_t n_hits)
 {
-    size_t i;
+    hsize_t u;
     h5fnal_mc_hit_t *hits = NULL;
 
     srand((unsigned int)time(NULL));
 
-    if (NULL == (hits = (h5fnal_mc_hit_t *)calloc(n_hits, sizeof(h5fnal_mc_hit_t))))
+    if (NULL == (hits = (h5fnal_mc_hit_t *)calloc((size_t)n_hits, sizeof(h5fnal_mc_hit_t))))
         H5FNAL_PROGRAM_ERROR("could allocate memory for hits")
 
-    for (i = 0; i < n_hits; i++) {
-        hits[i].signal_time = (float)rand();
-        hits[i].signal_width = (float)rand();
-        hits[i].peak_amp = (float)rand();
-        hits[i].charge = (float)rand();
-        hits[i].part_vertex_x = (float)rand();
-        hits[i].part_vertex_y = (float)rand();
-        hits[i].part_vertex_z = (float)rand();
-        hits[i].part_energy = (float)rand();
-        hits[i].part_track_id = (int)rand();
-        hits[i].channel = (unsigned)rand();
+    for (u = 0; u < n_hits; u++) {
+        hits[u].signal_time = (float)rand();
+        hits[u].signal_width = (float)rand();
+        hits[u].peak_amp = (float)rand();
+        hits[u].charge = (float)rand();
+        hits[u].part_vertex_x = (float)rand();
+        hits[u].part_vertex_y = (float)rand();
+        hits[u].part_vertex_z = (float)rand();
+        hits[u].part_energy = (float)rand();
+        hits[u].part_track_id = (int)rand();
+        hits[u].channel = (unsigned)rand();
     }
 
     return hits;
@@ -55,11 +55,11 @@ main(void)
     hid_t   subrun_id = -1;
     hid_t   event_id = -1;
     h5fnal_v_mc_hit_coll_t *vector = NULL;
-    size_t n_hits;
+    hsize_t n_hits;
     h5fnal_mc_hit_t *hits = NULL;
     h5fnal_mc_hit_t *hits_out = NULL;
     hssize_t n_hits_out = 0;
-    size_t u;
+    hsize_t u;
 
     printf("Testing vector of MC Hit Collection operations... ");
 
@@ -90,10 +90,10 @@ main(void)
     if (NULL == (hits = generate_fake_hits(n_hits)))
         H5FNAL_PROGRAM_ERROR("unable to create fake hit data")
 
-    /* Write some hits to it */
-    if (h5fnal_write_hits(vector, n_hits, hits) < 0)
+    /* Append hits */
+    if (h5fnal_append_hits(vector, n_hits, hits) < 0)
         H5FNAL_PROGRAM_ERROR("could not write hits to the file")
-    if (h5fnal_write_hits(vector, n_hits, hits) < 0)
+    if (h5fnal_append_hits(vector, n_hits, hits) < 0)
         H5FNAL_PROGRAM_ERROR("could not write hits to the file")
 
     /* Get the number of hits */

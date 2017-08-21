@@ -38,7 +38,7 @@ herr_t h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_
 herr_t h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hit_coll_t *vector);
 herr_t h5fnal_close_v_mc_hit_collection(h5fnal_v_mc_hit_coll_t *vector);
 
-herr_t h5fnal_write_hits(h5fnal_v_mc_hit_coll_t *vector, size_t n_hits, h5fnal_mc_hit_t *hits);
+herr_t h5fnal_append_hits(h5fnal_v_mc_hit_coll_t *vector, hsize_t n_hits, h5fnal_mc_hit_t *hits);
 hssize_t h5fnal_get_hits_count(h5fnal_v_mc_hit_coll_t *vector);
 herr_t h5fnal_read_all_hits(h5fnal_v_mc_hit_coll_t *vector, h5fnal_mc_hit_t *hits);
 

@@ -7,6 +7,8 @@
 #ifndef H5FNAL_ASSNS_H
 #define H5FNAL_ASSNS_H
 
+#include "h5fnal.h"
+
 /* Association Type */
 typedef struct h5fnal_association_t {
     uint16_t    left_process_index;

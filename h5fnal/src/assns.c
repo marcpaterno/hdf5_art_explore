@@ -3,8 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "h5fnal.h"
-#include "util.h"
+#include "assns.h"
 
 #define H5FNAL_ASSNS_DATA_DATASET_NAME          "data"
 #define H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME   "associations"
@@ -365,6 +364,9 @@ h5fnal_get_assns_count(h5fnal_assns_t *assns)
 {
     hid_t sid = H5FNAL_BAD_HID_T;
     hssize_t n_assns = -1;
+
+    if (!assns)
+        H5FNAL_PROGRAM_ERROR("assns parameter cannot be NULL");
 
     /* Get the number of elements in the associations dataset */
     if ((sid = H5Dget_space(assns->association_dataset_id)) < 0)

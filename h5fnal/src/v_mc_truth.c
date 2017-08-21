@@ -1,5 +1,7 @@
 /* v_mc_truth.c */
 
+#include <stdlib.h>
+
 #include "h5fnal.h"
 
 /************/
@@ -26,6 +28,9 @@
 #define H5FNAL_MC_TRUTH_PARTICLE_DATASET_NAME       "particles"
 #define H5FNAL_MC_TRUTH_DAUGHTER_DATASET_NAME       "daughters"
 #define H5FNAL_MC_TRUTH_TRAJECTORY_DATASET_NAME     "trajectories"
+
+/* Prototypes */
+static herr_t append_fixup(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_truths);
 
 hid_t
 h5fnal_create_origin_enum_type(void)
@@ -339,12 +344,67 @@ error:
 herr_t
 h5fnal_open_v_mc_truth(hid_t loc_id, const char *name, h5fnal_v_mc_truth_t *vector)
 {
-    /* NOT IMPLEMENTED */
 
+    if (loc_id < 0)
+        H5FNAL_PROGRAM_ERROR("invalid loc_id parameter")
+    if (NULL == name)
+        H5FNAL_PROGRAM_ERROR("name parameter cannot be NULL")
     if (NULL == vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
 
+    /* Create the datatypes */
+    if ((vector->origin_enum_dtype_id = h5fnal_create_origin_enum_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    if ((vector->neutrino_dtype_id = h5fnal_create_mc_neutrino_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    if ((vector->particle_dtype_id = h5fnal_create_mc_particle_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    if ((vector->daughter_dtype_id = h5fnal_create_daughter_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    if ((vector->trajectory_dtype_id = h5fnal_create_mc_trajectory_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+    if ((vector->truth_dtype_id = h5fnal_create_mc_truth_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create datatype")
+
+    /* Open top-level group */
+    if ((vector->top_level_group_id = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR
+
+    /* Open the datasets */
+    if ((vector->truth_dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MC_TRUTH_TRUTH_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->neutrino_dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MC_TRUTH_NEUTRINO_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->particle_dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MC_TRUTH_PARTICLE_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->daughter_dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MC_TRUTH_DAUGHTER_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((vector->trajectory_dataset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_MC_TRUTH_TRAJECTORY_DATASET_NAME, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    return H5FNAL_SUCCESS;
+
 error:
+
+    H5E_BEGIN_TRY {
+        if (vector) {
+            H5Gclose(vector->top_level_group_id);
+            H5Tclose(vector->origin_enum_dtype_id);
+            H5Tclose(vector->neutrino_dtype_id);
+            H5Tclose(vector->particle_dtype_id);
+            H5Tclose(vector->daughter_dtype_id);
+            H5Tclose(vector->trajectory_dtype_id);
+            H5Tclose(vector->truth_dtype_id);
+        }
+    } H5E_END_TRY;
+
+    vector->origin_enum_dtype_id = H5FNAL_BAD_HID_T;
+    vector->neutrino_dtype_id = H5FNAL_BAD_HID_T;
+    vector->particle_dtype_id = H5FNAL_BAD_HID_T;
+    vector->daughter_dtype_id = H5FNAL_BAD_HID_T;
+    vector->trajectory_dtype_id = H5FNAL_BAD_HID_T;
+    vector->truth_dtype_id = H5FNAL_BAD_HID_T;
+
     return H5FNAL_FAILURE;
 } /* h5fnal_open_v_mc_truth */
 
@@ -380,7 +440,6 @@ h5fnal_close_v_mc_truth(h5fnal_v_mc_truth_t *vector)
     if (H5Dclose(vector->truth_dataset_id) < 0)
         H5FNAL_HDF5_ERROR
 
-
     return H5FNAL_SUCCESS;
 
 error:
@@ -406,4 +465,139 @@ error:
 
     return H5FNAL_FAILURE;
 } /* h5fnal_close_v_mc_truth */
+
+static herr_t
+append_fixup(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_truths)
+{
+    return H5FNAL_FAILURE;
+}
+
+herr_t
+h5fnal_append_truths(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_truths)
+{
+    if (!vector)
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
+    if (!mem_truths)
+        H5FNAL_PROGRAM_ERROR("mem_truths parameter cannot be NULL");
+
+    /* Trivial case */
+    if (0 == mem_truths->n_truths)
+        return H5FNAL_SUCCESS;
+
+    /* append data to all the datasets */
+    if (h5fnal_append_data(vector->truth_dataset_id, vector->truth_dtype_id, mem_truths->n_truths, (const void *)(mem_truths->truths)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append truths data")
+    if (h5fnal_append_data(vector->trajectory_dataset_id, vector->trajectory_dtype_id, mem_truths->n_trajectories, (const void *)(mem_truths->trajectories)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append trajectories data")
+    if (h5fnal_append_data(vector->daughter_dataset_id, vector->daughter_dtype_id, mem_truths->n_daughters, (const void *)(mem_truths->daughters)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append daughters data")
+    if (h5fnal_append_data(vector->particle_dataset_id, vector->particle_dtype_id, mem_truths->n_particles, (const void *)(mem_truths->particles)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append particles data")
+    if (h5fnal_append_data(vector->neutrino_dataset_id, vector->neutrino_dtype_id, mem_truths->n_neutrinos, (const void *)(mem_truths->neutrinos)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append neutrinos data")
+
+    return H5FNAL_SUCCESS;
+
+error:
+    return H5FNAL_FAILURE;
+} /* end h5fnal_append_truths() */
+
+hssize_t
+h5fnal_get_truths_count(h5fnal_v_mc_truth_t *vector)
+{
+    hssize_t n_truths = -1;
+
+    if (!vector)
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
+
+    if ((n_truths = h5fnal_get_dset_size(vector->truth_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get the number of truths");
+
+    return n_truths;
+
+error:
+    return -1;
+} /* end h5fnal_get_truths_count() */
+
+herr_t
+h5fnal_read_all_truths(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_truths)
+{
+    if (!vector)
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
+    if (!mem_truths)
+        H5FNAL_PROGRAM_ERROR("mem_truths parameter cannot be NULL");
+
+    /* Get dataset sizes and allocate memory */
+    if ((mem_truths->n_truths = h5fnal_get_dset_size(vector->truth_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get dataset size");
+    if (NULL == (mem_truths->truths = (h5fnal_mc_truth_t *)calloc(mem_truths->n_truths, sizeof(h5fnal_mc_truth_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory")
+
+    if ((mem_truths->n_trajectories = h5fnal_get_dset_size(vector->trajectory_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get dataset size");
+    if (NULL == (mem_truths->trajectories = (h5fnal_mc_trajectory_t *)calloc(mem_truths->n_trajectories, sizeof(h5fnal_mc_trajectory_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory")
+
+    if ((mem_truths->n_daughters = h5fnal_get_dset_size(vector->daughter_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get dataset size");
+    if (NULL == (mem_truths->daughters = (h5fnal_daughter_t *)calloc(mem_truths->n_daughters, sizeof(h5fnal_daughter_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory")
+
+    if ((mem_truths->n_particles = h5fnal_get_dset_size(vector->particle_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get dataset size");
+    if (NULL == (mem_truths->particles = (h5fnal_mc_particle_t *)calloc(mem_truths->n_particles, sizeof(h5fnal_mc_particle_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory")
+
+    if ((mem_truths->n_neutrinos = h5fnal_get_dset_size(vector->neutrino_dataset_id)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not get dataset size");
+    if (NULL == (mem_truths->neutrinos = (h5fnal_mc_neutrino_t *)calloc(mem_truths->n_neutrinos, sizeof(h5fnal_mc_neutrino_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory")
+
+    /* Read data */
+    if (H5Dread(vector->truth_dataset_id, vector->truth_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, mem_truths->truths) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dread(vector->trajectory_dataset_id, vector->trajectory_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, mem_truths->trajectories) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dread(vector->daughter_dataset_id, vector->daughter_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, mem_truths->daughters) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dread(vector->particle_dataset_id, vector->particle_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, mem_truths->particles) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Dread(vector->neutrino_dataset_id, vector->neutrino_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, mem_truths->neutrinos) < 0)
+        H5FNAL_HDF5_ERROR
+
+    return H5FNAL_SUCCESS;
+
+error:
+    return H5FNAL_FAILURE;
+} /* end h5fnal_read_all_truths() */
+
+/* Important in case the library and application use a different
+ * memory allocator.
+ */
+herr_t
+h5fnal_free_mem_truths(h5fnal_mem_truth_t *mem_truths)
+{
+    if (!mem_truths)
+        H5FNAL_PROGRAM_ERROR("mem_truths parameter cannot be NULL");
+
+    free(mem_truths->truths);
+    free(mem_truths->trajectories);
+    free(mem_truths->daughters);
+    free(mem_truths->particles);
+    free(mem_truths->neutrinos);
+
+    mem_truths->truths          = NULL;
+    mem_truths->trajectories    = NULL;
+    mem_truths->daughters       = NULL;
+    mem_truths->particles       = NULL;
+    mem_truths->neutrinos       = NULL;
+
+    mem_truths->n_truths = 0;
+
+    return H5FNAL_SUCCESS;
+
+error:
+    return H5FNAL_FAILURE;
+} /* end h5fnal_free_mem_truths() */
+
 

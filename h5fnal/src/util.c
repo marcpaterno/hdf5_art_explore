@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "h5fnal.h"
 #include "util.h"
 
 herr_t
@@ -120,4 +119,95 @@ error:
     return H5FNAL_FAILURE;
 
 } /* end h5fnal_get_string_attribute() */
+
+hssize_t
+h5fnal_get_dset_size(hid_t did)
+{
+    hid_t sid = H5FNAL_BAD_HID_T;
+    hssize_t n = -1;
+
+    if (did < 0)
+        H5FNAL_PROGRAM_ERROR("did parameter cannot be negative");
+
+    if ((sid = H5Dget_space(did)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((n = H5Sget_simple_extent_npoints(sid)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    if (H5Sclose(sid) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    return n;
+
+error:
+    H5E_BEGIN_TRY {
+        H5Sclose(sid);
+    } H5E_END_TRY;
+
+    return -1;
+} /* end h5fnal_get_dset_size() */
+
+
+herr_t
+h5fnal_append_data(hid_t did, hid_t tid, hsize_t n_elements, const void *data)
+{
+    hid_t file_sid = -1;                /* dataspace ID                             */
+    hid_t memory_sid = -1;              /* dataspace ID                             */
+    hsize_t curr_dims[1];               /* initial size of dataset                  */
+    hsize_t new_dims[1];                /* new size of data dataset             */
+    hsize_t start[1];
+    hsize_t stride[1];
+    hsize_t count[1];
+    hsize_t block[1];
+
+    /* Create the memory dataspace (set of points describing the data size, etc.) */
+    curr_dims[0] = n_elements;
+    if ((memory_sid = H5Screate_simple(1, curr_dims, curr_dims)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Get the size (current size only) of the dataset */
+    if ((file_sid = H5Dget_space(did)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Sget_simple_extent_dims(file_sid, curr_dims, NULL) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Sclose(file_sid) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Resize the dataset to hold the new data */
+    new_dims[0] = curr_dims[0] + n_elements;
+    if (H5Dset_extent(did, new_dims) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Get the resized file space */
+    if ((file_sid = H5Dget_space(did)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Create a hyperslab describing where the data should go */
+    start[0] = curr_dims[0];
+    stride[0] = 1;
+    count[0] = n_elements;
+    block[0] = 1;
+    if (H5Sselect_hyperslab(file_sid, H5S_SELECT_SET, start, stride, count, block) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Write the data to the dataset */
+    if (H5Dwrite(did, tid, memory_sid, file_sid, H5P_DEFAULT, data) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Close everything */
+    if (H5Sclose(file_sid) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Sclose(memory_sid) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    return H5FNAL_SUCCESS;
+
+error:
+    H5E_BEGIN_TRY {
+        H5Sclose(file_sid);
+        H5Sclose(memory_sid);
+    } H5E_END_TRY;
+
+    return H5FNAL_FAILURE;
+} /* end h5fnal_append_data() */
 

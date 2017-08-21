@@ -194,65 +194,24 @@ error:
 
 
 herr_t
-h5fnal_write_hits(h5fnal_v_mc_hit_coll_t *vector, size_t n_hits, h5fnal_mc_hit_t *hits)
+h5fnal_append_hits(h5fnal_v_mc_hit_coll_t *vector, hsize_t n_hits, h5fnal_mc_hit_t *hits)
 {
-    hid_t file_sid = -1;                /* dataspace ID                             */
-    hid_t memory_sid = -1;              /* dataspace ID                             */
-    hsize_t curr_dims[1];               /* initial size of dataset                  */
-    hsize_t new_dims[1];                /* new size of data dataset                 */
-    hsize_t start[1];
-    hsize_t stride[1];
-    hsize_t count[1];
-    hsize_t block[1];
+    if (NULL == vector)
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
+    if (NULL == hits)
+        H5FNAL_PROGRAM_ERROR("hits parameter cannot be NULL")
 
-    /* Create the memory dataspace (set of points describing the data size, etc.) */
-    curr_dims[0] = n_hits;
-    if ((memory_sid = H5Screate_simple(1, curr_dims, curr_dims)) < 0)
-        H5FNAL_HDF5_ERROR
+    /* trivial case */
+    if (0 == n_hits)
+        return H5FNAL_SUCCESS;
 
-    /* Get the size (current size only) of the dataset */
-    if ((file_sid = H5Dget_space(vector->dataset_id)) < 0)
-        H5FNAL_HDF5_ERROR
-    if (H5Sget_simple_extent_dims(file_sid, curr_dims, NULL) < 0)
-        H5FNAL_HDF5_ERROR
-    if (H5Sclose(file_sid) < 0)
-        H5FNAL_HDF5_ERROR
-
-    /* Resize the dataset to hold the new data */
-    new_dims[0] = curr_dims[0] + n_hits;
-    if (H5Dset_extent(vector->dataset_id, new_dims) < 0)
-        H5FNAL_HDF5_ERROR
-
-    /* Get the resized file space */
-    if ((file_sid = H5Dget_space(vector->dataset_id)) < 0)
-        H5FNAL_HDF5_ERROR
-
-    /* Create a hyperslab describing where the data should go */
-    start[0] = curr_dims[0];
-    stride[0] = 1;
-    count[0] = n_hits;
-    block[0] = 1;
-    if (H5Sselect_hyperslab(file_sid, H5S_SELECT_SET, start, stride, count, block) < 0)
-        H5FNAL_HDF5_ERROR
-
-    /* Write the hits to the dataset */
-    if (H5Dwrite(vector->dataset_id, vector->datatype_id, memory_sid, file_sid, H5P_DEFAULT, hits) < 0)
-        H5FNAL_HDF5_ERROR
-
-    /* Close everything */
-    if (H5Sclose(file_sid) < 0)
-        H5FNAL_HDF5_ERROR
-    if (H5Sclose(memory_sid) < 0)
-        H5FNAL_HDF5_ERROR
+    /* append data */
+    if (h5fnal_append_data(vector->dataset_id, vector->datatype_id, n_hits, (const void *)hits) < 0)
+        H5FNAL_PROGRAM_ERROR("could not append hits data")
 
     return H5FNAL_SUCCESS;
 
 error:
-    H5E_BEGIN_TRY {
-        H5Sclose(file_sid);
-        H5Sclose(memory_sid);
-    } H5E_END_TRY;
-
     return H5FNAL_FAILURE;
 } /* end h5fnal_write_hits() */
 
