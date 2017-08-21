@@ -81,7 +81,7 @@ h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_v_mc_hi
         H5FNAL_HDF5_ERROR
 
     /* Set up chunking (size is arbitrary for now) */
-    chunk_dims[0] = 128;
+    chunk_dims[0] = 1024;
     if ((dcpl_id = H5Pcreate(H5P_DATASET_CREATE)) < 0)
         H5FNAL_HDF5_ERROR
     if (H5Pset_chunk(dcpl_id, 1, chunk_dims) < 0)
