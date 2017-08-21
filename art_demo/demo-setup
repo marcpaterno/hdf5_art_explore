@@ -13,3 +13,4 @@ btype=${4:-prof}
 source ${pdir}/setup
 setup -B dunetpc ${lsover} -q+${qual}:+${btype}
 setup -B gallery v1_03_12 -q +e14:+nu:+prof
+setup -B hdf5 v1_10_1a -q+e14

@@ -1,0 +1,7 @@
+# Edit the products directory as necessary
+source demo-setup  "${@}"
+if [[ $(uname -s) == Darwin ]]; then
+  export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH:+${DYLD_LIBRARY_PATH}:}${PWD}/h5fnal/src
+else
+  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}${PWD}/h5fnal/src
+fi
