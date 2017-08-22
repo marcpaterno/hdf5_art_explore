@@ -21,7 +21,7 @@ export DYN_LIB_PATH = $(if $(filter Darwin,$(UNAME_S)),DY,)LD_LIBRARY_PATH
 
 UNDEF_FLAG = $(if $(filter Darwin,$(UNAME_S)),-Wl$(comma)-undefined$(comma)error,-Wl$(comma)--no-undefined)
 
-export CXXFLAGS = -fPIC -std=c++14 -Wall -Wextra -pedantic $(OFLAGS)
+export CXXFLAGS = -fPIC -std=c++14 -Wall -Wextra -pedantic -Wno-unused-parameter $(OFLAGS)
 #export CXXFLAGS = -fPIC -std=c++14 -Wall -Wextra -Werror -pedantic $(OFLAGS)
 export CXX = g++
 export LDFLAGS = $$(root-config --libs) \

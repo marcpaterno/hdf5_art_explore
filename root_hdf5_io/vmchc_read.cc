@@ -77,9 +77,12 @@ process_event(hid_t gid, const char *name, const H5L_info_t *info, void *op_data
 {
   iter_data_t *stats = (iter_data_t *)op_data;
   h5fnal_v_mc_hit_coll_t *vector = NULL;
-  hssize_t n_hits_out = 0;
-  h5fnal_mc_hit_t *hits_out = NULL;
+  hssize_t n_hits = 0;
+  h5fnal_mc_hit_t *hits = NULL;
   string hitsName;
+  hssize_t i;
+  unsigned int prev_channel;
+  std::vector<sim::MCHitCollection> vmchc;
 
   stats->n_events++;
 
@@ -95,21 +98,41 @@ process_event(hid_t gid, const char *name, const H5L_info_t *info, void *op_data
     H5FNAL_PROGRAM_ERROR("could not open vector of mc hit collection")
 
   /* Read the hits */
-  if ((n_hits_out = h5fnal_get_hits_count(vector)) < 0)
+  if ((n_hits = h5fnal_get_hits_count(vector)) < 0)
     H5FNAL_PROGRAM_ERROR("could not get number of hits from dataset")
-  if (NULL == (hits_out = (h5fnal_mc_hit_t *)calloc(n_hits_out, sizeof(h5fnal_mc_hit_t))))
+  if (NULL == (hits = (h5fnal_mc_hit_t *)calloc(n_hits, sizeof(h5fnal_mc_hit_t))))
     H5FNAL_PROGRAM_ERROR("could allocate memory for hits_out")
-  if (h5fnal_read_all_hits(vector, hits_out) < 0)
+  if (h5fnal_read_all_hits(vector, hits) < 0)
     H5FNAL_PROGRAM_ERROR("could not read hits from the file")
 
   /* Close the vector */
   if (h5fnal_close_v_mc_hit_collection(vector) < 0)
     H5FNAL_PROGRAM_ERROR("could not close vector")
 
-  free(hits_out);
+  /* Pack the data into a Vector of MC Hit Collection */
+  prev_channel = (unsigned)-1;
+  for (i = 0; i < n_hits; i++) {
+    /* If the channel changed, add the old hit collection and create
+     * a new one.
+     */
+    if (hits[i].channel != prev_channel) {
+      vmchc.emplace_back(hits[i].channel);
+      prev_channel = hits[i].channel;
+    }
+
+    /* Add the hit to the current hit collection */
+    sim::MCHit hit;
+    hit.SetCharge(hits[i].charge, hits[i].peak_amp);
+    hit.SetTime(hits[i].signal_time, hits[i].signal_width);
+    float vtx[] = {hits[i].part_vertex_x, hits[i].part_vertex_y, hits[i].part_vertex_z};
+    hit.SetParticleInfo(vtx, hits[i].part_energy, hits[i].part_track_id);
+    vmchc.back().push_back(hit);
+  }
+
+  free(hits);
   free(vector);
 
-  cout << " Number of hits: " << n_hits_out << endl;
+  cout << " Number of hits: " << n_hits << endl;
 
   return 0;
 error:
@@ -117,7 +140,7 @@ error:
     if(vector)
       h5fnal_close_v_mc_hit_collection(vector);
   } H5E_END_TRY;
-  free(hits_out);
+  free(hits);
   free(vector);
 
   return -1;
