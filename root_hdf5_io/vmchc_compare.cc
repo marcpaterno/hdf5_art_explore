@@ -24,6 +24,22 @@
 using namespace art;
 using namespace std;
 
+void
+get_hdf5_hits(unsigned run, unsigned subrun, unsigned event, std::vector<sim::MCHitCollection> &hdf5_mchits)
+{
+    // Open run, subrun, and event
+
+    // Open the data product
+
+    // Read all the data
+
+    // Convert to MCHitCollections and add to the vector
+
+    // Close everything
+error:
+    return;
+}
+
 int main(int argc, char* argv[]) {
 
   hid_t   fid 		= H5FNAL_BAD_HID_T;
@@ -79,6 +95,7 @@ int main(int argc, char* argv[]) {
 
     // TODO: Open the data product in the event in the HDF5 file and get all the data out.
     std::vector<sim::MCHitCollection> hdf5_mchits;
+    get_hdf5_hits(aux.run(), aux.subRun(), aux.event(), hdf5_mchits);
 
     if (root_mchits == hdf5_mchits)
         cout << "equal" << endl;
