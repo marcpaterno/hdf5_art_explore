@@ -28,32 +28,60 @@ typedef struct iter_data_t {
     int     n_events;
 } iter_data_t;
 
+/* H5Literate() callbacks */
+herr_t process_run(hid_t gid, const char *name, const H5L_info_t *info, void *op_data);
+herr_t process_subrun(hid_t gid, const char *name, const H5L_info_t *info, void *op_data);
+herr_t process_event(hid_t gid, const char *name, const H5L_info_t *info, void *op_data);
+
+
 herr_t
-open_run(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
+process_run(hid_t gid, const char *name, const H5L_info_t *info, void *op_data)
 {
-    iter_data_t *stats = (iter_data_t *)op_data;
+  iter_data_t *stats = (iter_data_t *)op_data;
 
-    stats->n_runs++;
+  stats->n_runs++;
 
-    return 0;
+  cout << "Run name: " << name << endl;
+
+  /* Iterate over the sub-runs */
+  if (H5Literate_by_name(gid, name, H5_INDEX_CRT_ORDER, H5_ITER_INC, NULL, process_subrun, op_data, H5P_DEFAULT) < 0)
+    H5FNAL_PROGRAM_ERROR("iteration over sub-runs failed");
+
+  return 0;
 error:
-    return -1;
+  return -1;
 }
 
 herr_t
-open_subrun(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
+process_subrun(hid_t gid, const char *name, const H5L_info_t *info, void *op_data)
 {
-    return 0;
+  iter_data_t *stats = (iter_data_t *)op_data;
+
+  stats->n_subruns++;
+
+  cout << "Sub-run name: " << name << endl;
+
+  /* Iterate over the events */
+  if (H5Literate_by_name(gid, name, H5_INDEX_CRT_ORDER, H5_ITER_INC, NULL, process_event, op_data, H5P_DEFAULT) < 0)
+    H5FNAL_PROGRAM_ERROR("iteration over events failed");
+
+  return 0;
 error:
-    return -1;
+  return -1;
 }
 
 herr_t
-open_event(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
+process_event(hid_t gid, const char *name, const H5L_info_t *info, void *op_data)
 {
-    return 0;
+  iter_data_t *stats = (iter_data_t *)op_data;
+
+  stats->n_events++;
+
+  cout << "Event name: " << name << endl;
+
+  return 0;
 error:
-    return -1;
+  return -1;
 }
 
 int main(int argc, char* argv[]) {
@@ -83,7 +111,7 @@ int main(int argc, char* argv[]) {
    * products by using, say, H5Lvisit().
    */
   memset(&stats, 0, sizeof(iter_data_t));
-  if (H5Literate(master_id, H5_INDEX_CRT_ORDER, H5_ITER_INC, NULL, open_run, (void *)&stats) < 0)
+  if (H5Literate(master_id, H5_INDEX_CRT_ORDER, H5_ITER_INC, NULL, process_run, (void *)&stats) < 0)
     H5FNAL_PROGRAM_ERROR("iteration over runs failed");
 
   /* Clean up */
