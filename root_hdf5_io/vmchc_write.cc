@@ -16,7 +16,7 @@
 
 #include "h5fnal.h"
 
-#define FILE_NAME   "vmchc.h5"
+#define MASTER_RUN_CONTAINER    "master_run_container"
 
 using namespace art;
 using namespace std;
@@ -26,8 +26,9 @@ int main(int argc, char* argv[]) {
   size_t totalHits = 0L;
   hid_t   fid 		= H5FNAL_BAD_HID_T;
   hid_t   fapl_id 	= H5FNAL_BAD_HID_T;
+  hid_t   master_id = H5FNAL_BAD_HID_T;
   hid_t   run_id 	= H5FNAL_BAD_HID_T;
-  hid_t   subrun_id 	= H5FNAL_BAD_HID_T;
+  hid_t   subrun_id = H5FNAL_BAD_HID_T;
   hid_t   event_id 	= H5FNAL_BAD_HID_T;
   int prevRun 		= -1;
   int prevSubRun 	= -1;
@@ -36,19 +37,28 @@ int main(int argc, char* argv[]) {
   InputTag mchits_tag { "mchitfinder" };
   InputTag vertex_tag { "linecluster" };
   InputTag assns_tag  { "linecluster" };
+
   vector<string> filenames { argv+1, argv+argc }; // filenames from command line
-  if (filenames.empty()) {
-    std::cerr << "Please supply one or more input filenames\n";
-    return 1;
+  if (2 != filenames.size()) {
+    std::cerr << "Please supply input and output filenames\n";
+    exit(EXIT_FAILURE);
   }
 
   /* Create the HDF5 file */
-  if((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)
+  string h5FileName = filenames.back();
+  filenames.pop_back();
+  if ((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)
     H5FNAL_HDF5_ERROR;
-  if(H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST) < 0)
+  if (H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST) < 0)
     H5FNAL_HDF5_ERROR;
-  if((fid = H5Fcreate(FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id)) < 0)
+  if ((fid = H5Fcreate(h5FileName.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id)) < 0)
     H5FNAL_HDF5_ERROR;
+
+  /* Create a containing group in which creation order is tracked and indexed.
+   * There is no way to do this in the root group, so we can't use that.
+   */
+  if ((master_id = h5fnal_create_run(fid, MASTER_RUN_CONTAINER)) < 0)
+    H5FNAL_PROGRAM_ERROR("could not create master run containing group");
 
   /* Allocate memory for the data product struct */
   if (NULL == (h5vmchc = (h5fnal_v_mc_hit_coll_t *)calloc(1, sizeof(h5fnal_v_mc_hit_coll_t))))
@@ -61,6 +71,7 @@ int main(int argc, char* argv[]) {
 
   // Keep track of the total hit count
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
+
     vector<h5fnal_mc_hit_t> hits;
     auto const& aux = ev.eventAuxiliary();
     std::cout << "Processing event: " << aux.run()
@@ -76,7 +87,7 @@ int main(int argc, char* argv[]) {
         if (h5fnal_close_run(run_id) < 0)
           H5FNAL_PROGRAM_ERROR("could not close run")
 
-      if ((run_id = h5fnal_create_run(fid, std::to_string(currentRun).c_str())) < 0)
+      if ((run_id = h5fnal_create_run(master_id, std::to_string(currentRun).c_str())) < 0)
         H5FNAL_PROGRAM_ERROR("could not create run");
 
       // Create a new sub-run (create name from the integer ID)
@@ -151,17 +162,19 @@ int main(int argc, char* argv[]) {
     cout << "Wrote " << hits.size() << " hits to the HDF5 file." << endl;
 
     /* Close the event and HDF5 data product */
-    if(h5fnal_close_v_mc_hit_collection(h5vmchc) < 0)
+    if (h5fnal_close_v_mc_hit_collection(h5vmchc) < 0)
       H5FNAL_PROGRAM_ERROR("could not close HDF5 data product");
     if (h5fnal_close_event(event_id) < 0)
       H5FNAL_PROGRAM_ERROR("could not close event");
   }
 
   /* Clean up */
-  if(H5Pclose(fapl_id) < 0)
+  if (H5Pclose(fapl_id) < 0)
     H5FNAL_HDF5_ERROR;
-  if(H5Fclose(fid) < 0)
+  if (H5Fclose(fid) < 0)
     H5FNAL_HDF5_ERROR;
+  if (h5fnal_close_run(master_id) < 0)
+    H5FNAL_PROGRAM_ERROR("could not close master run container")
   // These will still be open after the loop.
   if (h5fnal_close_run(run_id) < 0)
     H5FNAL_PROGRAM_ERROR("could not close run")
@@ -182,6 +195,7 @@ error:
     h5fnal_close_run(run_id);
     h5fnal_close_run(subrun_id);
     h5fnal_close_event(event_id);
+    h5fnal_close_run(master_id);
     h5fnal_close_v_mc_hit_collection(h5vmchc);
   } H5E_END_TRY;
 
