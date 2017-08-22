@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <iterator>
@@ -17,6 +18,7 @@
 #include "h5fnal.h"
 
 #define MASTER_RUN_CONTAINER    "master_run_container"
+#define BADNAME                 "REPLACEME"     // TODO: Replace this with a good name
 
 using namespace art;
 using namespace std;
@@ -74,13 +76,50 @@ herr_t
 process_event(hid_t gid, const char *name, const H5L_info_t *info, void *op_data)
 {
   iter_data_t *stats = (iter_data_t *)op_data;
+  h5fnal_v_mc_hit_coll_t *vector = NULL;
+  hssize_t n_hits_out = 0;
+  h5fnal_mc_hit_t *hits_out = NULL;
+  string hitsName;
 
   stats->n_events++;
 
-  cout << "Event name: " << name << endl;
+  cout << "Event name: " << name;
+
+  /* Open the vector */
+  hitsName.append(name);
+  hitsName.append("/");
+  hitsName.append(BADNAME);
+  if (NULL == (vector = (h5fnal_v_mc_hit_coll_t *)calloc(1, sizeof(h5fnal_v_mc_hit_coll_t))))
+    H5FNAL_PROGRAM_ERROR("could not get memory for vector")
+  if (h5fnal_open_v_mc_hit_collection(gid, hitsName.c_str(), vector) < 0)
+    H5FNAL_PROGRAM_ERROR("could not open vector of mc hit collection")
+
+  /* Read the hits */
+  if ((n_hits_out = h5fnal_get_hits_count(vector)) < 0)
+    H5FNAL_PROGRAM_ERROR("could not get number of hits from dataset")
+  if (NULL == (hits_out = (h5fnal_mc_hit_t *)calloc(n_hits_out, sizeof(h5fnal_mc_hit_t))))
+    H5FNAL_PROGRAM_ERROR("could allocate memory for hits_out")
+  if (h5fnal_read_all_hits(vector, hits_out) < 0)
+    H5FNAL_PROGRAM_ERROR("could not read hits from the file")
+
+  /* Close the vector */
+  if (h5fnal_close_v_mc_hit_collection(vector) < 0)
+    H5FNAL_PROGRAM_ERROR("could not close vector")
+
+  free(hits_out);
+  free(vector);
+
+  cout << " Number of hits: " << n_hits_out << endl;
 
   return 0;
 error:
+  H5E_BEGIN_TRY {
+    if(vector)
+      h5fnal_close_v_mc_hit_collection(vector);
+  } H5E_END_TRY;
+  free(hits_out);
+  free(vector);
+
   return -1;
 }
 

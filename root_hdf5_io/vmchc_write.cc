@@ -17,6 +17,7 @@
 #include "h5fnal.h"
 
 #define MASTER_RUN_CONTAINER    "master_run_container"
+#define BADNAME                 "REPLACEME"     // TODO: Replace this with a good name
 
 using namespace art;
 using namespace std;
@@ -128,7 +129,7 @@ int main(int argc, char* argv[]) {
     // The empty string following the 2nd underscore indicates and empty 'product instance name'.
     // There is no need to represent the 'process name' because that is a top-level of the file entity -- in the root group.
     memset(h5vmchc, 0, sizeof(h5fnal_v_mc_hit_coll_t));
-    if (h5fnal_create_v_mc_hit_collection(event_id, "REPLACEME", h5vmchc) < 0)
+    if (h5fnal_create_v_mc_hit_collection(event_id, BADNAME, h5vmchc) < 0)
       H5FNAL_PROGRAM_ERROR("could not create HDF5 data product");
 
     // Process all MC Hit Collections
