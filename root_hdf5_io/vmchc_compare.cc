@@ -14,6 +14,8 @@
 #include "lardataobj/RecoBase/Vertex.h"
 #include "lardataobj/MCBase/MCHitCollection.h"
 
+#include "compare.hh"
+
 #include "h5fnal.h"
 
 #define MASTER_RUN_CONTAINER    "master_run_container"
@@ -66,15 +68,22 @@ int main(int argc, char* argv[]) {
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
 
     auto const& aux = ev.eventAuxiliary();
-    std::cout << "Processing event: " << aux.run()
+    std::cout << "Processing event " << aux.run()
               << ',' << aux.subRun()
-              << ',' << aux.event() << '\n';
+              << ',' << aux.event()
+              << ": ";
   
-    // TODO: Open the data product in the event in the HDF5 file
-   
     // getValidHandle() is preferred to getByLabel(), for both art and
     // gallery use. It does not require in-your-face error handling.
-    std::vector<sim::MCHitCollection> const& mchits = *ev.getValidHandle<vector<sim::MCHitCollection>>(mchits_tag);
+    std::vector<sim::MCHitCollection> const& root_mchits = *ev.getValidHandle<vector<sim::MCHitCollection>>(mchits_tag);
+
+    // TODO: Open the data product in the event in the HDF5 file and get all the data out.
+    std::vector<sim::MCHitCollection> hdf5_mchits;
+
+    if (root_mchits == hdf5_mchits)
+        cout << "equal" << endl;
+    else
+        cout << "*** BADNESS: NOT EQUAL ***" << endl;
   }
 
   /* Clean up */
