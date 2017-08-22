@@ -2,6 +2,8 @@
 source demo-setup  "${@}"
 if [[ $(uname -s) == Darwin ]]; then
   export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH:+${DYLD_LIBRARY_PATH}:}${PWD}/h5fnal/src
+  export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH:+${DYLD_LIBRARY_PATH}:}${PWD}/root_hdf5_io
 else
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}${PWD}/h5fnal/src
+  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}${PWD}/root_hdf5_io
 fi
