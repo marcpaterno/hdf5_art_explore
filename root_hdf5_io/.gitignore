@@ -6,5 +6,6 @@
 pullProducts
 vmchc_read
 vmchc_write
+vmchc_compare
 *.h5
 *.swp
