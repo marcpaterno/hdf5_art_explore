@@ -24,7 +24,7 @@ generate_test_hit_collections(hsize_t n_hit_collections)
     /* If you want to get deterministic behavior, change NULL to an integer */
     srand((unsigned int)time(NULL));
 
-    /* Pick a starting channel */
+    /* Pick a starting channel (arbitrary) */
     start_channel = (int)(rand() % 4096);
 
     /* Get memory for the top-level data container */
@@ -53,7 +53,7 @@ generate_test_hit_collections(hsize_t n_hit_collections)
         if (((double)rand() / RAND_MAX) < 0.5)
             this_hits = 0;
         else
-            this_hits = (int)(rand() % 1024);
+            this_hits = (int)(rand() % 64);
 
         /* Write the hit collection data to the buffer */
         data->hit_collections[hc].channel = start_channel + hc;
@@ -136,7 +136,7 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not create vector of mc hit collection");
 
     /* Generate some test data */
-    n_hit_collections = 16384;
+    n_hit_collections = 256;
     if (NULL == (data = generate_test_hit_collections(n_hit_collections)))
         H5FNAL_PROGRAM_ERROR("unable to create test hit collection data");
 

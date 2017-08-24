@@ -269,12 +269,31 @@ error:
 herr_t
 h5fnal_append_hits(h5fnal_vect_hitcoll_t *vector, h5fnal_vect_hitcoll_data_t *data)
 {
+    hid_t       sid     = H5FNAL_BAD_HID_T;
+    hsize_t     offset;
+    hsize_t     u;
+
     if (NULL == vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
     if (NULL == data)
         H5FNAL_PROGRAM_ERROR("data parameter cannot be NULL");
 
-    /* TODO: Hit collection fixup goes here */
+    /* Hit collection fixup.
+     *
+     * When appending hits and hit collections to non-empty datasets,
+     * the 'start' references in the incoming data will have to be
+     * modified so that they refer to the correct elements in the dataset. 
+     */
+    if ((sid = H5Dget_space(vector->hit_dset_id)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if ((offset = H5Sget_simple_extent_npoints(sid)) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Sclose(sid) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (offset > 0)
+        for (u = 0; u < data->n_hit_collections; u++)
+            if (data->hit_collections[u].count > 0)
+                data->hit_collections[u].start += offset;
 
     /* append data */
     if (h5fnal_append_data(vector->hit_dset_id, vector->hit_dtype_id, data->n_hits, (const void *)data->hits) < 0)
@@ -285,6 +304,10 @@ h5fnal_append_hits(h5fnal_vect_hitcoll_t *vector, h5fnal_vect_hitcoll_data_t *da
     return H5FNAL_SUCCESS;
 
 error:
+    H5E_BEGIN_TRY {
+        H5Sclose(sid);
+    } H5E_END_TRY;
+
     return H5FNAL_FAILURE;
 } /* end h5fnal_append_hits() */
 

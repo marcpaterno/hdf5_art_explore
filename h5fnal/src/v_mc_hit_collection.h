@@ -30,6 +30,10 @@ typedef struct h5fnal_hit_t {
  *
  * channel corresponds to fChannel in the MCHitCollection class.
  *
+ * start is the index into the corresponding hit array. This will
+ * be fixed up in the append() call when writing to a non-empty
+ * data product.
+ *
  * Set both start and count to zero to represent a hit collection
  * that contains zero hits for that channel.
  */
