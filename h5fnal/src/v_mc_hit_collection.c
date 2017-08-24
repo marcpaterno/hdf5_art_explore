@@ -237,15 +237,15 @@ h5fnal_close_v_mc_hit_collection(h5fnal_vect_hitcoll_t *vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
 
     if (H5Dclose(vector->hit_dset_id) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tclose(vector->hit_dtype_id) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Dclose(vector->hitcoll_dset_id) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tclose(vector->hitcoll_dtype_id) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Gclose(vector->top_level_group_id) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
 
     vector->hit_dset_id         = H5FNAL_BAD_HID_T;
     vector->hit_dtype_id        = H5FNAL_BAD_HID_T;
@@ -270,17 +270,17 @@ herr_t
 h5fnal_append_hits(h5fnal_vect_hitcoll_t *vector, h5fnal_vect_hitcoll_data_t *data)
 {
     if (NULL == vector)
-        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
     if (NULL == data)
-        H5FNAL_PROGRAM_ERROR("data parameter cannot be NULL")
+        H5FNAL_PROGRAM_ERROR("data parameter cannot be NULL");
 
     /* TODO: Hit collection fixup goes here */
 
     /* append data */
     if (h5fnal_append_data(vector->hit_dset_id, vector->hit_dtype_id, data->n_hits, (const void *)data->hits) < 0)
-        H5FNAL_PROGRAM_ERROR("could not append hit data")
+        H5FNAL_PROGRAM_ERROR("could not append hit data");
     if (h5fnal_append_data(vector->hitcoll_dset_id, vector->hitcoll_dtype_id, data->n_hit_collections, (const void *)data->hit_collections) < 0)
-        H5FNAL_PROGRAM_ERROR("could not append hit collection data")
+        H5FNAL_PROGRAM_ERROR("could not append hit collection data");
 
     return H5FNAL_SUCCESS;
 
