@@ -4,8 +4,14 @@
 *.so
 *.dSYM
 pullProducts
-vmchc_read
-vmchc_write
-vmchc_compare
+hitcoll_read
+hitcoll_write
+hitcoll_compare
+truth_read
+truth_write
+truth_compare
+assns_read
+assns_write
+assns_compare
 *.h5
 *.swp

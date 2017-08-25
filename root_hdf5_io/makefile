@@ -38,17 +38,16 @@ export LDFLAGS = $$(root-config --libs) \
 
 LIB := libhdf5_art_explore.so
 OBJECTS := compare.o
-#EXEC := vmchc_read vmchc_write vmchc_compare
-EXEC := vmchc_write vmchc_compare
+#EXEC := hitcoll_read hitcoll_write hitcoll_compare
+EXEC := hitcoll_write hitcoll_compare truth_write truth_compare \
+	    assns_write assns_compare
 
 all : $(EXEC)
 	$(MAKE) -C test all
 
-#vmchc_read.o : compare.hh
-
-vmchc_write.o : compare.hh
-
-vmchc_compare.o : compare.hh
+hitcoll_compare.o : compare.hh
+truth_compare.o : compare.hh
+assns_compare.o : compare.hh
 
 $(EXEC) : % : %.o $(LIB)
 	@echo Building $(@)
