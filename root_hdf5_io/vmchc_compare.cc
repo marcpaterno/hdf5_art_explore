@@ -33,11 +33,9 @@ get_hdf5_hits(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::
     hid_t   run_id = -1;
     hid_t   subrun_id = -1;
     hid_t   event_id = -1;
-    h5fnal_v_mc_hit_coll_t *vector = NULL;
-    hssize_t n_hits = 0;
-    h5fnal_mc_hit_t *hits = NULL;
-    hssize_t i;
-    unsigned int prev_channel;
+    h5fnal_vect_hitcoll_t *vector = NULL;
+    h5fnal_vect_hitcoll_data_t *data = NULL;
+    hsize_t hc;
 
     // Open run, sub-run, and event
     if ((run_id = h5fnal_open_run(loc_id, run_name.c_str())) < 0)
@@ -48,20 +46,45 @@ get_hdf5_hits(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::
         H5FNAL_PROGRAM_ERROR("could not open event")
 
     // Open the data product
-    if (NULL == (vector = (h5fnal_v_mc_hit_coll_t *)calloc(1, sizeof(h5fnal_v_mc_hit_coll_t))))
+    if (NULL == (vector = (h5fnal_vect_hitcoll_t *)calloc(1, sizeof(h5fnal_vect_hitcoll_t))))
         H5FNAL_PROGRAM_ERROR("could not get memory for vector")
     if (h5fnal_open_v_mc_hit_collection(event_id, BADNAME, vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not open vector of mc hit collection")
 
     // Read all the data
-    if ((n_hits = h5fnal_get_hits_count(vector)) < 0)
-        H5FNAL_PROGRAM_ERROR("could not get number of hits from dataset")
-    if (NULL == (hits = (h5fnal_mc_hit_t *)calloc(n_hits, sizeof(h5fnal_mc_hit_t))))
-        H5FNAL_PROGRAM_ERROR("could allocate memory for hits_out")
-    if (h5fnal_read_all_hits(vector, hits) < 0)
-        H5FNAL_PROGRAM_ERROR("could not read hits from the file")
+    if (NULL == (data = (h5fnal_vect_hitcoll_data_t *)calloc(1, sizeof(h5fnal_vect_hitcoll_data_t))))
+        H5FNAL_PROGRAM_ERROR("could not get memory for hit collection data")
+    if (h5fnal_read_all_hits(vector, data) < 0)
+        H5FNAL_PROGRAM_ERROR("could not read hit collection data from the file")
 
     // Convert to MCHitCollections and add to the vector
+    for (hc = 0; hc < data->n_hit_collections; hc++)
+    {
+        hsize_t start;
+        hsize_t end;
+        hsize_t v;
+
+        // Create a new hit collection in the vector
+        hdf5_mchits.emplace_back(data->hit_collections[hc].channel);
+
+        // Loop over the appropriate hits
+        start = data->hit_collections[hc].start;
+        end = start + data->hit_collections[hc].count;
+        for (v = start; v < end; v++) {
+            sim::MCHit hit;
+
+            // Create the hit
+            hit.SetCharge(data->hits[v].charge, data->hits[v].peak_amp);
+            hit.SetTime(data->hits[v].signal_time, data->hits[v].signal_width);
+            float vtx[] = {data->hits[v].part_vertex_x, data->hits[v].part_vertex_y, data->hits[v].part_vertex_z};
+            hit.SetParticleInfo(vtx, data->hits[v].part_energy, data->hits[v].part_track_id);
+
+            // Add the hit
+            hdf5_mchits.back().push_back(hit);
+        } // end loop over his
+    } // end loop over hit collections
+
+#if 0
     prev_channel = (unsigned)-1;
     for (i = 0; i < n_hits; i++) {
         /* If the channel changed, add the old hit collection and create
@@ -80,6 +103,7 @@ get_hdf5_hits(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::
         hit.SetParticleInfo(vtx, hits[i].part_energy, hits[i].part_track_id);
         hdf5_mchits.back().push_back(hit);
     }
+#endif
 
     // Close everything
     if (h5fnal_close_run(run_id) < 0)
@@ -90,8 +114,9 @@ get_hdf5_hits(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::
         H5FNAL_PROGRAM_ERROR("could not close event")
     if (h5fnal_close_v_mc_hit_collection(vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not close vector")
+    // TODO: clean up data
     free(vector);
-    free(hits);
+    free(data);
 
     return;
 
@@ -103,7 +128,7 @@ error:
         h5fnal_close_v_mc_hit_collection(vector);
     } H5E_END_TRY;
     free(vector);
-    free(hits);
+    free(data);
 
     return;
 }
@@ -112,7 +137,6 @@ int main(int argc, char* argv[]) {
 
   hid_t   fid 		= H5FNAL_BAD_HID_T;
   hid_t   master_id = H5FNAL_BAD_HID_T;
-  h5fnal_v_mc_hit_coll_t *h5vmchc = NULL;
  
   InputTag mchits_tag { "mchitfinder" };
   InputTag vertex_tag { "linecluster" };
@@ -137,10 +161,6 @@ int main(int argc, char* argv[]) {
   if ((master_id = h5fnal_open_run(fid, MASTER_RUN_CONTAINER)) < 0)
     H5FNAL_PROGRAM_ERROR("could not open master run containing group");
 
-  /* Allocate memory for the data product struct */
-  if (NULL == (h5vmchc = (h5fnal_v_mc_hit_coll_t *)calloc(1, sizeof(h5fnal_v_mc_hit_coll_t))))
-    H5FNAL_PROGRAM_ERROR("could not get memory for struct");
-
   // The gallery::Event object acts as a cursor into the stream of events.
   // A newly-constructed gallery::Event is at the start if its stream.
   // Use gallery::Event::atEnd() to check if you've reached the end of the stream.
@@ -160,12 +180,8 @@ int main(int argc, char* argv[]) {
     // getValidHandle() is preferred to getByLabel(), for both art and
     // gallery use. It does not require in-your-face error handling.
     std::vector<sim::MCHitCollection> const& root_mchits = *ev.getValidHandle<vector<sim::MCHitCollection>>(mchits_tag);
-    if (0 == root_mchits.size()) {
-        cout << "SKIPPING (empty MCHitCollection)" << endl;
-        continue;
-    }
 
-    // TODO: Open the data product in the event in the HDF5 file and get all the data out.
+    // Open the data product in the event in the HDF5 file and get all the data out.
     std::vector<sim::MCHitCollection> hdf5_mchits;
     get_hdf5_hits(master_id, aux.run(), aux.subRun(), aux.event(), hdf5_mchits);
 
@@ -181,8 +197,6 @@ int main(int argc, char* argv[]) {
   if (h5fnal_close_run(master_id) < 0)
     H5FNAL_PROGRAM_ERROR("could not close master run container")
 
-  free(h5vmchc);
-
   std::cout << "*** SUCCESS ***\n";
   exit(EXIT_SUCCESS);
 
@@ -192,8 +206,6 @@ error:
     H5Fclose(fid);
     h5fnal_close_run(master_id);
   } H5E_END_TRY;
-
-  free(h5vmchc);
 
   std::cout << "*** FAILURE ***\n";
   exit(EXIT_FAILURE);
