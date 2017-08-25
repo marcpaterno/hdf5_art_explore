@@ -122,11 +122,11 @@ main(void)
         H5FNAL_HDF5_ERROR;
 
     /* Create the run, sub-run, and event */
-    if ((run_id = h5fnal_create_run(fid, RUN_NAME)) < 0)
+    if ((run_id = h5fnal_create_run(fid, RUN_NAME, FALSE)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create run");
-    if ((subrun_id = h5fnal_create_run(run_id, SUBRUN_NAME)) < 0)
+    if ((subrun_id = h5fnal_create_run(run_id, SUBRUN_NAME, FALSE)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create sub-run");
-    if ((event_id = h5fnal_create_event(subrun_id, EVENT_NAME)) < 0)
+    if ((event_id = h5fnal_create_event(subrun_id, EVENT_NAME, TRUE)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create event");
 
     /* Create the vector of MC hit collection data product */

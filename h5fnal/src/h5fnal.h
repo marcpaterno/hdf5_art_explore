@@ -24,6 +24,10 @@
 #define H5FNAL_SUCCESS      0
 #define H5FNAL_FAILURE      (-1)
 
+/* Values for hbool_t */
+#define TRUE    1
+#define FALSE   0
+
 /* An invalid HDF5 ID */
 #define H5FNAL_BAD_HID_T    H5I_INVALID_HID
 
@@ -47,12 +51,12 @@ extern "C" {
 #endif
 
 /* Run */
-hid_t h5fnal_create_run(hid_t loc_id, const char *name);
+hid_t h5fnal_create_run(hid_t loc_id, const char *name, hbool_t compress_names);
 hid_t h5fnal_open_run(hid_t loc_id, const char *name);
 herr_t h5fnal_close_run(hid_t loc_id);
 
 /* Event */
-hid_t h5fnal_create_event(hid_t loc_id, const char *name);
+hid_t h5fnal_create_event(hid_t loc_id, const char *name, hbool_t compress_names);
 hid_t h5fnal_open_event(hid_t loc_id, const char *name);
 herr_t h5fnal_close_event(hid_t loc_id);
 

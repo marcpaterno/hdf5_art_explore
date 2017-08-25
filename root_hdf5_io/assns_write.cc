@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
   /* Create a top-level containing group in which creation order is tracked and indexed.
    * There is no way to do this in the root group, so we can't use that.
    */
-  if ((master_id = h5fnal_create_run(fid, MASTER_RUN_CONTAINER)) < 0)
+  if ((master_id = h5fnal_create_run(fid, MASTER_RUN_CONTAINER, FALSE)) < 0)
     H5FNAL_PROGRAM_ERROR("could not create master run containing group");
 
   /* Allocate memory for the data product struct
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
         if (h5fnal_close_run(run_id) < 0)
           H5FNAL_PROGRAM_ERROR("could not close run")
 
-      if ((run_id = h5fnal_create_run(master_id, std::to_string(currentRun).c_str())) < 0)
+      if ((run_id = h5fnal_create_run(master_id, std::to_string(currentRun).c_str(), FALSE)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create run");
 
       // Create a new sub-run (create name from the integer ID)
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
         if (h5fnal_close_run(subrun_id) < 0)
           H5FNAL_PROGRAM_ERROR("could not close sub-run");
 
-      if ((subrun_id = h5fnal_create_run(run_id, std::to_string(currentSubRun).c_str())) < 0)
+      if ((subrun_id = h5fnal_create_run(run_id, std::to_string(currentSubRun).c_str(), FALSE)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create sub-run");
 
       prevRun = currentRun;
@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
         if (h5fnal_close_run(subrun_id) < 0)
           H5FNAL_PROGRAM_ERROR("could not close sub-run");
 
-      if ((subrun_id = h5fnal_create_run(run_id, std::to_string(currentSubRun).c_str())) < 0)
+      if ((subrun_id = h5fnal_create_run(run_id, std::to_string(currentSubRun).c_str(), FALSE)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create sub-run");
 
       prevSubRun = currentSubRun;
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 
     // Create a new event (create name from the integer ID)
     unsigned int currentEvent = aux.event();
-    if ((event_id = h5fnal_create_event(subrun_id, std::to_string(currentEvent).c_str())) < 0)
+    if ((event_id = h5fnal_create_event(subrun_id, std::to_string(currentEvent).c_str(), FALSE)) < 0)
       H5FNAL_PROGRAM_ERROR("could not create event");
    
     // getValidHandle() is preferred to getByLabel(), for both art and
