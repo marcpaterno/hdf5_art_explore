@@ -151,6 +151,8 @@ h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_vect_hi
         H5FNAL_HDF5_ERROR;
     if (H5Pset_chunk(dcpl_id, 1, chunk_dims) < 0)
         H5FNAL_HDF5_ERROR;
+    if (H5Pset_shuffle(dcpl_id) < 0)
+        H5FNAL_HDF5_ERROR;
     if (H5Pset_deflate(dcpl_id, 6) < 0)
         H5FNAL_HDF5_ERROR;
 
