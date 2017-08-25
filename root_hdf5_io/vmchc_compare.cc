@@ -84,27 +84,6 @@ get_hdf5_hits(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::
         } // end loop over his
     } // end loop over hit collections
 
-#if 0
-    prev_channel = (unsigned)-1;
-    for (i = 0; i < n_hits; i++) {
-        /* If the channel changed, add the old hit collection and create
-         * a new one.
-         */
-        if (hits[i].channel != prev_channel) {
-            hdf5_mchits.emplace_back(hits[i].channel);
-            prev_channel = hits[i].channel;
-        }
-
-        /* Add the hit to the current hit collection */
-        sim::MCHit hit;
-        hit.SetCharge(hits[i].charge, hits[i].peak_amp);
-        hit.SetTime(hits[i].signal_time, hits[i].signal_width);
-        float vtx[] = {hits[i].part_vertex_x, hits[i].part_vertex_y, hits[i].part_vertex_z};
-        hit.SetParticleInfo(vtx, hits[i].part_energy, hits[i].part_track_id);
-        hdf5_mchits.back().push_back(hit);
-    }
-#endif
-
     // Close everything
     if (h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
@@ -114,7 +93,8 @@ get_hdf5_hits(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::
         H5FNAL_PROGRAM_ERROR("could not close event")
     if (h5fnal_close_v_mc_hit_collection(vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not close vector")
-    // TODO: clean up data
+    if (h5fnal_free_hitcoll_mem_data(data) < 0)
+        H5FNAL_PROGRAM_ERROR("could not free in-memory hit collection data");
     free(vector);
     free(data);
 
@@ -127,6 +107,8 @@ error:
         h5fnal_close_event(event_id);
         h5fnal_close_v_mc_hit_collection(vector);
     } H5E_END_TRY;
+    if (data )
+        h5fnal_free_hitcoll_mem_data(data);
     free(vector);
     free(data);
 
