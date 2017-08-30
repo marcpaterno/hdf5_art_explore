@@ -18,7 +18,7 @@
 #include "h5fnal.h"
 
 #define MASTER_RUN_CONTAINER    "master_run_container"
-#define BADNAME                 "REPLACEME"     // TODO: Replace this with a good name
+#define BADNAME                 "ASSNS"         // TODO: Replace this with a better name
 
 using namespace art;
 using namespace std;
@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
   hid_t   event_id 	= H5FNAL_BAD_HID_T;
   int prevRun 		= -1;
   int prevSubRun 	= -1;
-  h5fnal_vect_hitcoll_t *h5vmchc = NULL;
+  h5fnal_assns_t *h5assns = NULL;
  
   InputTag mchits_tag { "mchitfinder" };
   InputTag vertex_tag { "linecluster" };
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
    * This will be re-used for all data products we read in root and create
    * in HDF5 (it's re-initialized on close).
    */
-  if (NULL == (h5vmchc = (h5fnal_vect_hitcoll_t *)calloc(1, sizeof(h5fnal_vect_hitcoll_t))))
+  if (NULL == (h5assns = (h5fnal_assns_t *)calloc(1, sizeof(h5fnal_assns_t))))
     H5FNAL_PROGRAM_ERROR("could not get memory for HDF5 data product struct");
 
   // The gallery::Event object acts as a cursor into the stream of events.
@@ -78,11 +78,8 @@ int main(int argc, char* argv[]) {
   // Loop over all the events in the root file
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
 
-    vector<h5fnal_hit_t> hits;
-    vector<h5fnal_hitcoll_t> hit_collections;
     auto const& aux = ev.eventAuxiliary();
-    hsize_t first_hit;
-    h5fnal_vect_hitcoll_data_t hc_data;
+    h5fnal_assns_data_t assns_data;
 
     std::cout << "Processing event: " << aux.run()
               << ',' << aux.subRun()
@@ -133,68 +130,25 @@ int main(int argc, char* argv[]) {
     // art::Assns<recob::Cluster, recob::Hit> const& clusters_hits = *ev.getValidHandle<art::Assns<recob::Cluster, recob::Hit>>(assns_tag); 
     auto const& clusters_hits =  *ev.getValidHandle<art::Assns<recob::Cluster, recob::Hit>>(assns_tag); 
 
-    // Create the Vector of MC Hit Collection via h5fnal.
-    // This will create a group containing datasets. The name for this group should be something like:
-    // "MCHitCollections_mchitfinder_"
+    // Create the Assns via h5fnal.
     // The empty string following the 2nd underscore indicates and empty 'product instance name'.
     // There is no need to represent the 'process name' because that is a top-level of the file entity -- in the root group.
     // TODO: Update the name (using a cheap, hard-coded name for now)
-#if 0
-    if (h5fnal_create_v_mc_hit_collection(event_id, BADNAME, h5vmchc) < 0)
+    // TODO: What strings should LEFT and RIGHT be?
+    if (h5fnal_create_assns(event_id, BADNAME, "recob::Cluster", "recob:Hit", H5T_NATIVE_INT, h5assns) < 0)
       H5FNAL_PROGRAM_ERROR("could not create HDF5 data product");
 
-    // Process all MC Hit Collections
-    first_hit = 0;
+    // Process all Assns
     for (auto const& p : clusters_hits) {
-      h5fnal_hitcoll_t hc;
-      hsize_t hitcount = 0;
-      
-      // Iterate through all hits
-      for (sim::MCHit const& hit : hitcol) {
-        h5fnal_hit_t h5hit;
 
-        h5hit.signal_time 	= hit.PeakTime();
-        h5hit.signal_width	= hit.PeakWidth();
-        h5hit.peak_amp 		= hit.Charge(true);
-        h5hit.charge 		= hit.Charge(false);
-        h5hit.part_vertex_x	= (hit.PartVertex())[0];
-        h5hit.part_vertex_y 	= (hit.PartVertex())[1];
-        h5hit.part_vertex_z 	= (hit.PartVertex())[2];
-        h5hit.part_energy 	= hit.PartEnergy();
-        h5hit.part_track_id 	= hit.PartTrackId();
-
-        hitcount++;
-        hits.push_back(h5hit);
-      } /* end loop over hits */
-
-      hc.channel = hitcol.Channel();
-      hc.count = hitcount;
-      hc.start = (hitcount > 0) ? first_hit : 0;
-      hit_collections.push_back(hc);
-
-      first_hit += hitcount;
-
-    } /* end loop over hit collections */
-
-    // Write the data to the HDF5 data product
-    hc_data.n_hits = hits.size();
-    hc_data.n_hit_collections = hit_collections.size();
-    hc_data.hits = &hits[0];
-    hc_data.hit_collections = &hit_collections[0];
-
-    if (h5fnal_append_hits(h5vmchc, &hc_data) < 0)
-      H5FNAL_PROGRAM_ERROR("could not write hits to the HDF5 data product");
-
-    totalHits += hits.size();
-    cout << "Wrote " << hits.size() << " hits to the HDF5 file." << endl;
+    } /* end loop over Assns */
 
     /* Close the event and HDF5 data product */
-    if (h5fnal_close_v_mc_hit_collection(h5vmchc) < 0)
+    if (h5fnal_close_assns(h5assns) < 0)
       H5FNAL_PROGRAM_ERROR("could not close HDF5 data product");
-#endif
     if (h5fnal_close_event(event_id) < 0)
       H5FNAL_PROGRAM_ERROR("could not close event");
-  }
+  } /* End of loop over events */
 
   /* Clean up */
   if (H5Pclose(fapl_id) < 0)
@@ -209,7 +163,7 @@ int main(int argc, char* argv[]) {
   if (h5fnal_close_run(subrun_id) < 0)
     H5FNAL_PROGRAM_ERROR("could not close sub-run")
 
-  free(h5vmchc);
+  free(h5assns);
 
   cout << "Wrote " << totalHits << " TOTAL hits to the HDF5 file." << endl;
   std::cout << "*** SUCCESS ***\n";
@@ -224,11 +178,12 @@ error:
     h5fnal_close_run(subrun_id);
     h5fnal_close_event(event_id);
     h5fnal_close_run(master_id);
-    h5fnal_close_v_mc_hit_collection(h5vmchc);
+    h5fnal_close_assns(h5assns);
   } H5E_END_TRY;
 
-  free(h5vmchc);
+  free(h5assns);
 
   std::cout << "*** FAILURE ***\n";
   exit(EXIT_FAILURE);
 }
+
