@@ -12,6 +12,7 @@
 #include "gallery/ValidHandle.h"
 #include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/Vertex.h"
+#include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/MCBase/MCHitCollection.h"
 
 #include "h5fnal.h"
@@ -129,7 +130,8 @@ int main(int argc, char* argv[]) {
    
     // getValidHandle() is preferred to getByLabel(), for both art and
     // gallery use. It does not require in-your-face error handling.
-    std::vector<sim::MCHitCollection> const& mchits = *ev.getValidHandle<vector<sim::MCHitCollection>>(mchits_tag);
+    // art::Assns<recob::Cluster, recob::Hit> const& clusters_hits = *ev.getValidHandle<art::Assns<recob::Cluster, recob::Hit>>(assns_tag); 
+    auto const& clusters_hits =  *ev.getValidHandle<art::Assns<recob::Cluster, recob::Hit>>(assns_tag); 
 
     // Create the Vector of MC Hit Collection via h5fnal.
     // This will create a group containing datasets. The name for this group should be something like:
@@ -137,12 +139,13 @@ int main(int argc, char* argv[]) {
     // The empty string following the 2nd underscore indicates and empty 'product instance name'.
     // There is no need to represent the 'process name' because that is a top-level of the file entity -- in the root group.
     // TODO: Update the name (using a cheap, hard-coded name for now)
+#if 0
     if (h5fnal_create_v_mc_hit_collection(event_id, BADNAME, h5vmchc) < 0)
       H5FNAL_PROGRAM_ERROR("could not create HDF5 data product");
 
     // Process all MC Hit Collections
     first_hit = 0;
-    for (sim::MCHitCollection const&  hitcol : mchits) {
+    for (auto const& p : clusters_hits) {
       h5fnal_hitcoll_t hc;
       hsize_t hitcount = 0;
       
@@ -188,6 +191,7 @@ int main(int argc, char* argv[]) {
     /* Close the event and HDF5 data product */
     if (h5fnal_close_v_mc_hit_collection(h5vmchc) < 0)
       H5FNAL_PROGRAM_ERROR("could not close HDF5 data product");
+#endif
     if (h5fnal_close_event(event_id) < 0)
       H5FNAL_PROGRAM_ERROR("could not close event");
   }

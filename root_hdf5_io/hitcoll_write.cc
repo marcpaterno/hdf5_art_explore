@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
         if (h5fnal_close_run(subrun_id) < 0)
           H5FNAL_PROGRAM_ERROR("could not close sub-run");
 
-      if ((subrun_id = h5fnal_create_run(run_id, std::to_string(currentSubRun).c_str(), FALSE)) < 0)
+      if ((subrun_id = h5fnal_create_run(run_id, std::to_string(currentSubRun).c_str(), TRUE)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create sub-run");
 
       prevRun = currentRun;
@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
         if (h5fnal_close_run(subrun_id) < 0)
           H5FNAL_PROGRAM_ERROR("could not close sub-run");
 
-      if ((subrun_id = h5fnal_create_run(run_id, std::to_string(currentSubRun).c_str(), FALSE)) < 0)
+      if ((subrun_id = h5fnal_create_run(run_id, std::to_string(currentSubRun).c_str(), TRUE)) < 0)
         H5FNAL_PROGRAM_ERROR("could not create sub-run");
 
       prevSubRun = currentSubRun;
