@@ -5,32 +5,32 @@
 
 #include "assns.h"
 
+#define H5FNAL_ASSNS_PAIR_DATASET_NAME          "pairs"
 #define H5FNAL_ASSNS_DATA_DATASET_NAME          "data"
-#define H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME   "associations"
 
 #define H5FNAL_LEFT_DATA_PRODUCT_NAME           "left data product"
 #define H5FNAL_RIGHT_DATA_PRODUCT_NAME          "right data product"
 
 hid_t
-h5fnal_create_association_type(void)
+h5fnal_create_pair_type(void)
 {
     hid_t tid = H5FNAL_BAD_HID_T;
 
-    if ((tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_association_t))) < 0)
+    if ((tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_pair_t))) < 0)
         H5FNAL_HDF5_ERROR;
 
-    if (H5Tinsert(tid, "left_process_index", HOFFSET(h5fnal_association_t, left_process_index), H5T_STD_U16LE) < 0)
+    if (H5Tinsert(tid, "left_process_index", HOFFSET(h5fnal_pair_t, left_process_index), H5T_STD_U16LE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "left_product_index", HOFFSET(h5fnal_association_t, left_product_index), H5T_STD_U16LE) < 0)
+    if (H5Tinsert(tid, "left_product_index", HOFFSET(h5fnal_pair_t, left_product_index), H5T_STD_U16LE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "left_key", HOFFSET(h5fnal_association_t, left_key), H5T_STD_U64LE) < 0)
+    if (H5Tinsert(tid, "left_key", HOFFSET(h5fnal_pair_t, left_key), H5T_STD_U64LE) < 0)
         H5FNAL_HDF5_ERROR;
 
-    if (H5Tinsert(tid, "right_process_index", HOFFSET(h5fnal_association_t, right_process_index), H5T_STD_U16LE) < 0)
+    if (H5Tinsert(tid, "right_process_index", HOFFSET(h5fnal_pair_t, right_process_index), H5T_STD_U16LE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "right_product_index", HOFFSET(h5fnal_association_t, right_product_index), H5T_STD_U16LE) < 0)
+    if (H5Tinsert(tid, "right_product_index", HOFFSET(h5fnal_pair_t, right_product_index), H5T_STD_U16LE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "right_key", HOFFSET(h5fnal_association_t, right_key), H5T_STD_U64LE) < 0)
+    if (H5Tinsert(tid, "right_key", HOFFSET(h5fnal_pair_t, right_key), H5T_STD_U64LE) < 0)
         H5FNAL_HDF5_ERROR;
 
     return tid;
@@ -43,9 +43,46 @@ error:
     return H5FNAL_BAD_HID_T;
 } /* h5fnal_create_association_type */
 
+/************************************************************************
+ * h5fnal_close_vector_on_err()
+ *
+ * Closes HDF5 IDs for this data product with no error
+ * checking. Used to shut everything down and set the hid_t
+ * values to bad values when we need to ensure the vector
+ * is invalid.
+ ************************************************************************/
+static void
+h5fnal_close_assns_on_err(h5fnal_assns_t *assns)
+{
+    if (assns) {
+
+        H5E_BEGIN_TRY {
+            H5Dclose(assns->pair_dset_id);
+            H5Dclose(assns->data_dset_id);
+            H5Tclose(assns->pair_dtype_id);
+            H5Tclose(assns->data_dtype_id);
+            H5Gclose(assns->top_level_group_id);
+        } H5E_END_TRY;
+
+        assns->pair_dset_id         = H5FNAL_BAD_HID_T;
+        assns->data_dset_id         = H5FNAL_BAD_HID_T;
+        assns->pair_dtype_id        = H5FNAL_BAD_HID_T;
+        assns->data_dtype_id        = H5FNAL_BAD_HID_T;
+        assns->top_level_group_id   = H5FNAL_BAD_HID_T;
+
+        free(assns->left);
+        free(assns->right);
+
+        assns->left = NULL;
+        assns->right = NULL;
+    }
+
+    return;
+} /* end h5fnal_close_assns_on_err() */
+
 herr_t
 h5fnal_create_assns(hid_t loc_id, const char *name, const char *left, const char *right, 
-        h5fnal_assns_t *assns, hid_t data_datatype_id)
+        hid_t data_dtype_id, h5fnal_assns_t *assns)
 {
     hid_t dcpl_id = -1;
     hid_t sid = -1;
@@ -65,15 +102,8 @@ h5fnal_create_assns(hid_t loc_id, const char *name, const char *left, const char
     if (NULL == assns)
         H5FNAL_PROGRAM_ERROR("assns parameter cannot be NULL");
 
-    /* Store the names of the right and left data products in the struct */
-    dp_len = strlen(left) + 1;
-    if (NULL == (assns->left = (char *)malloc(dp_len)))
-        H5FNAL_PROGRAM_ERROR("could not get memory for left data product string");
-    strcpy(assns->left, left);
-    dp_len = strlen(right) + 1;
-    if (NULL == (assns->right = (char *)malloc(dp_len)))
-        H5FNAL_PROGRAM_ERROR("could not get memory for right data product string");
-    strcpy(assns->right, right);
+    /* Initialize the data product struct */
+    memset(assns, 0, sizeof(h5fnal_assns_t));
 
     /* Create top-level group */
     if ((assns->top_level_group_id = H5Gcreate2(loc_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)) < 0)
@@ -85,11 +115,27 @@ h5fnal_create_assns(hid_t loc_id, const char *name, const char *left, const char
     if (h5fnal_add_string_attribute(assns->top_level_group_id, H5FNAL_RIGHT_DATA_PRODUCT_NAME, right) < 0)
         H5FNAL_PROGRAM_ERROR("could not add left data product name attribute");
 
-    /* Set up chunking (size is arbitrary for now) */
-    chunk_dims[0] = 128;
+    /* Store the names of the right and left data products in the struct */
+    dp_len = strlen(left) + 1;
+    if (NULL == (assns->left = (char *)malloc(dp_len)))
+        H5FNAL_PROGRAM_ERROR("could not get memory for left data product string");
+    strcpy(assns->left, left);
+    dp_len = strlen(right) + 1;
+    if (NULL == (assns->right = (char *)malloc(dp_len)))
+        H5FNAL_PROGRAM_ERROR("could not get memory for right data product string");
+    strcpy(assns->right, right);
+
+    /* Create the dataset creation property list */
     if ((dcpl_id = H5Pcreate(H5P_DATASET_CREATE)) < 0)
         H5FNAL_HDF5_ERROR;
+
+    /* Set up chunking (size is arbitrary for now) */
+    chunk_dims[0] = 1024;
     if (H5Pset_chunk(dcpl_id, 1, chunk_dims) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Turn on compession */
+    if (H5Pset_shuffle(dcpl_id) < 0)
         H5FNAL_HDF5_ERROR;
     if (H5Pset_deflate(dcpl_id, 6) < 0)
         H5FNAL_HDF5_ERROR;
@@ -100,36 +146,31 @@ h5fnal_create_assns(hid_t loc_id, const char *name, const char *left, const char
     if ((sid = H5Screate_simple(1, init_dims, max_dims)) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* Create datatype */
-    if ((assns->association_datatype_id = h5fnal_create_association_type()) < 0)
-        H5FNAL_PROGRAM_ERROR("could not create association datatype");
+    /* Create the pair datatype */
+    if ((assns->pair_dtype_id = h5fnal_create_pair_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create pair datatype");
 
-    /* Create the association dataset */
-    if ((assns->association_dataset_id = H5Dcreate2(assns->top_level_group_id, H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME,
-            assns->association_datatype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
+    /* Create the pair dataset */
+    if ((assns->pair_dset_id = H5Dcreate2(assns->top_level_group_id, H5FNAL_ASSNS_PAIR_DATASET_NAME,
+            assns->pair_dtype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* Store the 'extra' data datatype
+    /* Store the 'extra' data datatype and create the associated dataset of that type.
      *
-     * We'll store a 'known invalid' value if the datatype
-     * is invalid (i.e.: not used) to make things more
-     * consistent.
+     * We'll store a 'known invalid' value if the datatype is invalid (i.e.: not used)
+     * to make things more consistent.
      */
-    if (data_datatype_id >= 0) {
-        if((assns->data_datatype_id = H5Tcopy(data_datatype_id)) < 0)
+    if (data_dtype_id >= 0) {
+        if((assns->data_dtype_id = H5Tcopy(data_dtype_id)) < 0)
+            H5FNAL_HDF5_ERROR;
+        if ((assns->data_dset_id = H5Dcreate2(assns->top_level_group_id, H5FNAL_ASSNS_DATA_DATASET_NAME,
+                assns->data_dtype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
             H5FNAL_HDF5_ERROR;
     }
-    else
-        assns->data_datatype_id = H5FNAL_BAD_HID_T;
-
-    /* Create the 'extra' data dataset, if we need that */
-    if (data_datatype_id >= 0) {
-        if ((assns->data_dataset_id = H5Dcreate2(assns->top_level_group_id, H5FNAL_ASSNS_DATA_DATASET_NAME,
-                assns->data_datatype_id, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
-            H5FNAL_HDF5_ERROR;
+    else {
+        assns->data_dtype_id = H5FNAL_BAD_HID_T;
+        assns->data_dset_id = H5FNAL_BAD_HID_T;
     }
-    else
-        assns->data_dataset_id = H5FNAL_BAD_HID_T;
 
     /* close everything */
     if (H5Pclose(dcpl_id) < 0)
@@ -139,25 +180,15 @@ h5fnal_create_assns(hid_t loc_id, const char *name, const char *left, const char
 
     return H5FNAL_SUCCESS;
 
+error:
     H5E_BEGIN_TRY {
         H5Sclose(sid);
         H5Pclose(dcpl_id);
-        if(assns) {
-            H5Gclose(assns->top_level_group_id);
-            H5Dclose(assns->association_dataset_id);
-            H5Tclose(assns->association_datatype_id);
-            H5Dclose(assns->data_dataset_id);
-            H5Tclose(assns->data_datatype_id);
-        }
     } H5E_END_TRY;
 
-    assns->top_level_group_id = H5FNAL_BAD_HID_T;
-    assns->association_dataset_id = H5FNAL_BAD_HID_T;
-    assns->association_datatype_id = H5FNAL_BAD_HID_T;
-    assns->data_dataset_id = H5FNAL_BAD_HID_T;
-    assns->data_datatype_id = H5FNAL_BAD_HID_T;
+    if (assns)
+        h5fnal_close_assns_on_err(assns);
 
-error:
     return H5FNAL_FAILURE;
 } /* h5fnal_create_assns */
 
@@ -173,9 +204,12 @@ h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
     if (NULL == assns)
         H5FNAL_PROGRAM_ERROR("assns parameter cannot be NULL");
 
+    /* Initialize the data product struct */
+    memset(assns, 0, sizeof(h5fnal_assns_t));
+
     /* Create datatype */
-    if ((assns->association_datatype_id = h5fnal_create_association_type()) < 0)
-        H5FNAL_PROGRAM_ERROR("could not create association datatype");
+    if ((assns->pair_dtype_id = h5fnal_create_pair_type()) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create pair datatype");
 
     /* Open top-level group */
     if ((assns->top_level_group_id = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
@@ -187,46 +221,29 @@ h5fnal_open_assns(hid_t loc_id, const char *name, h5fnal_assns_t *assns)
     if (h5fnal_get_string_attribute(assns->top_level_group_id, H5FNAL_RIGHT_DATA_PRODUCT_NAME, &(assns->right)) < 0)
         H5FNAL_PROGRAM_ERROR("could not get left data product name attribute");
 
-    /* Open association dataset */
-    if ((assns->association_dataset_id = H5Dopen2(assns->top_level_group_id, H5FNAL_ASSNS_ASSOCIATION_DATASET_NAME, H5P_DEFAULT)) < 0)
+    /* Open pair dataset */
+    if ((assns->pair_dset_id = H5Dopen2(assns->top_level_group_id, H5FNAL_ASSNS_PAIR_DATASET_NAME, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* Open data dataset, if it exists */
+    /* Open data dataset and get its type, if it exists */
     if ((data_dataset_exists = H5Lexists(assns->top_level_group_id, H5FNAL_ASSNS_DATA_DATASET_NAME, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR;
     if (data_dataset_exists) {
-        if ((assns->data_dataset_id = H5Dopen2(assns->top_level_group_id, H5FNAL_ASSNS_DATA_DATASET_NAME, H5P_DEFAULT)) < 0)
+        if ((assns->data_dset_id = H5Dopen2(assns->top_level_group_id, H5FNAL_ASSNS_DATA_DATASET_NAME, H5P_DEFAULT)) < 0)
+            H5FNAL_HDF5_ERROR;
+        if ((assns->data_dtype_id = H5Dget_type(assns->data_dset_id)) < 0)
             H5FNAL_HDF5_ERROR;
     }
-    else
-        assns->data_dataset_id = H5FNAL_BAD_HID_T;
-
-    /* Get the data datatype from the dataset */
-    if (data_dataset_exists) {
-        if ((assns->data_datatype_id = H5Dget_type(assns->data_dataset_id)) < 0)
-            H5FNAL_HDF5_ERROR;
+    else {
+        assns->data_dset_id = H5FNAL_BAD_HID_T;
+        assns->data_dtype_id = H5FNAL_BAD_HID_T;
     }
-    else
-        assns->data_datatype_id = H5FNAL_BAD_HID_T;
 
     return H5FNAL_SUCCESS;
 
 error:
-    H5E_BEGIN_TRY {
-        if (assns) {
-            H5Gclose(assns->top_level_group_id);
-            H5Dclose(assns->association_dataset_id);
-            H5Tclose(assns->association_datatype_id);
-            H5Dclose(assns->data_dataset_id);
-            H5Tclose(assns->data_datatype_id);
-        }
-    } H5E_END_TRY;
-
-    assns->top_level_group_id = H5FNAL_BAD_HID_T;
-    assns->association_dataset_id = H5FNAL_BAD_HID_T;
-    assns->association_datatype_id = H5FNAL_BAD_HID_T;
-    assns->data_dataset_id = H5FNAL_BAD_HID_T;
-    assns->data_datatype_id = H5FNAL_BAD_HID_T;
+    if (assns)
+        h5fnal_close_assns_on_err(assns);
 
     return H5FNAL_FAILURE;
 } /* h5fnal_open_assns */
@@ -245,50 +262,37 @@ h5fnal_close_assns(h5fnal_assns_t *assns)
     if (H5Gclose(assns->top_level_group_id) < 0)
         H5FNAL_HDF5_ERROR;
 
-    if (H5Dclose(assns->association_dataset_id) < 0)
+    if (H5Dclose(assns->pair_dset_id) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tclose(assns->association_datatype_id) < 0)
+    if (H5Tclose(assns->pair_dtype_id) < 0)
         H5FNAL_HDF5_ERROR;
 
     /* Only close these if they were used */
-    if (assns->data_dataset_id >= 0)
-        if (H5Dclose(assns->data_dataset_id) < 0)
+    if (assns->data_dset_id >= 0)
+        if (H5Dclose(assns->data_dset_id) < 0)
             H5FNAL_HDF5_ERROR;
-    if (assns->data_datatype_id >= 0)
-        if (H5Tclose(assns->data_datatype_id) < 0)
+    if (assns->data_dtype_id >= 0)
+        if (H5Tclose(assns->data_dtype_id) < 0)
             H5FNAL_HDF5_ERROR;
 
     assns->top_level_group_id = H5FNAL_BAD_HID_T;
-    assns->association_dataset_id = H5FNAL_BAD_HID_T;
-    assns->association_datatype_id = H5FNAL_BAD_HID_T;
-    assns->data_dataset_id = H5FNAL_BAD_HID_T;
-    assns->data_datatype_id = H5FNAL_BAD_HID_T;
+    assns->pair_dset_id = H5FNAL_BAD_HID_T;
+    assns->pair_dtype_id = H5FNAL_BAD_HID_T;
+    assns->data_dset_id = H5FNAL_BAD_HID_T;
+    assns->data_dtype_id = H5FNAL_BAD_HID_T;
 
     return H5FNAL_SUCCESS;
 
 error:
-    if (assns) {
-        H5E_BEGIN_TRY {
-            H5Gclose(assns->top_level_group_id);
-            H5Dclose(assns->association_dataset_id);
-            H5Tclose(assns->association_datatype_id);
-            H5Dclose(assns->data_dataset_id);
-            H5Tclose(assns->data_datatype_id);
-        } H5E_END_TRY;
-    }
-
-    assns->top_level_group_id = H5FNAL_BAD_HID_T;
-    assns->association_dataset_id = H5FNAL_BAD_HID_T;
-    assns->association_datatype_id = H5FNAL_BAD_HID_T;
-    assns->data_dataset_id = H5FNAL_BAD_HID_T;
-    assns->data_datatype_id = H5FNAL_BAD_HID_T;
+    if (assns)
+        h5fnal_close_assns_on_err(assns);
 
     return H5FNAL_FAILURE;
 
 } /* h5fnal_close_assns */
 
 herr_t
-h5fnal_append_assns(h5fnal_assns_t *assns, size_t n_assns, h5fnal_association_t *associations, void *data)
+h5fnal_append_assns(h5fnal_assns_t *assns, h5fnal_assns_data_t *data)
 {
     hid_t file_sid = -1;                /* dataspace ID                             */
     hid_t memory_sid = -1;              /* dataspace ID                             */
@@ -300,12 +304,14 @@ h5fnal_append_assns(h5fnal_assns_t *assns, size_t n_assns, h5fnal_association_t 
     hsize_t block[1];
 
     /* Create the memory dataspace (set of points describing the data size, etc.) */
-    curr_dims[0] = n_assns;
+    curr_dims[0] = data->n;
     if ((memory_sid = H5Screate_simple(1, curr_dims, curr_dims)) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* Get the size (current size only) of the dataset */
-    if ((file_sid = H5Dget_space(assns->association_dataset_id)) < 0)
+    /* Get the size (current size only) of the dataset. Both datasets are the
+     * same size.
+     */
+    if ((file_sid = H5Dget_space(assns->pair_dset_id)) < 0)
         H5FNAL_HDF5_ERROR;
     if (H5Sget_simple_extent_dims(file_sid, curr_dims, NULL) < 0)
         H5FNAL_HDF5_ERROR;
@@ -313,32 +319,32 @@ h5fnal_append_assns(h5fnal_assns_t *assns, size_t n_assns, h5fnal_association_t 
         H5FNAL_HDF5_ERROR;
 
     /* Resize the datasets to hold the new data */
-    new_dims[0] = curr_dims[0] + n_assns;
-    if (H5Dset_extent(assns->association_dataset_id, new_dims) < 0)
+    new_dims[0] = curr_dims[0] + data->n;
+    if (H5Dset_extent(assns->pair_dset_id, new_dims) < 0)
         H5FNAL_HDF5_ERROR;
-    if (assns->data_dataset_id >= 0)
-        if (H5Dset_extent(assns->data_dataset_id, new_dims) < 0)
+    if (assns->data_dset_id >= 0)
+        if (H5Dset_extent(assns->data_dset_id, new_dims) < 0)
             H5FNAL_HDF5_ERROR;
 
     /* Get the resized file space */
-    if ((file_sid = H5Dget_space(assns->association_dataset_id)) < 0)
+    if ((file_sid = H5Dget_space(assns->pair_dset_id)) < 0)
         H5FNAL_HDF5_ERROR;
 
     /* Create a hyperslab describing where the data should go */
     start[0] = curr_dims[0];
     stride[0] = 1;
-    count[0] = n_assns;
+    count[0] = data->n;
     block[0] = 1;
     if (H5Sselect_hyperslab(file_sid, H5S_SELECT_SET, start, stride, count, block) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* Write the associations to the dataset */
-    if (H5Dwrite(assns->association_dataset_id, assns->association_datatype_id, memory_sid, file_sid, H5P_DEFAULT, associations) < 0)
+    /* Write the pairs to the dataset */
+    if (H5Dwrite(assns->pair_dset_id, assns->pair_dtype_id, memory_sid, file_sid, H5P_DEFAULT, data->pairs) < 0)
         H5FNAL_HDF5_ERROR;
 
     /* Write the data to the dataset, if necessary */
-    if (assns->data_dataset_id >= 0)
-        if (H5Dwrite(assns->data_dataset_id, assns->data_datatype_id, memory_sid, file_sid, H5P_DEFAULT, data) < 0)
+    if (assns->data_dset_id >= 0)
+        if (H5Dwrite(assns->data_dset_id, assns->data_dtype_id, memory_sid, file_sid, H5P_DEFAULT, data->data) < 0)
             H5FNAL_HDF5_ERROR;
 
     /* Close everything */
@@ -359,52 +365,81 @@ error:
 } /* end h5fnal_write_assns() */
 
 
-hssize_t
-h5fnal_get_assns_count(h5fnal_assns_t *assns)
+herr_t
+h5fnal_read_all_assns(h5fnal_assns_t *assns, h5fnal_assns_data_t *data)
 {
-    hid_t sid = H5FNAL_BAD_HID_T;
-    hssize_t n_assns = -1;
+    hid_t       sid     = H5FNAL_BAD_HID_T;
 
     if (!assns)
         H5FNAL_PROGRAM_ERROR("assns parameter cannot be NULL");
+    if (!data)
+        H5FNAL_PROGRAM_ERROR("data parameter cannot be NULL");
 
-    /* Get the number of elements in the associations dataset */
-    if ((sid = H5Dget_space(assns->association_dataset_id)) < 0)
+    
+    /* Get the size of the datasets (both have the same size) */
+    if ((sid = H5Dget_space(assns->pair_dset_id)) < 0)
         H5FNAL_HDF5_ERROR;
-    if ((n_assns = H5Sget_simple_extent_npoints(sid)) < 0)
+    if ((data->n = H5Sget_simple_extent_npoints(sid)) < 0)
         H5FNAL_HDF5_ERROR;
-
     if (H5Sclose(sid) < 0)
         H5FNAL_HDF5_ERROR;
 
-    return n_assns;
+    /* Generate a buffer for the pairs data and read it */
+    if (NULL == (data->pairs = (h5fnal_pair_t *)calloc(data->n, sizeof(h5fnal_pair_t))))
+        H5FNAL_PROGRAM_ERROR("could not allocate memory for pairs");
+    if (H5Dread(assns->pair_dset_id, assns->pair_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, data->pairs) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Read the 'extra' associated data, if it exists */
+    if (assns->data_dset_id >= 0) {
+        size_t type_size = 0;
+
+        /* Note that we can get the native type size from the HDF5 type */
+        if (0 == (type_size = H5Tget_size(assns->data_dtype_id)))
+            H5FNAL_HDF5_ERROR;
+        if (NULL == (data->data = calloc(data->n, type_size)))
+            H5FNAL_PROGRAM_ERROR("could not allocate memory for data");
+        if (H5Dread(assns->data_dset_id, assns->data_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, data->data) < 0)
+            H5FNAL_HDF5_ERROR;
+    }
+
+    return H5FNAL_SUCCESS;
 
 error:
     H5E_BEGIN_TRY {
         H5Sclose(sid);
     } H5E_END_TRY;
 
-    return -1;
-} /* end h5fnal_get_assns_count() */
+    if (data)
+        h5fnal_free_assns_mem_data(data);
 
+    return H5FNAL_FAILURE;
 
+} /* end h5fnal_read_all_assns() */
+
+/************************************************************************
+ * h5fnal_free_assns_mem_data()
+ *
+ * Convenience function to clean up resources in the in-memory
+ * hit and hit collection data struct.
+ ************************************************************************/
 herr_t
-h5fnal_read_all_assns(h5fnal_assns_t *assns, h5fnal_association_t *associations, void *data)
+h5fnal_free_assns_mem_data(h5fnal_assns_data_t *data)
 {
-    if (!assns)
-        H5FNAL_PROGRAM_ERROR("assns parameter cannot be NULL");
+    if (!data)
+        H5FNAL_PROGRAM_ERROR("data parameter cannot be NULL");
 
-    if (H5Dread(assns->association_dataset_id, assns->association_datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, associations) < 0)
-        H5FNAL_HDF5_ERROR;
+    free(data->pairs);
+    free(data->data);
 
-    if (assns->data_dataset_id >= 0)
-        if (H5Dread(assns->data_dataset_id, assns->data_datatype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
-            H5FNAL_HDF5_ERROR;
+    data->pairs = NULL;
+    data->data = NULL;
+
+    data->n = 0;
 
     return H5FNAL_SUCCESS;
 
 error:
     return H5FNAL_FAILURE;
-
-} /* end h5fnal_read_all_assns() */
+} /* end h5fnal_free_assns_mem_data() */
 

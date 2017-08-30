@@ -58,7 +58,7 @@ typedef struct h5fnal_vect_hitcoll_data_t {
 } h5fnal_vect_hitcoll_data_t;
 
 
-/* Vector of MC Hit Collection type 
+/* Vector of MC Hit Collection  HDF5 data and related
  *
  * Contains HDF5 IDs for file objects that are a part of this
  * data product.

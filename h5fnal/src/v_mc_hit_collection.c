@@ -1,6 +1,7 @@
 /* v_mc_hit_collection.c */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "h5fnal.h"
 
@@ -141,16 +142,23 @@ h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_vect_hi
     if (NULL == vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
 
+    /* Initialize the data product struct */
+    memset(vector, 0, sizeof(h5fnal_vect_hitcoll_t));
+
     /* Create top-level group */
     if ((vector->top_level_group_id = H5Gcreate2(loc_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT)) < 0)
         H5FNAL_HDF5_ERROR;
 
-    /* Set up chunking (size is arbitrary for now) */
-    chunk_dims[0] = 1024;
+    /* Create the dataset creation property list */
     if ((dcpl_id = H5Pcreate(H5P_DATASET_CREATE)) < 0)
         H5FNAL_HDF5_ERROR;
+
+    /* Set up chunking (size is arbitrary for now) */
+    chunk_dims[0] = 1024;
     if (H5Pset_chunk(dcpl_id, 1, chunk_dims) < 0)
         H5FNAL_HDF5_ERROR;
+
+    /* Turn on compession */
     if (H5Pset_shuffle(dcpl_id) < 0)
         H5FNAL_HDF5_ERROR;
     if (H5Pset_deflate(dcpl_id, 6) < 0)
@@ -183,6 +191,11 @@ h5fnal_create_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_vect_hi
     return H5FNAL_SUCCESS;
 
 error:
+    H5E_BEGIN_TRY {
+        H5Sclose(sid);
+        H5Pclose(dcpl_id);
+    } H5E_END_TRY;
+
     if (vector)
         h5fnal_close_vector_on_err(vector);
 
@@ -202,6 +215,9 @@ h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_vect_hitc
         H5FNAL_PROGRAM_ERROR("name parameter cannot be NULL");
     if (NULL == vector)
         H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
+
+    /* Initialize the data product struct */
+    memset(vector, 0, sizeof(h5fnal_vect_hitcoll_t));
 
     /* Create datatypes */
     if ((vector->hit_dtype_id = h5fnal_create_hit_type()) < 0)
@@ -343,9 +359,9 @@ h5fnal_read_all_hits(h5fnal_vect_hitcoll_t *vector, h5fnal_vect_hitcoll_data_t *
 
     /* Generate buffers for reading the hits */
     if (NULL == (data->hits = (h5fnal_hit_t *)calloc(data->n_hits, sizeof(h5fnal_hit_t))))
-        H5FNAL_PROGRAM_ERROR("could allocate memory for hits");
+        H5FNAL_PROGRAM_ERROR("could not allocate memory for hits");
     if (NULL == (data->hit_collections = (h5fnal_hitcoll_t *)calloc(data->n_hit_collections, sizeof(h5fnal_hitcoll_t))))
-        H5FNAL_PROGRAM_ERROR("could allocate memory for hit collections");
+        H5FNAL_PROGRAM_ERROR("could not allocate memory for hit collections");
 
     /* Read the data from the datasets */
     if (H5Dread(vector->hit_dset_id, vector->hit_dtype_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, data->hits) < 0)
@@ -359,6 +375,9 @@ error:
     H5E_BEGIN_TRY {
         H5Sclose(sid);
     } H5E_END_TRY;
+
+    if (data)
+        h5fnal_free_hitcoll_mem_data(data);
 
     return H5FNAL_FAILURE;
     
