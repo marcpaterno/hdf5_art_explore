@@ -8,6 +8,7 @@
 #include "canvas/Utilities/InputTag.h"
 #include "canvas/Persistency/Common/Assns.h"
 #include "canvas/Persistency/Provenance/EventAuxiliary.h"
+#include "canvas/Persistency/Provenance/ProductID.h"
 #include "gallery/Event.h"
 #include "gallery/ValidHandle.h"
 #include "lardataobj/RecoBase/Cluster.h"
@@ -79,11 +80,12 @@ int main(int argc, char* argv[]) {
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
 
     auto const& aux = ev.eventAuxiliary();
-    h5fnal_assns_data_t assns_data;
+    vector<h5fnal_pair_t> h5pairs;
+    h5fnal_assns_data_t h5assns_data;
 
     std::cout << "Processing event: " << aux.run()
               << ',' << aux.subRun()
-              << ',' << aux.event() << '\n';
+              << ',' << aux.event();
   
     unsigned int currentRun = aux.run();
     unsigned int currentSubRun = aux.subRun();
@@ -135,13 +137,37 @@ int main(int argc, char* argv[]) {
     // There is no need to represent the 'process name' because that is a top-level of the file entity -- in the root group.
     // TODO: Update the name (using a cheap, hard-coded name for now)
     // TODO: What strings should LEFT and RIGHT be?
-    if (h5fnal_create_assns(event_id, BADNAME, "recob::Cluster", "recob:Hit", H5T_NATIVE_INT, h5assns) < 0)
+    if (h5fnal_create_assns(event_id, BADNAME, "recob::Cluster", "recob:Hit", -1, h5assns) < 0)
       H5FNAL_PROGRAM_ERROR("could not create HDF5 data product");
 
     // Process all Assns
     for (auto const& p : clusters_hits) {
+        // p.first is an art::Ptr<recob::Cluster>
+        // p.second is an art::Ptr<recob::Hit>
 
+        h5fnal_pair_t h5pair;
+
+        h5pair.left_process_index = p.first.id().processIndex();
+        h5pair.left_product_index = p.first.id().productIndex();
+        h5pair.left_key = p.first.key();
+
+        h5pair.right_process_index = p.second.id().processIndex();
+        h5pair.right_product_index = p.second.id().productIndex();
+        h5pair.right_key = p.second.key();
+
+        h5pairs.push_back(h5pair);
     } /* end loop over Assns */
+
+    /* Fill in-memory struct */
+    h5assns_data.pairs = &h5pairs[0];
+    h5assns_data.data = NULL;
+    h5assns_data.n = h5pairs.size();
+
+    /* Write flattened Assns data to the HDF5 file */
+    cout << " (" << h5pairs.size() << " Assns elements)" << endl;
+    if (h5pairs.size() > 0)
+        if (h5fnal_append_assns(h5assns, &h5assns_data) < 0)
+            H5FNAL_PROGRAM_ERROR("could not write assns to the HDF5 file");
 
     /* Close the event and HDF5 data product */
     if (h5fnal_close_assns(h5assns) < 0)
