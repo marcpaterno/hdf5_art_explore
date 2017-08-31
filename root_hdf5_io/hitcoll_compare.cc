@@ -19,7 +19,7 @@
 #include "h5fnal.h"
 
 #define MASTER_RUN_CONTAINER    "master_run_container"
-#define BADNAME                 "REPLACEME"     // TODO: Replace this with a good name
+#define BADNAME                 "MCHITCOLL"         // TODO: Replace this with a good name
 
 using namespace art;
 using namespace std;
