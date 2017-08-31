@@ -14,7 +14,6 @@
 #include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/Vertex.h"
 #include "lardataobj/RecoBase/Hit.h"
-#include "lardataobj/MCBase/MCHitCollection.h"
 
 #include "h5fnal.h"
 
@@ -136,11 +135,10 @@ int main(int argc, char* argv[]) {
     // The empty string following the 2nd underscore indicates and empty 'product instance name'.
     // There is no need to represent the 'process name' because that is a top-level of the file entity -- in the root group.
     // TODO: Update the name (using a cheap, hard-coded name for now)
-    // TODO: What strings should LEFT and RIGHT be?
     if (h5fnal_create_assns(event_id, BADNAME, "recob::Cluster", "recob:Hit", -1, h5assns) < 0)
       H5FNAL_PROGRAM_ERROR("could not create HDF5 data product");
 
-    // Process all Assns
+    // Process all data in the Assns
     for (auto const& p : clusters_hits) {
         // p.first is an art::Ptr<recob::Cluster>
         // p.second is an art::Ptr<recob::Hit>
