@@ -25,8 +25,12 @@
 using namespace art;
 using namespace std;
 
-void
-get_hdf5_assns(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, art::Assns<recob::Cluster, recob::Hit> hdf5_assns)
+/* We can't do simple compare here since gallery can't create Ptrs. Instead,
+ * we'll just compare the individual data fields.
+ */
+hbool_t
+compare_hdf5_assns(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, 
+        art::Assns<recob::Cluster, recob::Hit> root_assns)
 {
     string  run_name = std::to_string(run);
     string  subrun_name = std::to_string(subrun);
@@ -37,6 +41,7 @@ get_hdf5_assns(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, art:
     h5fnal_assns_t *assns = NULL;
     h5fnal_assns_data_t *data = NULL;
     hsize_t u;
+    hbool_t same = TRUE;
 
     // Open run, sub-run, and event
     if ((run_id = h5fnal_open_run(loc_id, run_name.c_str())) < 0)
@@ -58,17 +63,32 @@ get_hdf5_assns(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, art:
     if (h5fnal_read_all_assns(assns, data) < 0)
         H5FNAL_PROGRAM_ERROR("could not read assns data from the file")
 
-    // Convert to Assns
-    for (u = 0; u < data->n; u++)
-    {
-        ProductID leftID(data->pairs[u].left_process_index, data->pairs[u].left_product_index); 
-        ProductID rightID(data->pairs[u].right_process_index, data->pairs[u].right_product_index);
-
-        art::Ptr<recob::Cluster> leftPtr(leftID, data->pairs[u].left_key, NULL);
-        art::Ptr<recob::Hit> rightPtr(rightID, data->pairs[u].right_key, NULL);
-
-        hdf5_assns.addSingle(leftPtr, rightPtr);
-    } // end loop over assns
+    // Compare with Root Assns
+    if (data->n != root_assns.size())
+        same = FALSE;
+    else {
+        u = 0;
+        for (auto const& p : root_assns) {
+            if (   data->pairs[u].left_process_index != p.first.id().processIndex()
+                || data->pairs[u].left_product_index != p.first.id().productIndex()
+                || data->pairs[u].left_key           != p.first.key()
+                || data->pairs[u].right_process_index != p.second.id().processIndex()
+                || data->pairs[u].right_product_index != p.second.id().productIndex()
+                || data->pairs[u].right_key           != p.second.key()
+                )
+            same = FALSE;
+            break;
+            u++;
+        }
+    }
+#if 0
+    else {
+        auto iter = root_assns.begin();
+        for (u = 0; u < data->n && iter != root_assns.end(); u++, iter++)
+        {
+        }
+    }
+#endif
 
     // Close everything
     if (h5fnal_close_run(run_id) < 0)
@@ -84,7 +104,7 @@ get_hdf5_assns(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, art:
     free(assns);
     free(data);
 
-    return;
+    return same;
 
 error:
     H5E_BEGIN_TRY {
@@ -98,7 +118,7 @@ error:
     free(assns);
     free(data);
 
-    return;
+    return FALSE;
 }
 
 int main(int argc, char* argv[]) {
@@ -138,7 +158,7 @@ int main(int argc, char* argv[]) {
   // and read the data into a new vector of MCHitCollection, then compare
   // the two data products.
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
-
+    hbool_t same = FALSE;
     auto const& aux = ev.eventAuxiliary();
     std::cout << "Processing event " << aux.run()
               << ',' << aux.subRun()
@@ -149,12 +169,10 @@ int main(int argc, char* argv[]) {
     // gallery use. It does not require in-your-face error handling.
     auto const& root_clusters_hits =  *ev.getValidHandle<art::Assns<recob::Cluster, recob::Hit>>(assns_tag); 
 
-    // Open the data product in the event in the HDF5 file and get all the data out.
-    art::Assns<recob::Cluster, recob::Hit> hdf5_clusters_hits;
-    get_hdf5_assns(master_id, aux.run(), aux.subRun(), aux.event(), hdf5_clusters_hits);
+    // Open the data product in the event in the HDF5 file and compare the data with the Root data.
+    same = compare_hdf5_assns(master_id, aux.run(), aux.subRun(), aux.event(), root_clusters_hits);
 
-    // Hack this up to just compare data elements (ProductIDs and Keys)
-    if (root_clusters_hits == hdf5_clusters_hits)
+    if (same)
         cout << "equal" << endl;
     else
         cout << "*** BADNESS: NOT EQUAL ***" << endl;
