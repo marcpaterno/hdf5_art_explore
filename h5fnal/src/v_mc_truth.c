@@ -502,23 +502,6 @@ error:
     return H5FNAL_FAILURE;
 } /* end h5fnal_append_truths() */
 
-hssize_t
-h5fnal_get_truths_count(h5fnal_v_mc_truth_t *vector)
-{
-    hssize_t n_truths = -1;
-
-    if (!vector)
-        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
-
-    if ((n_truths = h5fnal_get_dset_size(vector->truth_dataset_id)) < 0)
-        H5FNAL_PROGRAM_ERROR("could not get the number of truths");
-
-    return n_truths;
-
-error:
-    return -1;
-} /* end h5fnal_get_truths_count() */
-
 herr_t
 h5fnal_read_all_truths(h5fnal_v_mc_truth_t *vector, h5fnal_mem_truth_t *mem_truths)
 {

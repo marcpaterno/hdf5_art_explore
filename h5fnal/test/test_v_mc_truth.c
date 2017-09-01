@@ -91,12 +91,6 @@ main(void)
     if (h5fnal_create_v_mc_truth(event_id, VECTOR_NAME, vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not create vector of mc truth")
 
-    /* It should have zero size when created */
-    if ((n_truths_out = h5fnal_get_truths_count(vector)) < 0)
-        H5FNAL_PROGRAM_ERROR("could not get number of truths from dataset")
-    if (n_truths_out != 0)
-        H5FNAL_PROGRAM_ERROR("got wrong number of truths from dataset after creation")
-
     /* Generate some fake data */
     if (NULL == (truths = calloc(1, sizeof(h5fnal_mem_truth_t))))
         H5FNAL_PROGRAM_ERROR("could not get memory for in-memory truth data container")
@@ -108,12 +102,6 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not write truths to the file")
     if (h5fnal_append_truths(vector, truths) < 0)
         H5FNAL_PROGRAM_ERROR("could not write truths to the file")
-
-    /* Get the number of truths */
-    if ((n_truths_out = h5fnal_get_truths_count(vector)) < 0)
-        H5FNAL_PROGRAM_ERROR("could not get number of truths")
-    if (n_truths_out != 2 * truths->n_truths)
-        H5FNAL_PROGRAM_ERROR("got wrong number of truths")
 
     /* Read the truths */
     if (NULL == (truths_out = calloc(1, sizeof(h5fnal_mem_truth_t))))
@@ -128,12 +116,6 @@ main(void)
     /* Re-open the vector */
     if (h5fnal_open_v_mc_truth(event_id, VECTOR_NAME, vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not open vector of mc truth")
-
-    /* Get the number of truths */
-    if ((n_truths_out = h5fnal_get_truths_count(vector)) < 0)
-        H5FNAL_PROGRAM_ERROR("could not get number of truths")
-    if (n_truths_out != 2 * truths->n_truths)
-        H5FNAL_PROGRAM_ERROR("got wrong number of truths")
 
     /* Re-read the truths */
     if (h5fnal_free_mem_truths(truths_out) < 0)
