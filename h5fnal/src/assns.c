@@ -375,7 +375,9 @@ h5fnal_read_all_assns(h5fnal_assns_t *assns, h5fnal_assns_data_t *data)
     if (!data)
         H5FNAL_PROGRAM_ERROR("data parameter cannot be NULL");
 
-    
+    /* Initialize the data struct */
+    memset(data, 0, sizeof(h5fnal_assns_data_t));
+ 
     /* Get the size of the datasets (both have the same size) */
     if ((sid = H5Dget_space(assns->pair_dset_id)) < 0)
         H5FNAL_HDF5_ERROR;
@@ -432,10 +434,7 @@ h5fnal_free_assns_mem_data(h5fnal_assns_data_t *data)
     free(data->pairs);
     free(data->data);
 
-    data->pairs = NULL;
-    data->data = NULL;
-
-    data->n = 0;
+    memset(data, 0, sizeof(h5fnal_assns_data_t));
 
     return H5FNAL_SUCCESS;
 

@@ -219,15 +219,15 @@ h5fnal_open_v_mc_hit_collection(hid_t loc_id, const char *name, h5fnal_vect_hitc
     /* Initialize the data product struct */
     memset(vector, 0, sizeof(h5fnal_vect_hitcoll_t));
 
+    /* Open top-level group */
+    if ((vector->top_level_group_id = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+
     /* Create datatypes */
     if ((vector->hit_dtype_id = h5fnal_create_hit_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create hit datatype");
     if ((vector->hitcoll_dtype_id = h5fnal_create_hitcoll_type()) < 0)
         H5FNAL_PROGRAM_ERROR("could not create hitcoll datatype");
-
-    /* Open top-level group */
-    if ((vector->top_level_group_id = H5Gopen2(loc_id, name, H5P_DEFAULT)) < 0)
-        H5FNAL_HDF5_ERROR;
 
     /* Open datasets */
     if ((vector->hit_dset_id = H5Dopen2(vector->top_level_group_id, H5FNAL_HIT_DATASET_NAME, H5P_DEFAULT)) < 0)
@@ -341,6 +341,9 @@ h5fnal_read_all_hits(h5fnal_vect_hitcoll_t *vector, h5fnal_vect_hitcoll_data_t *
     if (!data)
         H5FNAL_PROGRAM_ERROR("data parameter cannot be NULL")
 
+    /* Initialize the data struct */
+    memset(data, 0, sizeof(h5fnal_vect_hitcoll_data_t));
+
     /* Get the size of the hits dataset */
     if ((sid = H5Dget_space(vector->hit_dset_id)) < 0)
         H5FNAL_HDF5_ERROR;
@@ -399,11 +402,7 @@ h5fnal_free_hitcoll_mem_data(h5fnal_vect_hitcoll_data_t *data)
     free(data->hits);
     free(data->hit_collections);
 
-    data->hits = NULL;
-    data->hit_collections = NULL;
-
-    data->n_hits = 0;
-    data->n_hit_collections = 0;
+    memset(data, 0, sizeof(h5fnal_vect_hitcoll_data_t));
 
     return H5FNAL_SUCCESS;
 
