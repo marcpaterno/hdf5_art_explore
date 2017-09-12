@@ -6,7 +6,10 @@ CFLAGS = -Wall -O3 -fno-omit-frame-pointer -g -fPIC
 LDFLAGS = -L../src -L$(HDF5_LIB)
 LIBS = -lh5fnal -lhdf5
 
-all: test_v_mc_hit_collection test_v_mc_truth test_assns
+all: test_string_dictionary test_v_mc_hit_collection test_v_mc_truth test_assns
+
+test_string_dictionary: test_string_dictionary.c ../src/libh5fnal.so
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o test_string_dictionary test_string_dictionary.c $(LIBS)
 
 test_v_mc_hit_collection: test_v_mc_hit_collection.c ../src/libh5fnal.so
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o test_v_mc_hit_collection test_v_mc_hit_collection.c $(LIBS)
@@ -26,6 +29,7 @@ clean:
 	@rm -rf *.o
 	@rm -rf *.out
 	@rm -rf vmchc.h5
+	@rm -rf test_string_dictionary
 	@rm -rf test_v_mc_hit_collection
 	@rm -rf test_v_mc_truth
 	@rm -rf test_assns

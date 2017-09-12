@@ -148,6 +148,71 @@ error:
 } /* end h5fnal_get_dset_size() */
 
 
+/* Create an empty, chunked, 1D dataset */
+herr_t
+h5fnal_create_1D_dset(hid_t loc_id, const char *name, hid_t tid, hsize_t chunk_dim, /*OUT*/ hid_t *did)
+{
+    hid_t dcpl_id = -1;
+    hid_t sid = -1;
+    hsize_t chunk_dims[1];
+    hsize_t init_dims[1];
+    hsize_t max_dims[1];
+
+    if (loc_id < 0)
+        H5FNAL_PROGRAM_ERROR("loc_id parameter cannot be negative");
+    if (!name)
+        H5FNAL_PROGRAM_ERROR("name parameter cannot be NULL");
+    if (tid < 0)
+        H5FNAL_PROGRAM_ERROR("tid parameter cannot be negative");
+    if (!did)
+        H5FNAL_PROGRAM_ERROR("did parameter cannot be NULL");
+
+    /* Create the dataset creation property list */
+    if ((dcpl_id = H5Pcreate(H5P_DATASET_CREATE)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Set up chunking */
+    chunk_dims[0] = chunk_dim;
+    if (H5Pset_chunk(dcpl_id, 1, chunk_dims) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Turn on compession */
+    if (H5Pset_shuffle(dcpl_id) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Pset_deflate(dcpl_id, 6) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Create the dataspace */
+    init_dims[0] = 0;
+    max_dims[0] = H5S_UNLIMITED;
+    if ((sid = H5Screate_simple(1, init_dims, max_dims)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* Create datasets */
+    if ((*did = H5Dcreate2(loc_id, name, tid, sid, H5P_DEFAULT, dcpl_id, H5P_DEFAULT)) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    /* close everything */
+    if (H5Pclose(dcpl_id) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Sclose(sid) < 0)
+        H5FNAL_HDF5_ERROR;
+
+    return H5FNAL_SUCCESS;
+
+error:
+    H5E_BEGIN_TRY {
+        H5Sclose(sid);
+        H5Pclose(dcpl_id);
+    } H5E_END_TRY;
+
+    if (did)
+        did = H5FNAL_BAD_HID_T;
+
+    return H5FNAL_FAILURE;
+
+} /* end h5fnal_create_1D_dset() */
+
 herr_t
 h5fnal_append_data(hid_t did, hid_t tid, hsize_t n_elements, const void *data)
 {

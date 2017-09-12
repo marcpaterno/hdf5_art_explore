@@ -2,11 +2,12 @@
 
 # Get rid of old files
 rm -rf v_mc_hc.h5
-rm -rf test_v_mc_hit_collection.h5ls.out
-rm -rf test_v_mc_hit_collection.h5dump_H.out
-rm -rf test_v_mc_hit_collection.h5dump_dataset.out
+#rm -rf test_v_mc_hit_collection.h5ls.out
+#rm -rf test_v_mc_hit_collection.h5dump_H.out
+#rm -rf test_v_mc_hit_collection.h5dump_dataset.out
 
 # Run unit tests
+./test_string_dictionary
 ./test_v_mc_hit_collection
 ./test_v_mc_truth
 ./test_assns
