@@ -13,6 +13,7 @@
 #include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/Vertex.h"
 #include "lardataobj/MCBase/MCHitCollection.h"
+#include "nusimdata/SimulationBase/MCTruth.h"
 
 #include "compare.hh"
 
@@ -23,9 +24,10 @@
 
 using namespace art;
 using namespace std;
+using namespace simb;
 
 void
-get_hdf5_hits(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::vector<sim::MCHitCollection> &hdf5_mchits)
+get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::vector<simb::MCTruth> &hdf5_truths)
 {
     string  run_name = std::to_string(run);
     string  subrun_name = std::to_string(subrun);
@@ -33,9 +35,9 @@ get_hdf5_hits(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::
     hid_t   run_id = -1;
     hid_t   subrun_id = -1;
     hid_t   event_id = -1;
-    h5fnal_vect_hitcoll_t *vector = NULL;
-    h5fnal_vect_hitcoll_data_t *data = NULL;
-    hsize_t hc;
+    h5fnal_vect_truth_t *vector = NULL;
+    h5fnal_vect_truth_data_t *data = NULL;
+    hsize_t t;
 
     // Open run, sub-run, and event
     if ((run_id = h5fnal_open_run(loc_id, run_name.c_str())) < 0)
@@ -46,43 +48,21 @@ get_hdf5_hits(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::
         H5FNAL_PROGRAM_ERROR("could not open event")
 
     // Open the data product
-    if (NULL == (vector = (h5fnal_vect_hitcoll_t *)calloc(1, sizeof(h5fnal_vect_hitcoll_t))))
+    if (NULL == (vector = (h5fnal_vect_truth_t *)calloc(1, sizeof(h5fnal_vect_truth_t))))
         H5FNAL_PROGRAM_ERROR("could not get memory for vector")
-    if (h5fnal_open_v_mc_hit_collection(event_id, BADNAME, vector) < 0)
-        H5FNAL_PROGRAM_ERROR("could not open vector of mc hit collection")
+    if (h5fnal_open_v_mc_truth(event_id, BADNAME, vector) < 0)
+        H5FNAL_PROGRAM_ERROR("could not open Vector of MCTruth")
 
     // Read all the data
-    if (NULL == (data = (h5fnal_vect_hitcoll_data_t *)calloc(1, sizeof(h5fnal_vect_hitcoll_data_t))))
-        H5FNAL_PROGRAM_ERROR("could not get memory for hit collection data")
-    if (h5fnal_read_all_hits(vector, data) < 0)
-        H5FNAL_PROGRAM_ERROR("could not read hit collection data from the file")
+    if (NULL == (data = (h5fnal_vect_truth_data_t *)calloc(1, sizeof(h5fnal_vect_truth_data_t))))
+        H5FNAL_PROGRAM_ERROR("could not get memory for truth data")
+    if (h5fnal_read_all_truths(vector, data) < 0)
+        H5FNAL_PROGRAM_ERROR("could not read truth data from the file")
 
-    // Convert to MCHitCollections and add to the vector
-    for (hc = 0; hc < data->n_hit_collections; hc++)
+    // Convert to MCTruth and add to the vector
+    for (t = 0; t < data->n_truths; t++)
     {
-        hsize_t start;
-        hsize_t end;
-        hsize_t v;
-
-        // Create a new hit collection in the vector
-        hdf5_mchits.emplace_back(data->hit_collections[hc].channel);
-
-        // Loop over the appropriate hits
-        start = data->hit_collections[hc].start;
-        end = start + data->hit_collections[hc].count;
-        for (v = start; v < end; v++) {
-            sim::MCHit hit;
-
-            // Create the hit
-            hit.SetCharge(data->hits[v].charge, data->hits[v].peak_amp);
-            hit.SetTime(data->hits[v].signal_time, data->hits[v].signal_width);
-            float vtx[] = {data->hits[v].part_vertex_x, data->hits[v].part_vertex_y, data->hits[v].part_vertex_z};
-            hit.SetParticleInfo(vtx, data->hits[v].part_energy, data->hits[v].part_track_id);
-
-            // Add the hit
-            hdf5_mchits.back().push_back(hit);
-        } // end loop over his
-    } // end loop over hit collections
+    } // end loop over truths
 
     // Close everything
     if (h5fnal_close_run(run_id) < 0)
@@ -91,10 +71,10 @@ get_hdf5_hits(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::
         H5FNAL_PROGRAM_ERROR("could not close run")
     if (h5fnal_close_event(event_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close event")
-    if (h5fnal_close_v_mc_hit_collection(vector) < 0)
+    if (h5fnal_close_v_mc_truth(vector) < 0)
         H5FNAL_PROGRAM_ERROR("could not close vector")
-    if (h5fnal_free_hitcoll_mem_data(data) < 0)
-        H5FNAL_PROGRAM_ERROR("could not free in-memory hit collection data");
+    if (h5fnal_free_truth_mem_data(data) < 0)
+        H5FNAL_PROGRAM_ERROR("could not free in-memory truth data");
     free(vector);
     free(data);
 
@@ -105,10 +85,10 @@ error:
         h5fnal_close_run(run_id);
         h5fnal_close_run(subrun_id);
         h5fnal_close_event(event_id);
-        h5fnal_close_v_mc_hit_collection(vector);
+        h5fnal_close_v_mc_truth(vector);
     } H5E_END_TRY;
     if (data )
-        h5fnal_free_hitcoll_mem_data(data);
+        h5fnal_free_truth_mem_data(data);
     free(vector);
     free(data);
 
@@ -123,6 +103,7 @@ int main(int argc, char* argv[]) {
   InputTag mchits_tag { "mchitfinder" };
   InputTag vertex_tag { "linecluster" };
   InputTag assns_tag  { "linecluster" };
+  InputTag truths_tag { "generator" };
 
   // Get file names from the command line.
   // file name 1: root file
@@ -161,13 +142,13 @@ int main(int argc, char* argv[]) {
   
     // getValidHandle() is preferred to getByLabel(), for both art and
     // gallery use. It does not require in-your-face error handling.
-    std::vector<sim::MCHitCollection> const& root_mchits = *ev.getValidHandle<vector<sim::MCHitCollection>>(mchits_tag);
+    std::vector<simb::MCTruth> const& root_truths = *ev.getValidHandle<vector<simb::MCTruth>>(truths_tag);
 
     // Open the data product in the event in the HDF5 file and get all the data out.
-    std::vector<sim::MCHitCollection> hdf5_mchits;
-    get_hdf5_hits(master_id, aux.run(), aux.subRun(), aux.event(), hdf5_mchits);
+    std::vector<simb::MCTruth> hdf5_truths;
+    get_hdf5_truths(master_id, aux.run(), aux.subRun(), aux.event(), hdf5_truths);
 
-    if (root_mchits == hdf5_mchits)
+    if (root_truths == hdf5_truths)
         cout << "equal" << endl;
     else
         cout << "*** BADNESS: NOT EQUAL ***" << endl;
@@ -192,3 +173,4 @@ error:
   std::cout << "*** FAILURE ***\n";
   exit(EXIT_FAILURE);
 }
+
