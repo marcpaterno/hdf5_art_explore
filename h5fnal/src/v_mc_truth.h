@@ -9,6 +9,13 @@
 
 #include "h5fnal.h"
 
+/* Strings used in this data product */
+typedef struct h5fnal_truth_strings_t {
+    char      **strings;
+    hsize_t     n_strings;
+    hsize_t     n_allocated;
+} h5fnal_truth_strings_t;
+
 /* Neutrino origin enum */
 typedef enum h5fnal_origin_t {
     UNKNOWN             = 0,
@@ -38,8 +45,8 @@ typedef struct h5fnal_particle_t {
     int         track_id;
     int         pdg_code;
     int         mother;
-    hsize_t     process_index;
-    hsize_t     endprocess_index;
+    hsize_t     process_index;      /* into h5fnal_truth_strings_t */
+    hsize_t     endprocess_index;   /* into h5fnal_truth_strings_t */
     double      mass;
     double      polarization_x;
     double      polarization_y;
@@ -73,6 +80,7 @@ typedef struct h5fnal_trajectory_t {
 
 /* MC Truth Type */
 typedef struct h5fnal_truth_t {
+    h5fnal_origin_t     origin;
     hssize_t    neutrino_index;     /* -1 == no neutrino */
     hsize_t     particle_start_index;
     hsize_t     particle_end_index;
@@ -102,6 +110,8 @@ typedef struct h5fnal_vect_truth_t {
 
     hid_t       truth_dtype_id;
     hid_t       truth_dset_id;
+
+    string_dictionary_t dict;
 } h5fnal_vect_truth_t;
 
 /* In-memory data container for I/O calls */
@@ -116,6 +126,7 @@ typedef struct h5fnal_vect_truth_data_t {
     h5fnal_daughter_t      *daughters;
     h5fnal_particle_t      *particles;
     h5fnal_neutrino_t      *neutrinos;
+    h5fnal_truth_strings_t *truth_strings;
 } h5fnal_vect_truth_data_t;
 
 #ifdef __cplusplus

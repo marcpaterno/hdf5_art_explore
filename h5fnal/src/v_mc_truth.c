@@ -209,6 +209,8 @@ h5fnal_create_truth_type(void)
     if ((tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_truth_t))) < 0)
         H5FNAL_HDF5_ERROR
 
+    if (H5Tinsert(tid, "origin", HOFFSET(h5fnal_truth_t, origin), H5T_NATIVE_INT) < 0)
+        H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "neutrino_index", HOFFSET(h5fnal_truth_t, neutrino_index), H5T_NATIVE_HSSIZE) < 0)
         H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "particle_start_index", HOFFSET(h5fnal_truth_t, particle_start_index), H5T_NATIVE_HSIZE) < 0)

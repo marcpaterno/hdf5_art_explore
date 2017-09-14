@@ -13,11 +13,16 @@
 #define EVENT_NAME  "testevent"
 #define VECTOR_NAME "vomct"
 
+#define STRING_1    "string 1"
+#define STRING_2    "string 2"
+
 
 /* generates random MC Truth data for testing */
 static herr_t
 generate_test_truths(h5fnal_vect_truth_data_t *data)
 {
+    unsigned u;
+
     if (!data)
         H5FNAL_PROGRAM_ERROR("data parameter cannot be NULL");
 
@@ -46,7 +51,75 @@ generate_test_truths(h5fnal_vect_truth_data_t *data)
     if (NULL == (data->neutrinos = (h5fnal_neutrino_t *)calloc(data->n_neutrinos, sizeof(h5fnal_neutrino_t))))
         H5FNAL_PROGRAM_ERROR("could not allocate memory");
 
-    /* Add data */
+    /* Add data
+     * It's all random garbage but this could be turned into real data
+     * if desired (our 'real' test is in the C++ code).
+     */
+
+    /* neutrinos */
+    for (u = 0; u < data->n_neutrinos; u++) {
+        data->neutrinos[u].mode             = (int)rand();
+        data->neutrinos[u].interaction_type = (int)rand();
+        data->neutrinos[u].ccnc             = (int)rand();
+        data->neutrinos[u].target           = (int)rand();
+        data->neutrinos[u].hit_nuc          = (int)rand();
+        data->neutrinos[u].hit_quark        = (int)rand();
+        data->neutrinos[u].w                = (double)rand();
+        data->neutrinos[u].x                = (double)rand();
+        data->neutrinos[u].y                = (double)rand();
+        data->neutrinos[u].q_sqr            = (double)rand();
+    }
+
+    /* particles */
+    for (u = 0; u < data->n_particles; u++) {
+        data->particles[u].status           = (int)rand();
+        data->particles[u].track_id         = (int)rand();
+        data->particles[u].pdg_code         = (int)rand();
+        data->particles[u].mother           = (int)rand();
+        data->particles[u].process_index    = (hsize_t)rand();
+        data->particles[u].endprocess_index = (hsize_t)rand();
+        data->particles[u].mass             = (double)rand();
+        data->particles[u].polarization_x   = (double)rand();
+        data->particles[u].polarization_y   = (double)rand();
+        data->particles[u].polarization_z   = (double)rand();
+        data->particles[u].weight           = (double)rand();
+        data->particles[u].gvtx_e           = (double)rand();
+        data->particles[u].gvtx_x           = (double)rand();
+        data->particles[u].gvtx_y           = (double)rand();
+        data->particles[u].gvtx_z           = (double)rand();
+        data->particles[u].rescatter        = (double)rand();
+    }
+
+    /* daughters */
+    for (u = 0; u < data->n_daughters; u++) {
+        data->daughters[u].parent_index     = (hsize_t)rand();
+        data->daughters[u].child_index      = (hsize_t)rand();
+    }
+
+    /* trajectories */
+    for (u = 0; u < data->n_trajectories; u++) {
+        data->trajectories[u].Ec1           = (double)rand();
+        data->trajectories[u].px1           = (double)rand();
+        data->trajectories[u].py1           = (double)rand();
+        data->trajectories[u].pz1           = (double)rand();
+        data->trajectories[u].Ec2           = (double)rand();
+        data->trajectories[u].px2           = (double)rand();
+        data->trajectories[u].py2           = (double)rand();
+        data->trajectories[u].pz2           = (double)rand();
+        data->trajectories[u].particle_index    = (hsize_t)rand();
+    }
+
+    /* truths */
+    for (u = 0; u < data->n_truths; u++) {
+        data->truths[u].origin                      = (int)rand();
+        data->truths[u].neutrino_index              = (hsize_t)rand();
+        data->truths[u].particle_start_index        = (hsize_t)rand();
+        data->truths[u].particle_end_index          = (hsize_t)rand();
+        data->truths[u].trajectory_start_index      = (hsize_t)rand();
+        data->truths[u].trajectory_end_index        = (hsize_t)rand();
+        data->truths[u].daughters_start_index       = (hsize_t)rand();
+        data->truths[u].daughters_end_index         = (hsize_t)rand();
+    }
 
     return H5FNAL_SUCCESS;
 
@@ -104,8 +177,6 @@ main(void)
     /* Append truths */
     if (h5fnal_append_truths(vector, data) < 0)
         H5FNAL_PROGRAM_ERROR("could not write truths to the file");
-    if (h5fnal_append_truths(vector, data) < 0)
-        H5FNAL_PROGRAM_ERROR("could not write truths to the file");
 
     /* Read the truths */
     if (NULL == (data_out = (h5fnal_vect_truth_data_t *)calloc(1, sizeof(h5fnal_vect_truth_data_t))))
@@ -126,6 +197,18 @@ main(void)
         H5FNAL_PROGRAM_ERROR("could not clean up test data");
     if (h5fnal_read_all_truths(vector, data_out) < 0)
         H5FNAL_PROGRAM_ERROR("could not read truths from the file");
+
+    /* Compare the data */
+    if (memcmp(data->truths, data_out->truths, data->n_truths * sizeof(h5fnal_truth_t)) != 0)
+        H5FNAL_PROGRAM_ERROR("bad read data (truths)");
+    if (memcmp(data->trajectories, data_out->trajectories, data->n_trajectories * sizeof(h5fnal_trajectory_t)) != 0)
+        H5FNAL_PROGRAM_ERROR("bad read data (trajectories)");
+    if (memcmp(data->daughters, data_out->daughters, data->n_daughters * sizeof(h5fnal_daughter_t)) != 0)
+        H5FNAL_PROGRAM_ERROR("bad read data (daughters)");
+    if (memcmp(data->particles, data_out->particles, data->n_particles * sizeof(h5fnal_particle_t)) != 0)
+        H5FNAL_PROGRAM_ERROR("bad read data (particles)");
+    if (memcmp(data->neutrinos, data_out->neutrinos, data->n_neutrinos * sizeof(h5fnal_neutrino_t)) != 0)
+        H5FNAL_PROGRAM_ERROR("bad read data (neutrinos)");
 
     /* Close the vector */
     if (h5fnal_close_v_mc_truth(vector) < 0)
