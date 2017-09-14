@@ -26,7 +26,7 @@ using namespace simb;
 
 int main(int argc, char* argv[]) {
 
-  size_t totalHits = 0L;
+  size_t totalTruths = 0L;
   hid_t   fid 		= H5FNAL_BAD_HID_T;
   hid_t   fapl_id 	= H5FNAL_BAD_HID_T;
   hid_t   master_id = H5FNAL_BAD_HID_T;
@@ -80,6 +80,7 @@ int main(int argc, char* argv[]) {
   // Loop over all the events in the root file
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
     auto const& aux = ev.eventAuxiliary();
+    h5fnal_vect_truth_data_t truth_data;
 
     std::cout << "Processing event: " << aux.run()
               << ',' << aux.subRun()
@@ -129,11 +130,26 @@ int main(int argc, char* argv[]) {
     // gallery use. It does not require in-your-face error handling.
     std::vector<simb::MCTruth> const& root_truths = *ev.getValidHandle<vector<simb::MCTruth>>(truths_tag);
 
+    // Create the Vector of MC Truth via h5fnal.
+    // This will create a group containing datasets. The name for this group should be something like:
+    // "MCHitCollections_mchitfinder_"
+    // The empty string following the 2nd underscore indicates and empty 'product instance name'.
+    // There is no need to represent the 'process name' because that is a top-level of the file entity -- in the root group.
+    // TODO: Update the name (using a cheap, hard-coded name for now)
+    if (h5fnal_create_v_mc_truth(event_id, BADNAME, h5vtruth) < 0)
+      H5FNAL_PROGRAM_ERROR("could not create HDF5 data product");
+
+    // Iterate through all hits
+    totalTruths += root_truths.size();
     cout << "Number of truths in vector: " << root_truths.size() << endl;
     for (simb::MCTruth const&  truth : root_truths)
         cout << "    Origin: " << truth.Origin() << endl;
 
+    // TODO: Write the data to the HDF5 data product
+
     /* Close the event and HDF5 data product */
+    if (h5fnal_close_v_mc_truth(h5vtruth) < 0)
+      H5FNAL_PROGRAM_ERROR("could not close HDF5 data product");
     if (h5fnal_close_event(event_id) < 0)
       H5FNAL_PROGRAM_ERROR("could not close event");
   }
@@ -153,7 +169,7 @@ int main(int argc, char* argv[]) {
 
   free(h5vtruth);
 
-  cout << "Wrote " << totalHits << " TOTAL hits to the HDF5 file." << endl;
+  cout << "Wrote " << totalTruths << " TOTAL truths to the HDF5 file." << endl;
   std::cout << "*** SUCCESS ***\n";
   exit(EXIT_SUCCESS);
 
@@ -166,6 +182,7 @@ error:
     h5fnal_close_run(subrun_id);
     h5fnal_close_event(event_id);
     h5fnal_close_run(master_id);
+    h5fnal_close_v_mc_truth(h5vtruth);
   } H5E_END_TRY;
 
   free(h5vtruth);
