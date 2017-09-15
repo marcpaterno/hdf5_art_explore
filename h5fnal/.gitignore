@@ -9,6 +9,7 @@
 test_v_mc_hit_collection
 test_v_mc_truth
 test_assns
+test_string_dictionary
 
 # generated files
 v_mc_hc.h5

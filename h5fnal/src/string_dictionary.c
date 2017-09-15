@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "string_dictionary.h"
+#include "h5fnal.h"
 
 #define INITIAL_N_STRINGS   16
 #define CONCAT_STRING_INCR  4096

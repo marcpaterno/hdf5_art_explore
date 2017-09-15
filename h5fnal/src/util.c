@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "h5fnal.h"
 #include "util.h"
 
 herr_t
@@ -207,7 +208,7 @@ error:
     } H5E_END_TRY;
 
     if (did)
-        did = H5FNAL_BAD_HID_T;
+        *did = H5FNAL_BAD_HID_T;
 
     return H5FNAL_FAILURE;
 
