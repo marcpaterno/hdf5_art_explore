@@ -79,6 +79,12 @@ int main(int argc, char* argv[]) {
 
   // Loop over all the events in the root file
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
+    vector<h5fnal_truth_t> truths;
+    vector<h5fnal_trajectory_t> trajectories;
+    vector<h5fnal_daughter_t> daughters;
+    vector<h5fnal_particle_t> particles;
+    vector<h5fnal_neutrino_t> neutrinos;
+
     auto const& aux = ev.eventAuxiliary();
     h5fnal_vect_truth_data_t truth_data;
 
@@ -139,13 +145,27 @@ int main(int argc, char* argv[]) {
     if (h5fnal_create_v_mc_truth(event_id, BADNAME, h5vtruth) < 0)
       H5FNAL_PROGRAM_ERROR("could not create HDF5 data product");
 
-    // Iterate through all hits
+    // Iterate through all truths
     totalTruths += root_truths.size();
     cout << "Number of truths in vector: " << root_truths.size() << endl;
-    for (simb::MCTruth const&  truth : root_truths)
+    for (simb::MCTruth const&  truth : root_truths) {
         cout << "    Origin: " << truth.Origin() << endl;
+    }
 
-    // TODO: Write the data to the HDF5 data product
+    // Write the data to the HDF5 data product
+    truth_data.n_truths         = truths.size();
+    truth_data.truths           = &truths[0];
+    truth_data.n_trajectories   = trajectories.size();
+    truth_data.trajectories     = &trajectories[0];
+    truth_data.n_daughters      = daughters.size();
+    truth_data.daughters        = &daughters[0];
+    truth_data.n_particles      = particles.size();
+    truth_data.particles        = &particles[0];
+    truth_data.n_neutrinos      = neutrinos.size();
+    truth_data.neutrinos        = &neutrinos[0];
+
+    if (h5fnal_append_truths(h5vtruth, &truth_data) < 0)
+      H5FNAL_PROGRAM_ERROR("could not write truths to the HDF5 data product");
 
     /* Close the event and HDF5 data product */
     if (h5fnal_close_v_mc_truth(h5vtruth) < 0)
