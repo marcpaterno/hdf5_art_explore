@@ -83,10 +83,10 @@ generate_test_truths(h5fnal_vect_truth_data_t *data)
         data->particles[u].polarization_y   = (double)rand();
         data->particles[u].polarization_z   = (double)rand();
         data->particles[u].weight           = (double)rand();
-        data->particles[u].gvtx_e           = (double)rand();
         data->particles[u].gvtx_x           = (double)rand();
         data->particles[u].gvtx_y           = (double)rand();
         data->particles[u].gvtx_z           = (double)rand();
+        data->particles[u].gvtx_t           = (double)rand();
         data->particles[u].rescatter        = (double)rand();
     }
 
@@ -98,14 +98,14 @@ generate_test_truths(h5fnal_vect_truth_data_t *data)
 
     /* trajectories */
     for (u = 0; u < data->n_trajectories; u++) {
-        data->trajectories[u].Ec1           = (double)rand();
-        data->trajectories[u].px1           = (double)rand();
-        data->trajectories[u].py1           = (double)rand();
-        data->trajectories[u].pz1           = (double)rand();
-        data->trajectories[u].Ec2           = (double)rand();
-        data->trajectories[u].px2           = (double)rand();
-        data->trajectories[u].py2           = (double)rand();
-        data->trajectories[u].pz2           = (double)rand();
+        data->trajectories[u].Vx            = (double)rand();
+        data->trajectories[u].Vy            = (double)rand();
+        data->trajectories[u].Vz            = (double)rand();
+        data->trajectories[u].T             = (double)rand();
+        data->trajectories[u].Px            = (double)rand();
+        data->trajectories[u].Py            = (double)rand();
+        data->trajectories[u].Pz            = (double)rand();
+        data->trajectories[u].E             = (double)rand();
         data->trajectories[u].particle_index    = (hsize_t)rand();
     }
 

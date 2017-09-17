@@ -37,6 +37,8 @@ typedef struct h5fnal_neutrino_t {
     double      x;
     double      y;
     double      q_sqr;
+    hsize_t     nu;     // Index into particles
+    hsize_t     lepton; // Index into particles
 } h5fnal_neutrino_t;
 
 /* MC Particle Type */
@@ -52,10 +54,10 @@ typedef struct h5fnal_particle_t {
     double      polarization_y;
     double      polarization_z;
     double      weight;
-    double      gvtx_e;
     double      gvtx_x;
     double      gvtx_y;
     double      gvtx_z;
+    double      gvtx_t;
     int         rescatter;
 } h5fnal_particle_t;
 
@@ -67,14 +69,14 @@ typedef struct h5fnal_daughter_t {
 
 /* Trajectory type */
 typedef struct h5fnal_trajectory_t {
-    double      Ec1;
-    double      px1;
-    double      py1;
-    double      pz1;
-    double      Ec2;
-    double      px2;
-    double      py2;
-    double      pz2;
+    double      Vx;
+    double      Vy;
+    double      Vz;
+    double      T;
+    double      Px;
+    double      Py;
+    double      Pz;
+    double      E;
     hsize_t     particle_index;
 } h5fnal_trajectory_t;
 

@@ -148,8 +148,92 @@ int main(int argc, char* argv[]) {
     // Iterate through all truths
     totalTruths += root_truths.size();
     cout << "Number of truths in vector: " << root_truths.size() << endl;
-    for (simb::MCTruth const&  truth : root_truths) {
-        cout << "    Origin: " << truth.Origin() << endl;
+    for (simb::MCTruth const&  t : root_truths) {
+
+        // Copy particles
+        for (int i = 0; i < t.NParticles(); i++) {
+            const simb::MCParticle& p = t.GetParticle(i);
+            h5fnal_particle_t particle;
+
+            particle.status     = p.StatusCode();
+            particle.track_id   = p.TrackId();
+            particle.pdg_code   = p.PdgCode();
+            particle.mother     = p.Mother();
+            particle.mass       = p.Mass();
+            particle.weight     = p.Weight();
+            particle.gvtx_x     = p.Gvx();
+            particle.gvtx_y     = p.Gvy();
+            particle.gvtx_z     = p.Gvz();
+            particle.gvtx_t     = p.Gvt();
+            particle.rescatter  = p.Rescatter();
+
+            // Get polarization TVector3 and set fields
+            const TVector3& polarization = p.Polarization();
+            particle.polarization_x = polarization.x();
+            particle.polarization_y = polarization.y();
+            particle.polarization_z = polarization.z();
+
+            // TODO: Process string handling here
+
+            particles.push_back(particle);
+
+            // Copy daughters
+            for (int j = 0; j < p.NumberDaughters(); j++) {
+                h5fnal_daughter_t daughter;
+
+                daughter.parent_index   = particle.track_id;
+                daughter.child_index    = p.Daughter(i);
+
+                daughters.push_back(daughter);
+            }
+
+            // Copy trajectories
+            for (unsigned int j = 0; j < p.NumberTrajectoryPoints(); j++) {
+                h5fnal_trajectory_t trajectory;
+
+                trajectory.Vx   = p.Vx(j);
+                trajectory.Vy   = p.Vy(j);
+                trajectory.Vz   = p.Vz(j);
+                trajectory.T    = p.T(j);
+
+                trajectory.Px   = p.Px(j);
+                trajectory.Py   = p.Py(j);
+                trajectory.Pz   = p.Pz(j);
+                trajectory.E    = p.E(j);
+
+                trajectories.push_back(trajectory);
+            }
+        }
+
+        // Copy neutrino data
+        if (t.NeutrinoSet()) {
+            const simb::MCNeutrino& n = t.GetNeutrino();
+            h5fnal_neutrino_t neutrino;
+
+            neutrino.mode               = n.Mode();
+            neutrino.interaction_type   = n.InteractionType();
+            neutrino.ccnc               = n.CCNC();
+            neutrino.target             = n.Target();
+            neutrino.hit_nuc            = n.HitNuc();
+            neutrino.hit_quark          = n.HitQuark();
+            neutrino.w                  = n.W();
+            neutrino.x                  = n.X();
+            neutrino.y                  = n.Y();
+            neutrino.q_sqr              = n.QSqr();
+
+            // TODO: fill in (might use association dset instead)
+            //neutrino.nu                 = 0 ;
+            //neutrino.lepton             = 0 ;
+
+            neutrinos.push_back(neutrino);
+        }
+
+        // Copy truth data
+        h5fnal_truth_t truth;
+        truth.origin = static_cast<h5fnal_origin_t>(t.Origin());
+        // TODO: Add use size() to fixup index values
+        truths.push_back(truth);
+
     }
 
     // Write the data to the HDF5 data product

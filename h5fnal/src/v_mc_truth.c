@@ -123,13 +123,13 @@ h5fnal_create_particle_type(void)
         H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "fWeight", HOFFSET(h5fnal_particle_t, weight), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
-    if (H5Tinsert(tid, "fGvtx_e", HOFFSET(h5fnal_particle_t, gvtx_e), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "fGvtx_x", HOFFSET(h5fnal_particle_t, gvtx_x), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "fGvtx_y", HOFFSET(h5fnal_particle_t, gvtx_y), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "fGvtx_z", HOFFSET(h5fnal_particle_t, gvtx_z), H5T_NATIVE_DOUBLE) < 0)
+        H5FNAL_HDF5_ERROR
+    if (H5Tinsert(tid, "fGvtx_t", HOFFSET(h5fnal_particle_t, gvtx_t), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "rescatter", HOFFSET(h5fnal_particle_t, rescatter), H5T_NATIVE_INT) < 0)
         H5FNAL_HDF5_ERROR
@@ -173,21 +173,21 @@ h5fnal_create_trajectory_type(void)
     if ((tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_trajectory_t))) < 0)
         H5FNAL_HDF5_ERROR
 
-    if (H5Tinsert(tid, "Ec1", HOFFSET(h5fnal_trajectory_t, Ec1), H5T_NATIVE_DOUBLE) < 0)
+    if (H5Tinsert(tid, "Vx", HOFFSET(h5fnal_trajectory_t, Vx), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
-    if (H5Tinsert(tid, "px1", HOFFSET(h5fnal_trajectory_t, px1), H5T_NATIVE_DOUBLE) < 0)
+    if (H5Tinsert(tid, "Vy", HOFFSET(h5fnal_trajectory_t, Vy), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
-    if (H5Tinsert(tid, "py1", HOFFSET(h5fnal_trajectory_t, py1), H5T_NATIVE_DOUBLE) < 0)
+    if (H5Tinsert(tid, "Vz", HOFFSET(h5fnal_trajectory_t, Vz), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
-    if (H5Tinsert(tid, "pz1", HOFFSET(h5fnal_trajectory_t, pz1), H5T_NATIVE_DOUBLE) < 0)
+    if (H5Tinsert(tid, "T", HOFFSET(h5fnal_trajectory_t, T), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
-    if (H5Tinsert(tid, "Ec2", HOFFSET(h5fnal_trajectory_t, Ec2), H5T_NATIVE_DOUBLE) < 0)
+    if (H5Tinsert(tid, "Px", HOFFSET(h5fnal_trajectory_t, Px), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
-    if (H5Tinsert(tid, "px2", HOFFSET(h5fnal_trajectory_t, px2), H5T_NATIVE_DOUBLE) < 0)
+    if (H5Tinsert(tid, "Py", HOFFSET(h5fnal_trajectory_t, Py), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
-    if (H5Tinsert(tid, "py2", HOFFSET(h5fnal_trajectory_t, py2), H5T_NATIVE_DOUBLE) < 0)
+    if (H5Tinsert(tid, "Pz", HOFFSET(h5fnal_trajectory_t, Pz), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
-    if (H5Tinsert(tid, "pz2", HOFFSET(h5fnal_trajectory_t, pz2), H5T_NATIVE_DOUBLE) < 0)
+    if (H5Tinsert(tid, "E", HOFFSET(h5fnal_trajectory_t, E), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR
     if (H5Tinsert(tid, "particle_index", HOFFSET(h5fnal_trajectory_t, particle_index), H5T_NATIVE_HSIZE) < 0)
         H5FNAL_HDF5_ERROR
