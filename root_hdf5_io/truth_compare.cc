@@ -26,7 +26,14 @@ using namespace art;
 using namespace std;
 using namespace simb;
 
-void
+static herr_t
+member_compare(simb::MCTruth root_truth, simb::MCTruth hdf5_truth)
+{
+    return H5FNAL_SUCCESS;
+} /* end member_compare() */
+
+
+static void
 get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::vector<simb::MCTruth> &hdf5_truths)
 {
     string  run_name = std::to_string(run);
@@ -62,6 +69,9 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
     // Convert to MCTruth and add to the vector
     for (t = 0; t < data->n_truths; t++)
     {
+        // Create a new hit collection in the vector
+        hdf5_truths.emplace_back();
+
     } // end loop over truths
 
     // Close everything
@@ -148,10 +158,24 @@ int main(int argc, char* argv[]) {
     std::vector<simb::MCTruth> hdf5_truths;
     get_hdf5_truths(master_id, aux.run(), aux.subRun(), aux.event(), hdf5_truths);
 
+    // Check to see if the MCTruths are the same.
+    // We really only need the ==, but while debugging the member_compare()
+    // function proved helpful and was left in place.
     if (root_truths == hdf5_truths)
         cout << "equal" << endl;
-    else
+    else {
+        if (root_truths.size() != hdf5_truths.size())
+            cout << "BAD: vectors not same size" << endl;
+        else {
+            for (unsigned int u = 0; u < root_truths.size(); u++) {
+                if (member_compare(root_truths[u], hdf5_truths[u]) < 0)
+                    H5FNAL_PROGRAM_ERROR("error when comparing MCTruth members");
+            }
+        }
+
+        // Complain
         cout << "*** BADNESS: NOT EQUAL ***" << endl;
+    }
   }
 
   /* Clean up */
