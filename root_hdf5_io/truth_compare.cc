@@ -29,6 +29,39 @@ using namespace simb;
 static herr_t
 member_compare(simb::MCTruth root_truth, simb::MCTruth hdf5_truth)
 {
+    hbool_t comparable = FALSE;
+
+    cout << endl;
+    cout << "*** BADNESS SUMMARY ***" << endl;
+
+    if (root_truth.Origin() != hdf5_truth.Origin())
+        cout << "BAD: Origins differ" << endl;
+
+    if (root_truth.NeutrinoSet() != hdf5_truth.NeutrinoSet()) {
+        comparable = FALSE;
+        cout << "BAD: NeutrinoSet() values differ" << endl;
+    }
+    else {
+        comparable = TRUE;
+    }
+
+    if (comparable && true == root_truth.NeutrinoSet())
+        if (root_truth.GetNeutrino() != hdf5_truth.GetNeutrino())
+            cout << "BAD: Neutrino data differ" << endl;
+
+    if (root_truth.NParticles() != hdf5_truth.NParticles()) {
+        comparable = FALSE;
+        cout << "BAD: Number of particles differ: " << root_truth.NParticles() << " v "<< hdf5_truth.NParticles() << endl;
+    }
+    else {
+        comparable = TRUE;
+    }
+
+    if (comparable)
+        for (int i = 0; i < root_truth.NParticles(); i++)
+            if (root_truth.GetParticle(i) != hdf5_truth.GetParticle(i))
+                cout << "BAD: Particle " << i << " differs" << endl;
+
     return H5FNAL_SUCCESS;
 } /* end member_compare() */
 
@@ -44,7 +77,6 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
     hid_t   event_id = -1;
     h5fnal_vect_truth_t *vector = NULL;
     h5fnal_vect_truth_data_t *data = NULL;
-    hsize_t t;
 
     // Open run, sub-run, and event
     if ((run_id = h5fnal_open_run(loc_id, run_name.c_str())) < 0)
@@ -67,10 +99,50 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
         H5FNAL_PROGRAM_ERROR("could not read truth data from the file")
 
     // Convert to MCTruth and add to the vector
-    for (t = 0; t < data->n_truths; t++)
+    cout << "GETTING TRUTHS" << endl;
+    for (hsize_t u = 0; u < data->n_truths; u++)
     {
+        simb::MCTruth t;
+        hsize_t p_start;
+        hsize_t p_end;
+        
+        // Set the origin
+        t.SetOrigin(static_cast<simb::Origin_t>(data->truths[u].origin));
+
+        // Add particles
+        p_start = data->truths[u].particle_start_index;
+        p_end = data->truths[u].particle_end_index;
+        cout << "start: " << p_start << " end: " << p_end << endl;
+        for (hsize_t v = p_start; v <= p_end; v++ ) {
+            simb::MCParticle p(1, 1, "");
+            t.Add(p);
+            cout << "Added particle" << endl;
+        }
+
+        // Set the neutrino data
+        if (data->truths[u].neutrino_index >= 0) {
+            hsize_t ni = static_cast<hsize_t>(data->truths[u].neutrino_index);
+            h5fnal_neutrino_t n = data->neutrinos[ni];
+
+// Have to construct the MCParticles first since we need to get refs here
+#if 0
+            t.SetNeutrino(  // simb::MCParticle &nu
+                            // simb::MCParticle &lep
+                            n.ccnc,
+                            n.mode,
+                            n.interaction_type,
+                            n.target,
+                            n.hit_nuc,
+                            n.hit_quark,
+                            n.w,
+                            n.x,
+                            n.y,
+                            n.q_sqr);
+#endif
+        }
+        
         // Create a new hit collection in the vector
-        hdf5_truths.emplace_back();
+        hdf5_truths.push_back(t);
 
     } // end loop over truths
 

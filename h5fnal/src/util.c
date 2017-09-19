@@ -220,11 +220,17 @@ h5fnal_append_data(hid_t did, hid_t tid, hsize_t n_elements, const void *data)
     hid_t file_sid = -1;                /* dataspace ID                             */
     hid_t memory_sid = -1;              /* dataspace ID                             */
     hsize_t curr_dims[1];               /* initial size of dataset                  */
-    hsize_t new_dims[1];                /* new size of data dataset             */
+    hsize_t new_dims[1];                /* new size of data dataset                 */
     hsize_t start[1];
     hsize_t stride[1];
     hsize_t count[1];
     hsize_t block[1];
+
+    /* NOTE: no parameter check on data parameter to make it easier on higher-level code */
+
+    /* Trivial case of no elements */
+    if (0 == n_elements)
+        return H5FNAL_SUCCESS;
 
     /* Create the memory dataspace (set of points describing the data size, etc.) */
     curr_dims[0] = n_elements;

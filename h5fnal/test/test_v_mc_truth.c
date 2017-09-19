@@ -92,8 +92,7 @@ generate_test_truths(h5fnal_vect_truth_data_t *data)
 
     /* daughters */
     for (u = 0; u < data->n_daughters; u++) {
-        data->daughters[u].parent_index     = (hsize_t)rand();
-        data->daughters[u].child_index      = (hsize_t)rand();
+        data->daughters[u].track_id         = (int)rand();
     }
 
     /* trajectories */

@@ -79,13 +79,14 @@ int main(int argc, char* argv[]) {
 
   // Loop over all the events in the root file
   for (gallery::Event ev(filenames); !ev.atEnd(); ev.next()) {
+    auto const& aux = ev.eventAuxiliary();
+
     vector<h5fnal_truth_t> truths;
     vector<h5fnal_trajectory_t> trajectories;
     vector<h5fnal_daughter_t> daughters;
     vector<h5fnal_particle_t> particles;
     vector<h5fnal_neutrino_t> neutrinos;
 
-    auto const& aux = ev.eventAuxiliary();
     h5fnal_vect_truth_data_t truth_data;
 
     std::cout << "Processing event: " << aux.run()
@@ -134,7 +135,7 @@ int main(int argc, char* argv[]) {
    
     // getValidHandle() is preferred to getByLabel(), for both art and
     // gallery use. It does not require in-your-face error handling.
-    std::vector<simb::MCTruth> const& root_truths = *ev.getValidHandle<vector<simb::MCTruth>>(truths_tag);
+    std::vector<simb::MCTruth> const& rootTruths = *ev.getValidHandle<vector<simb::MCTruth>>(truths_tag);
 
     // Create the Vector of MC Truth via h5fnal.
     // This will create a group containing datasets. The name for this group should be something like:
@@ -145,10 +146,16 @@ int main(int argc, char* argv[]) {
     if (h5fnal_create_v_mc_truth(event_id, BADNAME, h5vtruth) < 0)
       H5FNAL_PROGRAM_ERROR("could not create HDF5 data product");
 
-    // Iterate through all truths
-    totalTruths += root_truths.size();
-    cout << "Number of truths in vector: " << root_truths.size() << endl;
-    for (simb::MCTruth const&  t : root_truths) {
+    // Iterate through all truths in the vector
+    totalTruths += rootTruths.size();
+    cout << "Number of truths in vector: " << rootTruths.size() << endl;
+    for (unsigned n = 0; n < rootTruths.size(); n++) {
+
+        simb::MCTruth t = rootTruths[n];
+        h5fnal_truth_t truth;
+
+        // Copy origin
+        truth.origin = static_cast<h5fnal_origin_t>(t.Origin());
 
         // Copy particles
         for (int i = 0; i < t.NParticles(); i++) {
@@ -174,16 +181,19 @@ int main(int argc, char* argv[]) {
             particle.polarization_z = polarization.z();
 
             // TODO: Process string handling here
+            cout << "Process: " << p.Process() << endl;
+            cout << "End Process: " << p.EndProcess() << endl;
 
+            cout << "Added particle" << endl;
             particles.push_back(particle);
 
-            // Copy daughters
+            // Copy daughters for this particle
             for (int j = 0; j < p.NumberDaughters(); j++) {
                 h5fnal_daughter_t daughter;
 
-                daughter.parent_index   = particle.track_id;
-                daughter.child_index    = p.Daughter(i);
+                daughter.track_id     = p.Daughter(i);
 
+                cout << "Added daughter" << endl;
                 daughters.push_back(daughter);
             }
 
@@ -201,6 +211,7 @@ int main(int argc, char* argv[]) {
                 trajectory.Pz   = p.Pz(j);
                 trajectory.E    = p.E(j);
 
+                cout << "Added trajectory" << endl;
                 trajectories.push_back(trajectory);
             }
         }
@@ -210,6 +221,8 @@ int main(int argc, char* argv[]) {
             const simb::MCNeutrino& n = t.GetNeutrino();
             h5fnal_neutrino_t neutrino;
 
+            //neutrino.nu                 = ?
+            //neutrino.lepton             = ?
             neutrino.mode               = n.Mode();
             neutrino.interaction_type   = n.InteractionType();
             neutrino.ccnc               = n.CCNC();
@@ -225,13 +238,16 @@ int main(int argc, char* argv[]) {
             //neutrino.nu                 = 0 ;
             //neutrino.lepton             = 0 ;
 
+            truth.neutrino_index = truths.size();
+
+            cout << "Added neutrino" << endl;
             neutrinos.push_back(neutrino);
         }
+        else
+            truth.neutrino_index = -1;
 
-        // Copy truth data
-        h5fnal_truth_t truth;
-        truth.origin = static_cast<h5fnal_origin_t>(t.Origin());
         // TODO: Add use size() to fixup index values
+
         truths.push_back(truth);
 
     }

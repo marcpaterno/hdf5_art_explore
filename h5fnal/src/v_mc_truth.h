@@ -61,10 +61,12 @@ typedef struct h5fnal_particle_t {
     int         rescatter;
 } h5fnal_particle_t;
 
-/* Daughters type (for parent-child relationships) */
+/* Daughters type (for parent-child relationships)
+ * (this struct used to have more fields and could probably
+ * just be a single int now)
+ */
 typedef struct h5fnal_daughter_t {
-    hsize_t     parent_index;
-    hsize_t     child_index;
+    int         track_id;
 } h5fnal_daughter_t;
 
 /* Trajectory type */

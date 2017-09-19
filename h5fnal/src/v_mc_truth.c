@@ -25,23 +25,23 @@ h5fnal_create_origin_type(void)
     hid_t tid = H5FNAL_BAD_HID_T;
 
     if ((tid = H5Tenum_create(H5T_NATIVE_INT)) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
 
     enum_value = 0;
     if (H5Tenum_insert(tid, "kUnknown", &enum_value) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     enum_value = 1;
     if (H5Tenum_insert(tid, "kBeamNeutrino", &enum_value) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     enum_value = 2;
     if (H5Tenum_insert(tid, "kCosmicRay", &enum_value) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     enum_value = 3;
     if (H5Tenum_insert(tid, "kSuperNovaParticle", &enum_value) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     enum_value = 4;
     if (H5Tenum_insert(tid, "kSingleParticle", &enum_value) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
 
     return tid;
 
@@ -62,25 +62,25 @@ h5fnal_create_neutrino_type(void)
         H5FNAL_HDF5_ERROR
 
     if (H5Tinsert(tid, "fMode", HOFFSET(h5fnal_neutrino_t, mode), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fInteractionType", HOFFSET(h5fnal_neutrino_t, interaction_type), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fCCNC", HOFFSET(h5fnal_neutrino_t, ccnc), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fTarget", HOFFSET(h5fnal_neutrino_t, target), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fHitNuc", HOFFSET(h5fnal_neutrino_t, hit_nuc), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fHitQuark", HOFFSET(h5fnal_neutrino_t, hit_quark), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fW", HOFFSET(h5fnal_neutrino_t, w), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fX", HOFFSET(h5fnal_neutrino_t, x), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fY", HOFFSET(h5fnal_neutrino_t, y), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fQSqr", HOFFSET(h5fnal_neutrino_t, q_sqr), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
 
     return tid;
 
@@ -98,41 +98,41 @@ h5fnal_create_particle_type(void)
     hid_t tid = H5FNAL_BAD_HID_T;
 
     if ((tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_particle_t))) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
 
     if (H5Tinsert(tid, "fStatus", HOFFSET(h5fnal_particle_t, status), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fTrackId", HOFFSET(h5fnal_particle_t, track_id), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fpdgCode", HOFFSET(h5fnal_particle_t, pdg_code), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fMother", HOFFSET(h5fnal_particle_t, mother), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     /* NOTE: The 'strings' are just indexes into a string dictionary */
     if (H5Tinsert(tid, "fprocess", HOFFSET(h5fnal_particle_t, process_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fendprocess", HOFFSET(h5fnal_particle_t, endprocess_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fmass", HOFFSET(h5fnal_particle_t, mass), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fpolarization_x", HOFFSET(h5fnal_particle_t, polarization_x), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fpolarization_y", HOFFSET(h5fnal_particle_t, polarization_y), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fpolarization_z", HOFFSET(h5fnal_particle_t, polarization_z), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fWeight", HOFFSET(h5fnal_particle_t, weight), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fGvtx_x", HOFFSET(h5fnal_particle_t, gvtx_x), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fGvtx_y", HOFFSET(h5fnal_particle_t, gvtx_y), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fGvtx_z", HOFFSET(h5fnal_particle_t, gvtx_z), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fGvtx_t", HOFFSET(h5fnal_particle_t, gvtx_t), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "rescatter", HOFFSET(h5fnal_particle_t, rescatter), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     return tid;
 
 error:
@@ -149,12 +149,11 @@ h5fnal_create_daughter_type(void)
     hid_t tid = H5FNAL_BAD_HID_T;
 
     if ((tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_daughter_t))) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
 
-    if (H5Tinsert(tid, "parent", HOFFSET(h5fnal_daughter_t, parent_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
-    if (H5Tinsert(tid, "child", HOFFSET(h5fnal_daughter_t, child_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+    if (H5Tinsert(tid, "track_id", HOFFSET(h5fnal_daughter_t, track_id), H5T_NATIVE_INT) < 0)
+        H5FNAL_HDF5_ERROR;
+
     return tid;
 
 error:
@@ -171,26 +170,26 @@ h5fnal_create_trajectory_type(void)
     hid_t tid = H5FNAL_BAD_HID_T;
 
     if ((tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_trajectory_t))) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
 
     if (H5Tinsert(tid, "Vx", HOFFSET(h5fnal_trajectory_t, Vx), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "Vy", HOFFSET(h5fnal_trajectory_t, Vy), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "Vz", HOFFSET(h5fnal_trajectory_t, Vz), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "T", HOFFSET(h5fnal_trajectory_t, T), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "Px", HOFFSET(h5fnal_trajectory_t, Px), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "Py", HOFFSET(h5fnal_trajectory_t, Py), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "Pz", HOFFSET(h5fnal_trajectory_t, Pz), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "E", HOFFSET(h5fnal_trajectory_t, E), H5T_NATIVE_DOUBLE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "particle_index", HOFFSET(h5fnal_trajectory_t, particle_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     return tid;
 
 error:
@@ -207,24 +206,24 @@ h5fnal_create_truth_type(void)
     hid_t tid = H5FNAL_BAD_HID_T;
 
     if ((tid = H5Tcreate(H5T_COMPOUND, sizeof(h5fnal_truth_t))) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
 
     if (H5Tinsert(tid, "origin", HOFFSET(h5fnal_truth_t, origin), H5T_NATIVE_INT) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "neutrino_index", HOFFSET(h5fnal_truth_t, neutrino_index), H5T_NATIVE_HSSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "particle_start_index", HOFFSET(h5fnal_truth_t, particle_start_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "particle_end_index", HOFFSET(h5fnal_truth_t, particle_end_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "trajectory_start_index", HOFFSET(h5fnal_truth_t, trajectory_start_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "trajectory_end_index", HOFFSET(h5fnal_truth_t, trajectory_end_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "daughters_start_index", HOFFSET(h5fnal_truth_t, daughters_start_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "daughters_end_index", HOFFSET(h5fnal_truth_t, daughters_end_index), H5T_NATIVE_HSIZE) < 0)
-        H5FNAL_HDF5_ERROR
+        H5FNAL_HDF5_ERROR;
     return tid;
 
 error:
@@ -305,7 +304,7 @@ h5fnal_create_v_mc_truth(hid_t loc_id, const char *name, h5fnal_vect_truth_t *ve
     if (NULL == name)
         H5FNAL_PROGRAM_ERROR("name parameter cannot be NULL");
     if (NULL == vector)
-        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL")
+        H5FNAL_PROGRAM_ERROR("vector parameter cannot be NULL");
 
     /* Initialize the data product struct */
     memset(vector, 0, sizeof(h5fnal_vect_truth_t));
@@ -510,7 +509,11 @@ h5fnal_append_truths(h5fnal_vect_truth_t *vector, h5fnal_vect_truth_data_t *data
     if (!data)
         H5FNAL_PROGRAM_ERROR("data parameter cannot be NULL");
 
-    /* XXX: Fixup datasets here */
+    /* XXX: Fixup datasets for multiple appends here */
+
+    /* Trivial case of zero truths to append */
+    if (0 == data->n_truths)
+        return H5FNAL_SUCCESS;
 
     /* append data to all the datasets */
     if (h5fnal_append_data(vector->truth_dset_id, vector->truth_dtype_id, data->n_truths, (const void *)(data->truths)) < 0)
