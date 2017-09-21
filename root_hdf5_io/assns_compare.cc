@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cstring>
 #include <iostream>
 #include <iterator>
@@ -24,6 +25,7 @@
 
 using namespace art;
 using namespace std;
+using namespace std::chrono;
 
 /* We can't do simple compare here since gallery can't create Ptrs. Instead,
  * we'll just compare the individual data fields.
@@ -130,6 +132,9 @@ int main(int argc, char* argv[]) {
   InputTag vertex_tag { "linecluster" };
   InputTag assns_tag  { "linecluster" };
 
+  vector<microseconds> root_times; // times for reading ROOT
+  vector<microseconds> hdf_times;  // times for reading HDF5
+
   // Get file names from the command line.
   // file name 1: root file
   // file name 2: HDF5 file
@@ -165,12 +170,23 @@ int main(int argc, char* argv[]) {
               << ',' << aux.event()
               << ": ";
   
+
     // getValidHandle() is preferred to getByLabel(), for both art and
     // gallery use. It does not require in-your-face error handling.
+
+    auto const t0 = system_clock::now();
+
     auto const& root_clusters_hits =  *ev.getValidHandle<art::Assns<recob::Cluster, recob::Hit>>(assns_tag); 
+
+    auto const t1 = system_clock::now();
 
     // Open the data product in the event in the HDF5 file and compare the data with the Root data.
     same = compare_hdf5_assns(master_id, aux.run(), aux.subRun(), aux.event(), root_clusters_hits);
+
+    auto const t2 = system_clock::now();
+
+    root_times.push_back(duration_cast<microseconds>(t1 - t0));
+    hdf_times.push_back(duration_cast<microseconds>(t2 - t1));
 
     if (same)
         cout << "equal" << endl;
@@ -183,6 +199,13 @@ int main(int argc, char* argv[]) {
     H5FNAL_HDF5_ERROR;
   if (h5fnal_close_run(master_id) < 0)
     H5FNAL_PROGRAM_ERROR("could not close master run container")
+
+  // Write out the times to a standard output, in a way easily
+  // readable with R (or many other tools).
+  std::cout << "root\thdf5\n";
+  for (size_t i = 0, sz = root_times.size(); i != sz; ++i) {
+    cout << root_times[i].count() << '\t' << hdf_times[i].count() << '\n';
+  }
 
   std::cout << "*** SUCCESS ***\n";
   exit(EXIT_SUCCESS);
