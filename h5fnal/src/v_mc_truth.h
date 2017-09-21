@@ -82,16 +82,18 @@ typedef struct h5fnal_trajectory_t {
     hsize_t     particle_index;
 } h5fnal_trajectory_t;
 
-/* MC Truth Type */
+/* MC Truth Type
+ * -1 values mean nothing stored
+ */
 typedef struct h5fnal_truth_t {
     h5fnal_origin_t     origin;
-    hssize_t    neutrino_index;     /* -1 == no neutrino */
-    hsize_t     particle_start_index;
-    hsize_t     particle_end_index;
-    hsize_t     trajectory_start_index;
-    hsize_t     trajectory_end_index;
-    hsize_t     daughters_start_index;
-    hsize_t     daughters_end_index;
+    hssize_t    neutrino_index;
+    hssize_t    particle_start_index;
+    hssize_t    particle_end_index;
+    hssize_t    trajectory_start_index;
+    hssize_t    trajectory_end_index;
+    hssize_t    daughters_start_index;
+    hssize_t    daughters_end_index;
 } h5fnal_truth_t;
 
 /* Vector of MC Truth Type */

@@ -212,17 +212,17 @@ h5fnal_create_truth_type(void)
         H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "neutrino_index", HOFFSET(h5fnal_truth_t, neutrino_index), H5T_NATIVE_HSSIZE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "particle_start_index", HOFFSET(h5fnal_truth_t, particle_start_index), H5T_NATIVE_HSIZE) < 0)
+    if (H5Tinsert(tid, "particle_start_index", HOFFSET(h5fnal_truth_t, particle_start_index), H5T_NATIVE_HSSIZE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "particle_end_index", HOFFSET(h5fnal_truth_t, particle_end_index), H5T_NATIVE_HSIZE) < 0)
+    if (H5Tinsert(tid, "particle_end_index", HOFFSET(h5fnal_truth_t, particle_end_index), H5T_NATIVE_HSSIZE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "trajectory_start_index", HOFFSET(h5fnal_truth_t, trajectory_start_index), H5T_NATIVE_HSIZE) < 0)
+    if (H5Tinsert(tid, "trajectory_start_index", HOFFSET(h5fnal_truth_t, trajectory_start_index), H5T_NATIVE_HSSIZE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "trajectory_end_index", HOFFSET(h5fnal_truth_t, trajectory_end_index), H5T_NATIVE_HSIZE) < 0)
+    if (H5Tinsert(tid, "trajectory_end_index", HOFFSET(h5fnal_truth_t, trajectory_end_index), H5T_NATIVE_HSSIZE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "daughters_start_index", HOFFSET(h5fnal_truth_t, daughters_start_index), H5T_NATIVE_HSIZE) < 0)
+    if (H5Tinsert(tid, "daughters_start_index", HOFFSET(h5fnal_truth_t, daughters_start_index), H5T_NATIVE_HSSIZE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "daughters_end_index", HOFFSET(h5fnal_truth_t, daughters_end_index), H5T_NATIVE_HSIZE) < 0)
+    if (H5Tinsert(tid, "daughters_end_index", HOFFSET(h5fnal_truth_t, daughters_end_index), H5T_NATIVE_HSSIZE) < 0)
         H5FNAL_HDF5_ERROR;
     return tid;
 
