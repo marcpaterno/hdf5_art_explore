@@ -134,7 +134,7 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
         // Add particles
         p_start = t.particle_start_index;
         p_end   = t.particle_end_index;
-        cout << "Particles: start: " << p_start << " end: " << p_end << endl;
+//        cout << "Particles: start: " << p_start << " end: " << p_end << endl;
         if (p_start != -1)
             for (hssize_t v = p_start; v <= p_end; v++ ) {
 
@@ -170,8 +170,8 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
                 /* TODO: set trajectories */
                 start = p.trajectory_start_index;
                 end   = p.trajectory_end_index;
-                cout << "Trajectories: start: " << start << " end: " << end << endl;
-                if (p_start != -1)
+//                cout << "Trajectories: start: " << start << " end: " << end << endl;
+                if (start != -1)
                     for (hssize_t w = start; w <= end; w++ ) {
                         h5fnal_trajectory_t traj = data->trajectories[v];
 
@@ -185,7 +185,14 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
                 /* TODO: set daughters */
                 start = p.daughter_start_index;
                 end   = p.daughter_end_index;
-                cout << "Daughters: start: " << start << " end: " << end << endl;
+//                cout << "Daughters: start: " << start << " end: " << end << endl;
+                if (start != -1)
+                    for (hssize_t w = start; w <= end; w++ ) {
+                        h5fnal_daughter_t d = data->daughters[v];
+
+                        newParticle.AddDaughter(d.track_id);
+                    }
+
 
 
                 /* add the constructed particle to the data product */
