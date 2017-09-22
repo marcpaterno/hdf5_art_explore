@@ -87,11 +87,6 @@ int main(int argc, char* argv[]) {
         vector<h5fnal_particle_t> particles;
         vector<h5fnal_neutrino_t> neutrinos;
 
-        hsize_t total_trajectories = 0;
-        hsize_t total_daughters = 0;
-        hsize_t total_particles = 0;
-        hsize_t total_neutrinos = 0;
-
         h5fnal_vect_truth_data_t truth_data;
 
         std::cout << "Processing event: " << aux.run()
@@ -159,6 +154,9 @@ int main(int argc, char* argv[]) {
             simb::MCTruth t = rootTruths[n];
             h5fnal_truth_t truth;
 
+            hsize_t new_particles = 0;
+            hbool_t has_neutrino = FALSE;
+
             // Copy origin
             truth.origin = static_cast<h5fnal_origin_t>(t.Origin());
 
@@ -166,6 +164,8 @@ int main(int argc, char* argv[]) {
             for (int i = 0; i < t.NParticles(); i++) {
                 const simb::MCParticle& p = t.GetParticle(i);
                 h5fnal_particle_t particle;
+                hsize_t new_trajectories = 0;
+                hsize_t new_daughters = 0;
 
                 particle.status     = p.StatusCode();
                 particle.track_id   = p.TrackId();
@@ -180,17 +180,14 @@ int main(int argc, char* argv[]) {
                 particle.rescatter  = p.Rescatter();
 
                 // Get polarization TVector3 and set fields
-                const TVector3& polarization = p.Polarization();
-                particle.polarization_x = polarization.x();
-                particle.polarization_y = polarization.y();
-                particle.polarization_z = polarization.z();
+                const TVector3& pol = p.Polarization();
+                particle.polarization_x = pol.x();
+                particle.polarization_y = pol.y();
+                particle.polarization_z = pol.z();
 
                 // TODO: Process string handling here
                 cout << "Process: " << p.Process() << endl;
                 cout << "End Process: " << p.EndProcess() << endl;
-
-                cout << "Added particle" << endl;
-                particles.push_back(particle);
 
                 // Copy trajectories
                 for (unsigned int j = 0; j < p.NumberTrajectoryPoints(); j++) {
@@ -207,25 +204,47 @@ int main(int argc, char* argv[]) {
                     trajectory.E    = p.E(j);
 
                     cout << "Added trajectory" << endl;
+                    new_trajectories++;
                     trajectories.push_back(trajectory);
                 } /* end loop over trajectory points */
 
+                /* Fix up trajectory dataset indices */
+                if (new_trajectories > 0) {
+                    particle.trajectory_start_index     = trajectories.size() - new_trajectories;
+                    particle.trajectory_end_index       = trajectories.size() - 1;
+                }
+                else {
+                    particle.trajectory_start_index     = -1;
+                    particle.trajectory_end_index       = -1;
+                }
+
                 // TODO: Ignoring daughters for now since there are zero in my
                 //       input test file.
-        
+                particle.daughter_start_index   = -1;   // No daughters
+                particle.daughter_end_index     = -1;   // No daughters
+
+                cout << "Added particle" << endl;
+                new_particles++;
+                particles.push_back(particle);
+
             } /* end loop over particles */
 
             // TODO: Copy neutrino data. NOTE: must come after particles.
 
 
-            // TODO: Add use size() to fixup index values
+            // TODO: Fix all index values
+            // TODO: Add code to fix up neutrinos and daughters
             truth.neutrino_index            = -1;   // No neutrino
-            truth.particle_start_index      = 0;
-            truth.particle_end_index        = 0;
-            truth.trajectory_start_index    = 0;
-            truth.trajectory_end_index      = 0;
-            truth.daughters_start_index     = -1;   // No daughters
-            truth.daughters_end_index       = -1;   // No daughters
+
+            /* Fix up particle dataset indices */
+            if (new_particles > 0) {
+                truth.particle_start_index      = particles.size() - new_particles;
+                truth.particle_end_index        = particles.size() - 1;
+            }
+            else {
+                truth.particle_start_index      = -1;
+                truth.particle_end_index        = -1;
+            }
 
             truths.push_back(truth);
 

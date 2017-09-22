@@ -133,6 +133,14 @@ h5fnal_create_particle_type(void)
         H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "rescatter", HOFFSET(h5fnal_particle_t, rescatter), H5T_NATIVE_INT) < 0)
         H5FNAL_HDF5_ERROR;
+    if (H5Tinsert(tid, "trajectory_start_index", HOFFSET(h5fnal_particle_t, trajectory_start_index), H5T_NATIVE_HSSIZE) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Tinsert(tid, "trajectory_end_index", HOFFSET(h5fnal_particle_t, trajectory_end_index), H5T_NATIVE_HSSIZE) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Tinsert(tid, "daughter_start_index", HOFFSET(h5fnal_particle_t, daughter_start_index), H5T_NATIVE_HSSIZE) < 0)
+        H5FNAL_HDF5_ERROR;
+    if (H5Tinsert(tid, "daughter_end_index", HOFFSET(h5fnal_particle_t, daughter_end_index), H5T_NATIVE_HSSIZE) < 0)
+        H5FNAL_HDF5_ERROR;
     return tid;
 
 error:
@@ -215,14 +223,6 @@ h5fnal_create_truth_type(void)
     if (H5Tinsert(tid, "particle_start_index", HOFFSET(h5fnal_truth_t, particle_start_index), H5T_NATIVE_HSSIZE) < 0)
         H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "particle_end_index", HOFFSET(h5fnal_truth_t, particle_end_index), H5T_NATIVE_HSSIZE) < 0)
-        H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "trajectory_start_index", HOFFSET(h5fnal_truth_t, trajectory_start_index), H5T_NATIVE_HSSIZE) < 0)
-        H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "trajectory_end_index", HOFFSET(h5fnal_truth_t, trajectory_end_index), H5T_NATIVE_HSSIZE) < 0)
-        H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "daughters_start_index", HOFFSET(h5fnal_truth_t, daughters_start_index), H5T_NATIVE_HSSIZE) < 0)
-        H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "daughters_end_index", HOFFSET(h5fnal_truth_t, daughters_end_index), H5T_NATIVE_HSSIZE) < 0)
         H5FNAL_HDF5_ERROR;
     return tid;
 

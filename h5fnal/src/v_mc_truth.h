@@ -59,6 +59,10 @@ typedef struct h5fnal_particle_t {
     double      gvtx_z;
     double      gvtx_t;
     int         rescatter;
+    hssize_t    trajectory_start_index;
+    hssize_t    trajectory_end_index;
+    hssize_t    daughter_start_index;
+    hssize_t    daughter_end_index;
 } h5fnal_particle_t;
 
 /* Daughters type (for parent-child relationships)
@@ -90,10 +94,6 @@ typedef struct h5fnal_truth_t {
     hssize_t    neutrino_index;
     hssize_t    particle_start_index;
     hssize_t    particle_end_index;
-    hssize_t    trajectory_start_index;
-    hssize_t    trajectory_end_index;
-    hssize_t    daughters_start_index;
-    hssize_t    daughters_end_index;
 } h5fnal_truth_t;
 
 /* Vector of MC Truth Type */

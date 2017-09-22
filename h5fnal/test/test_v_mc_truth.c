@@ -88,6 +88,10 @@ generate_test_truths(h5fnal_vect_truth_data_t *data)
         data->particles[u].gvtx_z           = (double)rand();
         data->particles[u].gvtx_t           = (double)rand();
         data->particles[u].rescatter        = (double)rand();
+        data->particles[u].trajectory_start_index   = (hssize_t)rand();
+        data->particles[u].trajectory_end_index     = (hssize_t)rand();
+        data->particles[u].daughter_start_index     = (hssize_t)rand();
+        data->particles[u].daughter_end_index       = (hssize_t)rand();
     }
 
     /* daughters */
@@ -112,12 +116,8 @@ generate_test_truths(h5fnal_vect_truth_data_t *data)
     for (u = 0; u < data->n_truths; u++) {
         data->truths[u].origin                      = (int)rand();
         data->truths[u].neutrino_index              = (hsize_t)rand();
-        data->truths[u].particle_start_index        = (hsize_t)rand();
-        data->truths[u].particle_end_index          = (hsize_t)rand();
-        data->truths[u].trajectory_start_index      = (hsize_t)rand();
-        data->truths[u].trajectory_end_index        = (hsize_t)rand();
-        data->truths[u].daughters_start_index       = (hsize_t)rand();
-        data->truths[u].daughters_end_index         = (hsize_t)rand();
+        data->truths[u].particle_start_index        = (hssize_t)rand();
+        data->truths[u].particle_end_index          = (hssize_t)rand();
     }
 
     return H5FNAL_SUCCESS;

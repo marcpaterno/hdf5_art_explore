@@ -60,9 +60,29 @@ member_compare(simb::MCTruth root_truth, simb::MCTruth hdf5_truth)
     }
 
     if (comparable)
-        for (int i = 0; i < root_truth.NParticles(); i++)
+        for (int i = 0; i < root_truth.NParticles(); i++) {
+            auto rp  = root_truth.GetParticle(i);
+            auto h5p = hdf5_truth.GetParticle(i);
+            if (rp.TrackId() != h5p.TrackId())
+                cout << "BAD: Particle " << i << " track ID differs" << endl;
+            if (rp.StatusCode() != h5p.StatusCode())
+                cout << "BAD: Particle " << i << " status code differs" << endl;
+            if (rp.PdgCode() != h5p.PdgCode())
+                cout << "BAD: Particle " << i << " PDG code differs" << endl;
+            if (rp.Mother() != h5p.Mother())
+                cout << "BAD: Particle " << i << " mother differs" << endl;
+            if (rp.Process() != h5p.Process())
+                cout << "BAD: Particle " << i << " process differs" << endl;
+#if 0
+            if (rp.() != h5p.())
+                cout << "BAD: Particle " << i << " differs" << endl;
+#endif
+        }
+
+#if 0
             if (root_truth.GetParticle(i) != hdf5_truth.GetParticle(i))
                 cout << "BAD: Particle " << i << " differs" << endl;
+#endif
 
     return H5FNAL_SUCCESS;
 } /* end member_compare() */
@@ -101,29 +121,80 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
         H5FNAL_PROGRAM_ERROR("could not read truth data from the file")
 
     // Convert to MCTruth and add to the vector
-    cout << "GETTING TRUTHS" << endl;
     for (hsize_t u = 0; u < data->n_truths; u++)
     {
-        simb::MCTruth t;
-        hsize_t p_start;
-        hsize_t p_end;
+        simb::MCTruth newTruth;
+        h5fnal_truth_t t = data->truths[u];
+        hssize_t p_start;
+        hssize_t p_end;
         
         // Set the origin
-        t.SetOrigin(static_cast<simb::Origin_t>(data->truths[u].origin));
+        newTruth.SetOrigin(static_cast<simb::Origin_t>(t.origin));
 
         // Add particles
-        p_start = data->truths[u].particle_start_index;
-        p_end = data->truths[u].particle_end_index;
-        cout << "start: " << p_start << " end: " << p_end << endl;
-        for (hsize_t v = p_start; v <= p_end; v++ ) {
-            simb::MCParticle p(1, 1, "");
-            t.Add(p);
-            cout << "Added particle" << endl;
-        }
+        p_start = t.particle_start_index;
+        p_end   = t.particle_end_index;
+        cout << "Particles: start: " << p_start << " end: " << p_end << endl;
+        if (p_start != -1)
+            for (hssize_t v = p_start; v <= p_end; v++ ) {
+
+                h5fnal_particle_t p = data->particles[v];
+                hssize_t start;
+                hssize_t end;
+
+                /* ctor */
+                simb::MCParticle newParticle(
+                    p.track_id,
+                    p.pdg_code,
+                    "primary",
+                    p.mother,
+                    p.mass,
+                    p.status);
+
+                /* set weight */
+                newParticle.SetWeight(p.weight);
+
+                /* TODO: set end process */
+                newParticle.SetEndProcess("");
+
+                /* set polarization */
+                TVector3 pol(p.polarization_x, p.polarization_y, p.polarization_z);
+                newParticle.SetPolarization(pol);
+
+                /* set rescatter */
+                newParticle.SetRescatter(p.rescatter);
+
+                /* set gvtx */
+                newParticle.SetGvtx(p.gvtx_x, p.gvtx_y, p.gvtx_z, p.gvtx_t);
+
+                /* TODO: set trajectories */
+                start = p.trajectory_start_index;
+                end   = p.trajectory_end_index;
+                cout << "Trajectories: start: " << start << " end: " << end << endl;
+                if (p_start != -1)
+                    for (hssize_t w = start; w <= end; w++ ) {
+                        h5fnal_trajectory_t traj = data->trajectories[v];
+
+                        TLorentzVector pos(traj.Vx, traj.Vy, traj.Vz, traj.T);
+                        TLorentzVector mo(traj.Px, traj.Py, traj.Pz, traj.E);
+
+                        newParticle.AddTrajectoryPoint(pos, mo);
+                    }
+
+
+                /* TODO: set daughters */
+                start = p.daughter_start_index;
+                end   = p.daughter_end_index;
+                cout << "Daughters: start: " << start << " end: " << end << endl;
+
+
+                /* add the constructed particle to the data product */
+                newTruth.Add(newParticle);
+            } /* end particle construction / add loop */
 
         // Set the neutrino data
-        if (data->truths[u].neutrino_index >= 0) {
-            hsize_t ni = static_cast<hsize_t>(data->truths[u].neutrino_index);
+        if (t.neutrino_index >= 0) {
+            hsize_t ni = static_cast<hsize_t>(t.neutrino_index);
             h5fnal_neutrino_t n = data->neutrinos[ni];
 
 // Have to construct the MCParticles first since we need to get refs here
@@ -144,7 +215,7 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
         }
         
         // Create a new hit collection in the vector
-        hdf5_truths.push_back(t);
+        hdf5_truths.push_back(newTruth);
 
     } // end loop over truths
 
