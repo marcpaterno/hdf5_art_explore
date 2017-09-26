@@ -146,7 +146,7 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
                 simb::MCParticle newParticle(
                     p.track_id,
                     p.pdg_code,
-                    "primary",
+                    "primary",      // TODO
                     p.mother,
                     p.mass,
                     p.status);
@@ -167,7 +167,7 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
                 /* set gvtx */
                 newParticle.SetGvtx(p.gvtx_x, p.gvtx_y, p.gvtx_z, p.gvtx_t);
 
-                /* TODO: set trajectories */
+                /* set trajectories */
                 start = p.trajectory_start_index;
                 end   = p.trajectory_end_index;
 //                cout << "Trajectories: start: " << start << " end: " << end << endl;
@@ -181,8 +181,7 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
                         newParticle.AddTrajectoryPoint(pos, mo);
                     }
 
-
-                /* TODO: set daughters */
+                /* set daughters */
                 start = p.daughter_start_index;
                 end   = p.daughter_end_index;
 //                cout << "Daughters: start: " << start << " end: " << end << endl;
@@ -193,8 +192,6 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
                         newParticle.AddDaughter(d.track_id);
                     }
 
-
-
                 /* add the constructed particle to the data product */
                 newTruth.Add(newParticle);
             } /* end particle construction / add loop */
@@ -203,6 +200,9 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
         if (t.neutrino_index >= 0) {
             hsize_t ni = static_cast<hsize_t>(t.neutrino_index);
             h5fnal_neutrino_t n = data->neutrinos[ni];
+            hssize_t    nu_index;
+            hssize_t    lepton_index;
+
 
 // Have to construct the MCParticles first since we need to get refs here
 #if 0

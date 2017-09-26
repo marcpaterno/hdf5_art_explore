@@ -37,8 +37,8 @@ typedef struct h5fnal_neutrino_t {
     double      x;
     double      y;
     double      q_sqr;
-    hsize_t     nu;     // Index into particles
-    hsize_t     lepton; // Index into particles
+    hsize_t     nu_particle_index;      // Index into particles
+    hsize_t     lepton_particle_index;  // Index into particles
 } h5fnal_neutrino_t;
 
 /* MC Particle Type */
