@@ -47,9 +47,18 @@ member_compare(simb::MCTruth root_truth, simb::MCTruth hdf5_truth)
         comparable = TRUE;
     }
 
-    if (comparable && true == root_truth.NeutrinoSet())
-        if (root_truth.GetNeutrino() != hdf5_truth.GetNeutrino())
+    if (comparable && (true == root_truth.NeutrinoSet())) {
+        auto rn  = root_truth.GetNeutrino();
+        auto h5n = hdf5_truth.GetNeutrino();
+        if (rn.CCNC() != h5n.CCNC())
+            cout << "BAD: Neutrino CCNC data differ: " << rn.CCNC() << " " << h5n.CCNC() << endl;
+        //if (rn != h5n)
+        if (rn != h5n) {
             cout << "BAD: Neutrino data differ" << endl;
+            cout << rn << endl;
+            cout << h5n << endl;
+        }
+    }
 
     if (root_truth.NParticles() != hdf5_truth.NParticles()) {
         comparable = FALSE;
@@ -77,12 +86,10 @@ member_compare(simb::MCTruth root_truth, simb::MCTruth hdf5_truth)
             if (rp.() != h5p.())
                 cout << "BAD: Particle " << i << " differs" << endl;
 #endif
-        }
 
-#if 0
             if (root_truth.GetParticle(i) != hdf5_truth.GetParticle(i))
                 cout << "BAD: Particle " << i << " differs" << endl;
-#endif
+        }
 
     return H5FNAL_SUCCESS;
 } /* end member_compare() */
@@ -144,8 +151,10 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, str
                 char *s = NULL;
 
                 /* Get the Process string from the dictionary */
-                if (get_string(dict, p.process_index, &s) < 0)
+                if (get_string(dict, p.process_index, &s) < 0) {
+                    cout << "p.process_index: " << p.process_index << endl;
                     H5FNAL_PROGRAM_ERROR("error getting process string");
+                }
 
                 /* ctor */
                 simb::MCParticle newParticle(
@@ -207,14 +216,10 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, str
         if (t.neutrino_index >= 0) {
             hsize_t ni = static_cast<hsize_t>(t.neutrino_index);
             h5fnal_neutrino_t n = data->neutrinos[ni];
-            hssize_t    nu_index;
-            hssize_t    lepton_index;
 
-
-// Have to construct the MCParticles first since we need to get refs here
-#if 0
-            t.SetNeutrino(  // simb::MCParticle &nu
-                            // simb::MCParticle &lep
+            // Nu and Lepton particles are determined
+            // automatically when this is set.
+            newTruth.SetNeutrino(
                             n.ccnc,
                             n.mode,
                             n.interaction_type,
@@ -225,7 +230,6 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, str
                             n.x,
                             n.y,
                             n.q_sqr);
-#endif
         }
         
         // Create a new hit collection in the vector

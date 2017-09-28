@@ -163,7 +163,6 @@ int main(int argc, char* argv[]) {
             h5fnal_truth_t truth;
 
             hsize_t new_particles = 0;
-            hbool_t has_neutrino = FALSE;
 
             // Copy origin
             truth.origin = static_cast<h5fnal_origin_t>(t.Origin());
@@ -269,11 +268,32 @@ int main(int argc, char* argv[]) {
             } /* end loop over particles */
 
             // TODO: Copy neutrino data. NOTE: must come after particles.
+            // Copy neutrino data
+            if (t.NeutrinoSet()) {
+                const simb::MCNeutrino& n = t.GetNeutrino();
+                h5fnal_neutrino_t neutrino;
+ 
+                neutrino.mode               = n.Mode();
+                neutrino.interaction_type   = n.InteractionType();
+                neutrino.ccnc               = n.CCNC();
+                neutrino.target             = n.Target();
+                neutrino.hit_nuc            = n.HitNuc();
+                neutrino.hit_quark          = n.HitQuark();
+                neutrino.w                  = n.W();
+                neutrino.x                  = n.X();
+                neutrino.y                  = n.Y();
+                neutrino.q_sqr              = n.QSqr();
+ 
+                cout << "Added neutrino" << endl;
+                neutrinos.push_back(neutrino);
+            }
 
+            // Fix up neutrino index
+            if (t.NeutrinoSet())
+                truth.neutrino_index            = neutrinos.size() - 1;
+            else
+                truth.neutrino_index            = -1;   // No neutrino
 
-            // TODO: Fix all index values
-            // TODO: Add code to fix up neutrinos and daughters
-            truth.neutrino_index            = -1;   // No neutrino
 
             /* Fix up particle dataset indices */
             if (new_particles > 0) {

@@ -124,6 +124,7 @@ create_string_dictionary(hid_t loc_id, string_dictionary_t *dict)
     if (NULL == (dict->indices = (dict_index_t *)calloc((size_t)INITIAL_N_STRINGS, sizeof(dict_index_t))))
         H5FNAL_PROGRAM_ERROR("couldn't allocate memory for indices");
     dict->n_allocated = INITIAL_N_STRINGS;
+    dict->n_strings = 0;
     /* concatenated strings */
     if (NULL == (dict->concat_strings = (char *)calloc((size_t)CONCAT_STRING_INCR, sizeof(char))))
         H5FNAL_PROGRAM_ERROR("couldn't allocate memory for strings");
