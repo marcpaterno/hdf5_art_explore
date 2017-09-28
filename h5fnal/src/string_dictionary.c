@@ -340,7 +340,7 @@ get_string_index(const char *s, string_dictionary_t *dict, /*OUT*/ hbool_t *foun
         H5FNAL_PROGRAM_ERROR("index parameter cannot be NULL");
 
     *found = FALSE;
-    *index = INT_MAX;
+    *index = dict->n_strings; // Where the next string will go if not found.
 
     /* Wildly inefficient. Should be a hash table. */
     for (u = 0; u < dict->n_strings; u++) {

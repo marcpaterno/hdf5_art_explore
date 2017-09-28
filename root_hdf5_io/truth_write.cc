@@ -174,6 +174,8 @@ int main(int argc, char* argv[]) {
                 h5fnal_particle_t particle;
                 hsize_t new_trajectories = 0;
                 hsize_t new_daughters = 0;
+                hbool_t string_found;
+                unsigned string_index;
 
                 particle.status     = p.StatusCode();
                 particle.track_id   = p.TrackId();
@@ -194,6 +196,12 @@ int main(int argc, char* argv[]) {
                 particle.polarization_z = pol.z();
 
                 // TODO: Process string handling here
+                if (get_string_index(p.Process().c_str(), dict, &string_found, &string_index) < 0)
+                    H5FNAL_PROGRAM_ERROR("error getting string index");
+                if (!string_found)
+                    if (add_string_to_dictionary(p.Process().c_str(), dict) < 0)
+                        H5FNAL_PROGRAM_ERROR("error adding string to dictionary");
+                particle.process_index = static_cast<hsize_t>(string_index);
                 cout << "Process: " << p.Process() << endl;
                 cout << "End Process: " << p.EndProcess() << endl;
 
