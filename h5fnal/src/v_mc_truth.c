@@ -81,10 +81,6 @@ h5fnal_create_neutrino_type(void)
         H5FNAL_HDF5_ERROR;
     if (H5Tinsert(tid, "fQSqr", HOFFSET(h5fnal_neutrino_t, q_sqr), H5T_NATIVE_DOUBLE) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "nu_particle_index", HOFFSET(h5fnal_neutrino_t, nu_particle_index), H5T_NATIVE_HSSIZE) < 0)
-        H5FNAL_HDF5_ERROR;
-    if (H5Tinsert(tid, "lepton_particle_index", HOFFSET(h5fnal_neutrino_t, lepton_particle_index), H5T_NATIVE_HSSIZE) < 0)
-        H5FNAL_HDF5_ERROR;
 
     return tid;
 

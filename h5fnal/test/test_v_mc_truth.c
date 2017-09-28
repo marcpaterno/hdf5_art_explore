@@ -68,8 +68,6 @@ generate_test_truths(h5fnal_vect_truth_data_t *data)
         data->neutrinos[u].x                = (double)rand();
         data->neutrinos[u].y                = (double)rand();
         data->neutrinos[u].q_sqr            = (double)rand();
-        data->neutrinos[u].nu_particle_index        = (hssize_t)rand();
-        data->neutrinos[u].lepton_particle_index    = (hssize_t)rand();
     }
 
     /* particles */

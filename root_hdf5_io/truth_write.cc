@@ -156,7 +156,6 @@ int main(int argc, char* argv[]) {
 
         // Iterate through all truths in the vector
         totalTruths += rootTruths.size();
-        cout << "Number of truths in vector: " << rootTruths.size() << endl;
         for (unsigned n = 0; n < rootTruths.size(); n++) {
 
             simb::MCTruth t = rootTruths[n];
@@ -224,7 +223,6 @@ int main(int argc, char* argv[]) {
                     trajectory.Pz   = p.Pz(u);
                     trajectory.E    = p.E(u);
 
-                    cout << "Added trajectory" << endl;
                     new_trajectories++;
                     trajectories.push_back(trajectory);
                 } /* end loop over trajectory points */
@@ -246,7 +244,6 @@ int main(int argc, char* argv[]) {
 
                     daughter.track_id = p.Daughter(j);
 
-                    cout << "Added daughter" << endl;
                     new_daughters++;
                     daughters.push_back(daughter);
                 } /* end loop over daughters */
@@ -261,14 +258,12 @@ int main(int argc, char* argv[]) {
                     particle.daughter_end_index         = -1;
                 }
 
-                cout << "Added particle" << endl;
                 new_particles++;
                 particles.push_back(particle);
 
             } /* end loop over particles */
 
-            // TODO: Copy neutrino data. NOTE: must come after particles.
-            // Copy neutrino data
+            // Copy neutrino data. NOTE: must come after particles.
             if (t.NeutrinoSet()) {
                 const simb::MCNeutrino& n = t.GetNeutrino();
                 h5fnal_neutrino_t neutrino;
@@ -284,7 +279,6 @@ int main(int argc, char* argv[]) {
                 neutrino.y                  = n.Y();
                 neutrino.q_sqr              = n.QSqr();
  
-                cout << "Added neutrino" << endl;
                 neutrinos.push_back(neutrino);
             }
 

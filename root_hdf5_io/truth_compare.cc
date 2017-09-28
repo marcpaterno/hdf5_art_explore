@@ -28,73 +28,6 @@ using namespace std;
 using namespace simb;
 using namespace std::chrono;
 
-static herr_t
-member_compare(simb::MCTruth root_truth, simb::MCTruth hdf5_truth)
-{
-    hbool_t comparable = FALSE;
-
-    cout << endl;
-    cout << "*** BADNESS SUMMARY ***" << endl;
-
-    if (root_truth.Origin() != hdf5_truth.Origin())
-        cout << "BAD: Origins differ" << endl;
-
-    if (root_truth.NeutrinoSet() != hdf5_truth.NeutrinoSet()) {
-        comparable = FALSE;
-        cout << "BAD: NeutrinoSet() values differ" << endl;
-    }
-    else {
-        comparable = TRUE;
-    }
-
-    if (comparable && (true == root_truth.NeutrinoSet())) {
-        auto rn  = root_truth.GetNeutrino();
-        auto h5n = hdf5_truth.GetNeutrino();
-        if (rn.CCNC() != h5n.CCNC())
-            cout << "BAD: Neutrino CCNC data differ: " << rn.CCNC() << " " << h5n.CCNC() << endl;
-        //if (rn != h5n)
-        if (rn != h5n) {
-            cout << "BAD: Neutrino data differ" << endl;
-            cout << rn << endl;
-            cout << h5n << endl;
-        }
-    }
-
-    if (root_truth.NParticles() != hdf5_truth.NParticles()) {
-        comparable = FALSE;
-        cout << "BAD: Number of particles differ: " << root_truth.NParticles() << " v "<< hdf5_truth.NParticles() << endl;
-    }
-    else {
-        comparable = TRUE;
-    }
-
-    if (comparable)
-        for (int i = 0; i < root_truth.NParticles(); i++) {
-            auto rp  = root_truth.GetParticle(i);
-            auto h5p = hdf5_truth.GetParticle(i);
-            if (rp.TrackId() != h5p.TrackId())
-                cout << "BAD: Particle " << i << " track ID differs" << endl;
-            if (rp.StatusCode() != h5p.StatusCode())
-                cout << "BAD: Particle " << i << " status code differs" << endl;
-            if (rp.PdgCode() != h5p.PdgCode())
-                cout << "BAD: Particle " << i << " PDG code differs" << endl;
-            if (rp.Mother() != h5p.Mother())
-                cout << "BAD: Particle " << i << " mother differs" << endl;
-            if (rp.Process() != h5p.Process())
-                cout << "BAD: Particle " << i << " process differs" << endl;
-#if 0
-            if (rp.() != h5p.())
-                cout << "BAD: Particle " << i << " differs" << endl;
-#endif
-
-            if (root_truth.GetParticle(i) != hdf5_truth.GetParticle(i))
-                cout << "BAD: Particle " << i << " differs" << endl;
-        }
-
-    return H5FNAL_SUCCESS;
-} /* end member_compare() */
-
-
 static void
 get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, string_dictionary_t *dict, std::vector<simb::MCTruth> &hdf5_truths)
 {
@@ -141,7 +74,6 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, str
         // Add particles
         p_start = t.particle_start_index;
         p_end   = t.particle_end_index;
-//        cout << "Particles: start: " << p_start << " end: " << p_end << endl;
         if (p_start != -1)
             for (hssize_t v = p_start; v <= p_end; v++ ) {
 
@@ -151,10 +83,8 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, str
                 char *s = NULL;
 
                 /* Get the Process string from the dictionary */
-                if (get_string(dict, p.process_index, &s) < 0) {
-                    cout << "p.process_index: " << p.process_index << endl;
+                if (get_string(dict, p.process_index, &s) < 0)
                     H5FNAL_PROGRAM_ERROR("error getting process string");
-                }
 
                 /* ctor */
                 simb::MCParticle newParticle(
@@ -186,7 +116,6 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, str
                 /* set trajectories */
                 start = p.trajectory_start_index;
                 end   = p.trajectory_end_index;
-//                cout << "Trajectories: start: " << start << " end: " << end << endl;
                 if (start != -1)
                     for (hssize_t w = start; w <= end; w++ ) {
                         h5fnal_trajectory_t traj = data->trajectories[v];
@@ -200,7 +129,6 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, str
                 /* set daughters */
                 start = p.daughter_start_index;
                 end   = p.daughter_end_index;
-//                cout << "Daughters: start: " << start << " end: " << end << endl;
                 if (start != -1)
                     for (hssize_t w = start; w <= end; w++ ) {
                         h5fnal_daughter_t d = data->daughters[v];
@@ -348,19 +276,8 @@ int main(int argc, char* argv[]) {
     // function proved helpful and was left in place.
     if (root_truths == hdf5_truths)
         cout << "equal" << endl;
-    else {
-        if (root_truths.size() != hdf5_truths.size())
-            cout << "BAD: vectors not same size" << endl;
-        else {
-            for (unsigned int u = 0; u < root_truths.size(); u++) {
-                if (member_compare(root_truths[u], hdf5_truths[u]) < 0)
-                    H5FNAL_PROGRAM_ERROR("error when comparing MCTruth members");
-            }
-        }
-
-        // Complain
+    else
         cout << "*** BADNESS: NOT EQUAL ***" << endl;
-    }
   }
 
   /* Clean up */

@@ -37,8 +37,6 @@ typedef struct h5fnal_neutrino_t {
     double      x;
     double      y;
     double      q_sqr;
-    hsize_t     nu_particle_index;      // Index into particles
-    hsize_t     lepton_particle_index;  // Index into particles
 } h5fnal_neutrino_t;
 
 /* MC Particle Type */
@@ -47,8 +45,8 @@ typedef struct h5fnal_particle_t {
     int         track_id;
     int         pdg_code;
     int         mother;
-    hsize_t     process_index;      /* into h5fnal_truth_strings_t */
-    hsize_t     endprocess_index;   /* into h5fnal_truth_strings_t */
+    hsize_t     process_index;      /* into string dictionary */
+    hsize_t     endprocess_index;   /* into string dictionary */
     double      mass;
     double      polarization_x;
     double      polarization_y;
