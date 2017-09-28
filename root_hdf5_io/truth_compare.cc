@@ -89,7 +89,7 @@ member_compare(simb::MCTruth root_truth, simb::MCTruth hdf5_truth)
 
 
 static void
-get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std::vector<simb::MCTruth> &hdf5_truths)
+get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, string_dictionary_t *dict, std::vector<simb::MCTruth> &hdf5_truths)
 {
     string  run_name = std::to_string(run);
     string  subrun_name = std::to_string(subrun);
@@ -141,12 +141,17 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
                 h5fnal_particle_t p = data->particles[v];
                 hssize_t start;
                 hssize_t end;
+                char *s = NULL;
+
+                /* Get the Process string from the dictionary */
+                if (get_string(dict, p.process_index, &s) < 0)
+                    H5FNAL_PROGRAM_ERROR("error getting process string");
 
                 /* ctor */
                 simb::MCParticle newParticle(
                     p.track_id,
                     p.pdg_code,
-                    "primary",      // TODO
+                    s,
                     p.mother,
                     p.mass,
                     p.status);
@@ -154,8 +159,10 @@ get_hdf5_truths(hid_t loc_id, unsigned run, unsigned subrun, unsigned event, std
                 /* set weight */
                 newParticle.SetWeight(p.weight);
 
-                /* TODO: set end process */
-                newParticle.SetEndProcess("");
+                /* Set end process */
+                if (get_string(dict, p.endprocess_index, &s) < 0)
+                    H5FNAL_PROGRAM_ERROR("error getting end process string");
+                newParticle.SetEndProcess(s);
 
                 /* set polarization */
                 TVector3 pol(p.polarization_x, p.polarization_y, p.polarization_z);
@@ -260,8 +267,11 @@ error:
 int main(int argc, char* argv[]) {
 
   hid_t   fid 		= H5FNAL_BAD_HID_T;
+  hid_t   dict_id 	= H5FNAL_BAD_HID_T;
   hid_t   master_id = H5FNAL_BAD_HID_T;
- 
+
+  string_dictionary_t *dict = NULL;
+
   InputTag mchits_tag { "mchitfinder" };
   InputTag vertex_tag { "linecluster" };
   InputTag assns_tag  { "linecluster" };
@@ -284,6 +294,12 @@ int main(int argc, char* argv[]) {
   filenames.pop_back();
   if ((fid = H5Fopen(h5FileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT)) < 0)
     H5FNAL_HDF5_ERROR;
+
+  /* Open the file-wide string dictionary */
+  if (NULL == (dict = (string_dictionary_t *)calloc(1, sizeof(string_dictionary_t))))
+    H5FNAL_PROGRAM_ERROR("could not get memory for string dictionary");
+  if ((dict_id = open_string_dictionary(fid, dict)) < 0)
+    H5FNAL_PROGRAM_ERROR("could not open string dictionary");
 
   /* Open the master run container */
   if ((master_id = h5fnal_open_run(fid, MASTER_RUN_CONTAINER)) < 0)
@@ -316,7 +332,7 @@ int main(int argc, char* argv[]) {
 
     // Open the data product in the event in the HDF5 file and get all the data out.
     std::vector<simb::MCTruth> hdf5_truths;
-    get_hdf5_truths(master_id, aux.run(), aux.subRun(), aux.event(), hdf5_truths);
+    get_hdf5_truths(master_id, aux.run(), aux.subRun(), aux.event(), dict, hdf5_truths);
 
     auto const t2 = system_clock::now();
 
@@ -344,10 +360,12 @@ int main(int argc, char* argv[]) {
   }
 
   /* Clean up */
-  if (H5Fclose(fid) < 0)
-    H5FNAL_HDF5_ERROR;
+  if (close_string_dictionary(dict) < 0)
+    H5FNAL_PROGRAM_ERROR("could not close string dictionary")
   if (h5fnal_close_run(master_id) < 0)
     H5FNAL_PROGRAM_ERROR("could not close master run container")
+  if (H5Fclose(fid) < 0)
+    H5FNAL_HDF5_ERROR;
 
   // Write out the times to a standard output, in a way easily
   // readable with R (or many other tools).
@@ -364,6 +382,8 @@ error:
   H5E_BEGIN_TRY {
     H5Fclose(fid);
     h5fnal_close_run(master_id);
+    if (dict)
+      close_string_dictionary(dict);
   } H5E_END_TRY;
 
   std::cout << "*** FAILURE ***\n";

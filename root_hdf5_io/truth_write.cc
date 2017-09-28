@@ -195,15 +195,21 @@ int main(int argc, char* argv[]) {
                 particle.polarization_y = pol.y();
                 particle.polarization_z = pol.z();
 
-                // TODO: Process string handling here
+                // Store the process string
                 if (get_string_index(p.Process().c_str(), dict, &string_found, &string_index) < 0)
-                    H5FNAL_PROGRAM_ERROR("error getting string index");
+                    H5FNAL_PROGRAM_ERROR("error getting Process string index");
                 if (!string_found)
                     if (add_string_to_dictionary(p.Process().c_str(), dict) < 0)
-                        H5FNAL_PROGRAM_ERROR("error adding string to dictionary");
+                        H5FNAL_PROGRAM_ERROR("error adding Process string to dictionary");
                 particle.process_index = static_cast<hsize_t>(string_index);
-                cout << "Process: " << p.Process() << endl;
-                cout << "End Process: " << p.EndProcess() << endl;
+
+                // Store the end process string
+                if (get_string_index(p.EndProcess().c_str(), dict, &string_found, &string_index) < 0)
+                    H5FNAL_PROGRAM_ERROR("error getting EndProcess string index");
+                if (!string_found)
+                    if (add_string_to_dictionary(p.EndProcess().c_str(), dict) < 0)
+                        H5FNAL_PROGRAM_ERROR("error adding EndProcess string to dictionary");
+                particle.endprocess_index = static_cast<hsize_t>(string_index);
 
                 // Copy trajectories
                 for (unsigned int j = 0; j < p.NumberTrajectoryPoints(); j++) {
