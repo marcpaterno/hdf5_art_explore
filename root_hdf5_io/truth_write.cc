@@ -212,18 +212,18 @@ int main(int argc, char* argv[]) {
                 particle.endprocess_index = static_cast<hsize_t>(string_index);
 
                 // Copy trajectories
-                for (unsigned int j = 0; j < p.NumberTrajectoryPoints(); j++) {
+                for (unsigned int u = 0; u < p.NumberTrajectoryPoints(); u++) {
                     h5fnal_trajectory_t trajectory;
 
-                    trajectory.Vx   = p.Vx(j);
-                    trajectory.Vy   = p.Vy(j);
-                    trajectory.Vz   = p.Vz(j);
-                    trajectory.T    = p.T(j);
+                    trajectory.Vx   = p.Vx(u);
+                    trajectory.Vy   = p.Vy(u);
+                    trajectory.Vz   = p.Vz(u);
+                    trajectory.T    = p.T(u);
 
-                    trajectory.Px   = p.Px(j);
-                    trajectory.Py   = p.Py(j);
-                    trajectory.Pz   = p.Pz(j);
-                    trajectory.E    = p.E(j);
+                    trajectory.Px   = p.Px(u);
+                    trajectory.Py   = p.Py(u);
+                    trajectory.Pz   = p.Pz(u);
+                    trajectory.E    = p.E(u);
 
                     cout << "Added trajectory" << endl;
                     new_trajectories++;
@@ -240,10 +240,27 @@ int main(int argc, char* argv[]) {
                     particle.trajectory_end_index       = -1;
                 }
 
-                // TODO: Ignoring daughters for now since there are zero in my
-                //       input test file.
-                particle.daughter_start_index   = -1;   // No daughters
-                particle.daughter_end_index     = -1;   // No daughters
+                // Copy daughters
+                for (int j = 0; j < p.NumberDaughters(); j++) {
+
+                    h5fnal_daughter_t daughter;
+
+                    daughter.track_id = p.Daughter(j);
+
+                    cout << "Added daughter" << endl;
+                    new_daughters++;
+                    daughters.push_back(daughter);
+                } /* end loop over daughters */
+
+                /* Fix up daughter dataset indices */
+                if (new_daughters > 0) {
+                    particle.daughter_start_index       = daughters.size() - new_daughters;
+                    particle.daughter_end_index         = daughters.size() - 1;
+                }
+                else {
+                    particle.daughter_start_index       = -1;
+                    particle.daughter_end_index         = -1;
+                }
 
                 cout << "Added particle" << endl;
                 new_particles++;
