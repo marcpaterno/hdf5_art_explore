@@ -44,8 +44,11 @@ extern "C" {
 herr_t create_string_dictionary(hid_t loc_id, string_dictionary_t *dict);
 herr_t open_string_dictionary(hid_t loc_id, string_dictionary_t *dict);
 herr_t close_string_dictionary(string_dictionary_t *dict);
+
 herr_t add_string_to_dictionary(const char *s, string_dictionary_t *dict);
+
 herr_t get_string_index(const char *s, string_dictionary_t *dict, /*OUT*/ hbool_t *found, /*OUT*/ unsigned *index);
+
 herr_t get_string(string_dictionary_t *dict, unsigned index, /*OUT*/ char **s);
 
 #ifdef __cplusplus

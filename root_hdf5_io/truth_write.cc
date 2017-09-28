@@ -33,8 +33,10 @@ int main(int argc, char* argv[]) {
     hid_t   run_id 	= H5FNAL_BAD_HID_T;
     hid_t   subrun_id = H5FNAL_BAD_HID_T;
     hid_t   event_id 	= H5FNAL_BAD_HID_T;
+    hid_t   dict_id 	= H5FNAL_BAD_HID_T;
     int prevRun 		= -1;
     int prevSubRun 	= -1;
+    string_dictionary_t *dict = NULL;
     h5fnal_vect_truth_t *h5vtruth = NULL;
  
     InputTag mchits_tag { "mchitfinder" };
@@ -57,6 +59,12 @@ int main(int argc, char* argv[]) {
         H5FNAL_HDF5_ERROR;
     if ((fid = H5Fcreate(h5FileName.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id)) < 0)
         H5FNAL_HDF5_ERROR;
+
+    /* Create a file-wide string dictionary */
+    if (NULL == (dict = (string_dictionary_t *)calloc(1, sizeof(string_dictionary_t))))
+        H5FNAL_PROGRAM_ERROR("could not get memory for string dictionary");
+    if ((dict_id = create_string_dictionary(fid, dict)) < 0)
+        H5FNAL_PROGRAM_ERROR("could not create string dictionary");
 
     /* Create a top-level containing group in which creation order is tracked and indexed.
      * There is no way to do this in the root group, so we can't use that.
@@ -276,16 +284,19 @@ int main(int argc, char* argv[]) {
     /* Clean up */
     if (H5Pclose(fapl_id) < 0)
         H5FNAL_HDF5_ERROR;
-    if (H5Fclose(fid) < 0)
-        H5FNAL_HDF5_ERROR;
     if (h5fnal_close_run(master_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close master run container")
-    // These will still be open after the loop.
+    // The run and sub-run will still be open after the last loop iteration.
     if (h5fnal_close_run(run_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close run")
     if (h5fnal_close_run(subrun_id) < 0)
         H5FNAL_PROGRAM_ERROR("could not close sub-run")
+    if (close_string_dictionary(dict) < 0)
+        H5FNAL_PROGRAM_ERROR("could not string dictionary")
+    if (H5Fclose(fid) < 0)
+        H5FNAL_HDF5_ERROR;
 
+    free(dict);
     free(h5vtruth);
 
     cout << "Wrote " << totalTruths << " TOTAL truths to the HDF5 file." << endl;
@@ -296,14 +307,18 @@ error:
 
     H5E_BEGIN_TRY {
         H5Pclose(fapl_id);
-        H5Fclose(fid);
         h5fnal_close_run(run_id);
         h5fnal_close_run(subrun_id);
         h5fnal_close_event(event_id);
         h5fnal_close_run(master_id);
-        h5fnal_close_v_mc_truth(h5vtruth);
+        if (h5vtruth)
+            h5fnal_close_v_mc_truth(h5vtruth);
+        if (dict)
+            close_string_dictionary(dict);
+        H5Fclose(fid);
     } H5E_END_TRY;
 
+    free(dict);
     free(h5vtruth);
 
     std::cout << "*** FAILURE ***\n";
