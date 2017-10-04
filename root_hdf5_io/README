@@ -1,0 +1,10 @@
+Every product has a write and a compare.
+
+By historical accident, there is also a hitcoll_read.cc; it has not
+been updated recently. The compare code does reading, of course. The
+hitcoll_read code also shows use of H5Literate.
+
+Top-level container exists because you can't set properties on the
+root group. We want to be able to set properties at the top-level.
+
+
